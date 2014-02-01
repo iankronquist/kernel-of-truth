@@ -30,8 +30,8 @@ uint8_t term_color;
 uint16_t* term_buffer;
 
 void term_copy_up_lines();
-void term_writestring(char* data);
-void term_putchar(char c);
+int term_writestring(char* data);
+int term_putchar(char c);
 void term_initialize();
 void term_putentryat(char c, uint8_t color, size_t x, size_t y);
 uint16_t make_vgaentry(char c, uint8_t color);

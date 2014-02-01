@@ -48,13 +48,13 @@ void term_initialize()
 }
 
 
-void term_putchar(char c)
+int term_putchar(char c)
 {
         if(c == '\n')
         {
                 term_row = 0;
                 term_column = 0;
-                return;
+                return c;
         }
         if(term_column >= VGA_WIDTH)
         {
@@ -84,12 +84,15 @@ void term_putchar(char c)
                         term_column = 0;
                 }
         }
+	return c;
 }
 
-void term_writestring(char* data)
+int term_writestring(char* data)
 {
-        for ( size_t i = 0; data[i] != 0; i++ )
+	size_t i;
+        for (i = 0; data[i] != 0; i++ )
                 term_putchar(data[i]);
+	return data[i];
 }
 
 
