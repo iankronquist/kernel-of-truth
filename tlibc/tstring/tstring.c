@@ -1,8 +1,35 @@
 #include "tstring.h"
-#include "../assert/assert.h"
+#if !defined(__linux__)
+	#include "../assert/assert.h"
+#else
+	#include <assert.h>
+	#include <stdio.h>
+#endif
+
 
 typedef unsigned long ulong;
 const char HIGHBIT = 1 << (sizeof(char) - 1);
+
+void createFromLiteral(char* literal, tstring* str)
+{
+	ulong literalLength = 0;
+	for(; literal[literalLength] != '\0'; literalLength++);
+	printf("lit len %lu\n", literalLength);
+	puts("d");
+	ulong prefixLength;
+	puts("e");
+	addPrefixToTstring(str, &prefixLength, literalLength);
+	puts("f");
+	char newStr[prefixLength + literalLength];
+	for(ulong index = 0; index < literalLength; index++)
+	{
+		newStr[index + prefixLength] = literal[index];
+	}
+	str = newStr;
+	printf("newstrp %p \n", &newStr);
+	printf("strp    %p \n", &str);
+	assert(str == newStr);
+}
 
 char elem(tstring str, int index)
 {
@@ -45,21 +72,32 @@ ulong realLength(tstring a)
 	return prefixLength(a) + length(a);
 }
 
+void addPrefixToTstring(tstring newEmptyStr, ulong* prefixLength, 
+	ulong dataLength)
+{	
+	
+	ulong newPrefixLength = (dataLength/(sizeof(char)*8 - 1)) + 1;
+	char newString[newPrefixLength + dataLength];
+	ulong l;
+	for(l = 0; l < newPrefixLength; l++)
+	{
+		newString[l] = (char)~0;
+	}
+	newString[l++] = (dataLength) % (sizeof(char)*8 - 1);
+	newEmptyStr = (tstring)newString;
+	*prefixLength = l;
+}
+
 void extend(tstring str, int extra_space, tstring new_str)
 {
 	ulong currentLength = length(str);
 	ulong currentLengthPrefixSize = prefixLength(str);
 	ulong newDataLength = currentLength + extra_space;
 	assert(currentLength < newDataLength);
-	ulong newPrefixLength = (newDataLength/(sizeof(char)*8 - 1)) + 1;
-	char newString[newPrefixLength = newDataLength];
-	ulong l;
-	for(l = 0; l < newPrefixLength; l++)
-	{
-		newString[l] = (char)~0;
-	}
-	newString[l++] = (newDataLength) % (sizeof(char)*8 - 1);
 	ulong currentStrIndex = 0;
+	ulong l;
+	tstring newString;
+	addPrefixToTstring(newString, &l, newDataLength);
 	for(; l < currentLength; l++)
 	{
 		newString[l] = str[currentLengthPrefixSize + currentStrIndex];
@@ -81,7 +119,7 @@ void concat(tstring a, tstring b, tstring newString)
 
 void copy(tstring a, tstring b)
 {
-	ulong aSize = realSize(a);
+	ulong aSize = realLength(a);
 	char newString[aSize];
 	for(ulong i = 0; i < aSize; i++)
 	{
@@ -93,7 +131,7 @@ void copy(tstring a, tstring b)
 int compare(tstring a, tstring b)
 {
 	ulong aLength = length(a);
-	if(aLength != tstring(b))
+	if(aLength != length(b))
 	{
 		return 0;
 	}
