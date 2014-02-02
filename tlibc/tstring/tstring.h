@@ -1,6 +1,6 @@
 #ifndef TSTRING_H
 #define TSTRING_H
-
+#include "../tmem/tmem.h"
 
 typedef char* tstring;
 
