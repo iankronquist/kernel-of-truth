@@ -1,13 +1,17 @@
+#include "mem.h"
 
 int memcmp(const void* a, const void* b, size_t size)
 {
+	const char* ac = (char*)a;
+	const char* bc = (char*)b;
+
 	for(size_t i = 0; i < size; i++)
 	{
-		if(a[i] > b[i])
+		if(ac[i] > bc[i])
 		{
 			return -1;
 		}
-		else if(a[i] < b[i])
+		else if(ac[i] < bc[i])
 		{
 			return 1;
 		}
@@ -31,20 +35,20 @@ void* memset(void* buffer, int value, size_t size)
 	unsigned char* bufferc = (unsigned char*) buffer;
 	for(size_t i = 0; i < size; i++)
 	{
-		buffer[i] = (unsigned char) size;
+		bufferc[i] = (unsigned char) size;
 	}
 	return buffer;
 }
 
-void* memmove(void* destination, void* source, size_t size)
+void* memmove(void* destination, const void* source, size_t size)
 {
-	unsigned char* dst = (unsigned char*) dstptr;
-	const unsigned char* src = (const unsigned char*) srcptr;
+	unsigned char* dst = (unsigned char*) destination;
+	const unsigned char* src = (const unsigned char*) source;
 	if ( dst < src )
 	{
 		for ( size_t i = 0; i < size; i++ )
 		{
-			dst[i] = src[i
+			dst[i] = src[i];
 		}
 	}
 	else
@@ -54,5 +58,5 @@ void* memmove(void* destination, void* source, size_t size)
 			dst[i-1] = src[i-1];
 		}
 	}
-	return dstptr;
+	return destination;
 }
