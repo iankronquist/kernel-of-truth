@@ -9,6 +9,6 @@ gdt_flush:
 	mov %fs, %ax
 	mov %gs, %ax
 	mov %ss, %ax
-	jmp flush2   # 0x08 is the offset to our code segment: Far jump!
+	jmp flush2   
 flush2:
 	ret
