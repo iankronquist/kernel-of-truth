@@ -12,18 +12,11 @@ The above was paraphrased from:
 http://www.osdever.net/bkerndev/Docs/gdt.htm
 */
 
-<<<<<<< HEAD
-typedef unsigned short usort;
-typedef unsigned char uchar;
-typedef unsigned int uint;
-
-=======
 typedef unsigned short ushort;
 typedef unsigned char uchar;
 typedef unsigned int uint;
 
 extern void gdt_flush();
->>>>>>> gdt
 /* the __attribute__((packed))
 tells the compiler not to 'optimize' the struct for us by 
 packing.
@@ -52,8 +45,6 @@ struct gdt_ptr   gdtp;
 reload the new segment registers */
 //extern void gdt_flush();
 
-<<<<<<< HEAD
-=======
 void gdt_set_gate(int num, unsigned long base, unsigned long limit,
 	uchar access, uchar granularity)
 {
@@ -97,4 +88,3 @@ void gdt_install()
 }
 
 
->>>>>>> gdt
