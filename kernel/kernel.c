@@ -1,6 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
+#include "gdt.c"
 #include "terminal.h"
+
 
 /* Check if the compiler thinks if we are targeting the wrong operating system. */
 #if defined(__linux__)
@@ -15,6 +17,7 @@
  
 void kernel_main()
 {
+	gdt_install();
 	term_initialize();
 	char* str = "0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 	for(size_t i = 0; i < VGA_HEIGHT + 5; i++)
