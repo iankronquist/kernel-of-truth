@@ -1,5 +1,5 @@
 #ifndef TEST
-	#include "../../terminal.c"
+	#include "../../kernel/terminal.c"
 #else
 	#include "../tests/test_stdio.c"
 #endif

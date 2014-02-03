@@ -76,6 +76,7 @@ _start:
 # This is useful when debugging or when you implement call tracing.
 .size _start, . - _start
 
+<<<<<<< HEAD
 # from http://www.osdever.net/bkerndev/Docs/gdt.htm
 # This will set up our new segment registers. We need to do
 # something special in order to set CS. We do what is called a
@@ -95,3 +96,6 @@ _gdt_flush:
 flush2:
     ret               # Returns back to the C code!
 
+=======
+#.file "start.asm"
+>>>>>>> gdt
