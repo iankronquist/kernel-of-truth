@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "gdt.c"
+#include "idt.c"
 #include "terminal.h"
 
 
@@ -18,6 +19,7 @@
 void kernel_main()
 {
 	gdt_install();
+	idt_install();
 	term_initialize();
 	term_writestring("Hello, Kernel!");
 }
