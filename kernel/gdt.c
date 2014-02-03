@@ -12,10 +12,11 @@ The above was paraphrased from:
 http://www.osdever.net/bkerndev/Docs/gdt.htm
 */
 
-typedef unsigned short usort;
+typedef unsigned short ushort;
 typedef unsigned char uchar;
 typedef unsigned int uint;
 
+extern void gdt_flush();
 /* the __attribute__((packed))
 tells the compiler not to 'optimize' the struct for us by 
 packing.
@@ -49,7 +50,7 @@ void gdt_set_gate(int num, unsigned long base, unsigned long limit,
 {
 	//Set descriptor base access
 	gdt[num].base_low = (base & 0xffff);
-	gdt[num].base_iddle = (base >> 16) & 0xff;
+	gdt[num].base_middle = (base >> 16) & 0xff;
 	gdt[num].base_high = (base >> 24) & 0xff;
 	
 	//Set descriptor limits
@@ -64,11 +65,11 @@ void gdt_set_gate(int num, unsigned long base, unsigned long limit,
 void gdt_install()
 {
 	//Setup GDT pointer and limit
-	gdp.limit = (sizeof(struct gdt_entry) * 3) - 1;
-	gdp.base = &gdt;
+	gdtp.limit = (sizeof(struct gdt_entry) * 3) - 1;
+	gdtp.base = &gdt;
 
 	// NULL descriptor
-	gdt_set_gate(0,0,0,0);
+	gdt_set_gate(0,0,0,0,0);
 
 	/* The second entry is our Code Segment. The base address
 	*  is 0, the limit is 4GBytes, it uses 4KByte granularity,
