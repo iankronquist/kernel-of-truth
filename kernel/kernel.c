@@ -19,11 +19,5 @@ void kernel_main()
 {
 	gdt_install();
 	term_initialize();
-	char* str = "0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-	for(size_t i = 0; i < VGA_HEIGHT + 5; i++)
-	{
-		str[0] += i;
-		term_writestring(str);
-		
-	}
+	term_writestring("Hello, Kernel!");
 }
