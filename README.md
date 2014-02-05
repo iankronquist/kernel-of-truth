@@ -20,21 +20,21 @@ The following tutorials have proven useful in developing this kernel:
 
 The following resources may also prove useful:
 * Info on the Global Descriptor Table:
-	[](http://wiki.osdev.org/GDT_Tutorial)
-	[](http://www.osdever.net/bkerndev/Docs/gdt.htm)
+	http://wiki.osdev.org/GDT_Tutorial
+	http://www.osdever.net/bkerndev/Docs/gdt.htm
 * Info on the Interrupt Descriptor Table:
-	[](http://www.osdever.net/bkerndev/Docs/idt.htm)
+	http://www.osdever.net/bkerndev/Docs/idt.htm
 * Info on the Interrupt Service Routines:
-	[](http://www.osdever.net/bkerndev/Docs/isrs.htm)
+	http://www.osdever.net/bkerndev/Docs/isrs.htm
 * Info on implementing `malloc` and `free`:
-	[](http://www.inf.udec.cl/~leo/Malloc_tutorial.pdf)
-	[](https://codereview.stackexchange.com/questions/19635/malloc-free-implementation)
-	[](http://wiki.osdev.org/Memory_Allocation)
+	http://www.inf.udec.cl/~leo/Malloc_tutorial.pdf
+	https://codereview.stackexchange.com/questions/19635/malloc-free-implementation
+	http://wiki.osdev.org/Memory_Allocation
 * Info on PS/2 Keyboard drivers:
-	[](http://wiki.osdev.org/PS/2_Keyboard)
+	http://wiki.osdev.org/PS/2_Keyboard
 * Info on OS Development on the Pi:
-	[](https://www.cl.cam.ac.uk/projects/raspberrypi/tutorials/os/index.html)
-	[](http://elinux.org/RPi_Easy_SD_Card_Setup)
+	https://www.cl.cam.ac.uk/projects/raspberrypi/tutorials/os/index.html
+	http://elinux.org/RPi_Easy_SD_Card_Setup
 
 Building:
 ---------
@@ -67,8 +67,8 @@ A cross compiler for the Pi written by the Raspberry Pi foundation can be found
 on [github][3]  
 
 
-[0](http://wiki.osdev.org/C%2B%2B_Bare_Bones)
-[1](http://wiki.osdev.org/User:Sortie/Meaty_Skeleton)
-[2](http://www.osdever.net/bkerndev/Docs/gettingstarted.htm)
-[3](https://github.com/raspberrypi/tools)
+[0]:http://wiki.osdev.org/C%2B%2B_Bare_Bones
+[1]:http://wiki.osdev.org/User:Sortie/Meaty_Skeleton
+[2]:http://www.osdever.net/bkerndev/Docs/gettingstarted.htm
+[3]:https://github.com/raspberrypi/tools
 
