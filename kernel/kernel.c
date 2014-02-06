@@ -1,8 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "gdt.c"
-#include "idt.c"
-#include "isr.c"
+#include "gdt.h"
+#include "idt.h"
+#include "isr.h"
 #include "terminal.h"
 
 
