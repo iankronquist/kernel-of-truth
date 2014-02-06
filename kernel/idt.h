@@ -1,7 +1,7 @@
 #ifndef IDT_H
 #define IDT_H
 //Included for the memset function.
-#include "../tlibc/tmem/mem.c"
+#include "../tlibc/tmem/mem.h"
 // This is modeled after the material on the following tutorial:
 // http://www.osdever.net/bkerndev/Docs/idt.htm
 

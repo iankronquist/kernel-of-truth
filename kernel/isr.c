@@ -1,9 +1,40 @@
-#include "kputs.c"
-#include "kabort.c"
-#include "idt.h"
 #include "isr.h"
 
-
+char* exception_messages[] =
+{
+	"Division By Zero Exception",
+	"Debug Exception",
+	"Non Maskable Interrupt Exception",
+	"Breakpoint Exception",
+	"Into Detected Overflow Exception",
+	"Out of Bounds Exception",
+	"Invalid Opcode Exception",	
+	"No Coprocessor Exception",	
+	"Double Fault Exception",	
+	"Coprocessor Segment Overrun Exception",
+ 	"Bad TSS Exception",
+ 	"Segment Not Present Exception",
+ 	"Stack Fault Exception",
+ 	"General Protection Fault Exception",   
+ 	"Page Fault Exception",
+ 	"Unknown Interrupt Exception",
+ 	"Coprocessor Fault Exception",	
+ 	"Alignment Check Exception (486+)",     
+ 	"Machine Check Exception (Pentium/586+)",
+	"Reserved Exceptions",
+	"Reserved Exceptions",
+	"Reserved Exceptions",
+	"Reserved Exceptions",
+	"Reserved Exceptions",
+	"Reserved Exceptions",
+	"Reserved Exceptions",
+	"Reserved Exceptions",
+	"Reserved Exceptions",
+	"Reserved Exceptions",
+	"Reserved Exceptions",
+	"Reserved Exceptions",
+	"Reserved Exceptions",
+};
 void isrs_install()
 {
 	idt_set_gate(0,(unsigned)isr0, 0x08, 0x8e);
@@ -49,11 +80,11 @@ void fault_handler(struct regs *r)
 		/* Display the description for the Exception that occurred.
 		*  In this tutorial, we will simply halt the system using an
 		*  infinite loop */
-		kputs(exception_messages[r->int_no]);
-		kputs(" Exception. System Halted!\n");
-		kabort();
+		//kputs(exception_messages[r->int_no]);
+		//kputs(" Exception. System Halted!\n");
+		//kabort();
 	}
 	//This should never happen.
-	kputs("ERROR UNEXPECTED INTERRUPT!\n");
-	kabort();
+	//kputs("ERROR UNEXPECTED INTERRUPT!\n");
+	//kabort();
 }

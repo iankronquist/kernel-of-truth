@@ -1,8 +1,8 @@
 #ifndef ISR_H
 #define ISR_H
 
-#include "kputs.c"
-#include "kabort.c"
+#include "kputs.h"
+#include "kabort.h"
 #include "idt.h"
 
 extern void isr0();
@@ -40,41 +40,6 @@ extern void isr31();
 
 void isrs_install();
 
-char *exception_messages[] =
-{
-	"Division By Zero Exception",
-	"Debug Exception",
-	"Non Maskable Interrupt Exception",
-	"Breakpoint Exception",
-	"Into Detected Overflow Exception",
-	"Out of Bounds Exception",
-	"Invalid Opcode Exception",	
-	"No Coprocessor Exception",	
-	"Double Fault Exception",	
-	"Coprocessor Segment Overrun Exception",
- 	"Bad TSS Exception",
- 	"Segment Not Present Exception",
- 	"Stack Fault Exception",
- 	"General Protection Fault Exception",   
- 	"Page Fault Exception",
- 	"Unknown Interrupt Exception",
- 	"Coprocessor Fault Exception",	
- 	"Alignment Check Exception (486+)",     
- 	"Machine Check Exception (Pentium/586+)",
-	"Reserved Exceptions",
-	"Reserved Exceptions",
-	"Reserved Exceptions",
-	"Reserved Exceptions",
-	"Reserved Exceptions",
-	"Reserved Exceptions",
-	"Reserved Exceptions",
-	"Reserved Exceptions",
-	"Reserved Exceptions",
-	"Reserved Exceptions",
-	"Reserved Exceptions",
-	"Reserved Exceptions",
-	"Reserved Exceptions",
-};
 
 
 /* This defines what the stack looks like after an ISR was running */

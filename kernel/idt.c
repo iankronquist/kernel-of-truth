@@ -1,8 +1,5 @@
 //Included for the memset function.
 #include "idt.h"
-#include "../tlibc/tmem/mem.h"
-// This is modeled after the material on the following tutorial:
-// http://www.osdever.net/bkerndev/Docs/idt.htm
 
 typedef unsigned long ulong;
 typedef unsigned int uint;
