@@ -18,12 +18,15 @@ terminal: build
 	${CC} -c kernel/terminal.c -o build/terminal.o ${CFLAGS}
 
 gdt-i586: build
+	${CC} -c kernel/gdt.c -o build/gdt.o ${CFLAGS}
 	${AS} kernel/arch/i586/gdt.s -o build/gdt.o
 
 idt-i586: build
+	${CC} -c kernel/idt.c -o build/idt.o ${CFLAGS}
 	${AS} kernel/arch/i586/idt.s -o build/idt.o
 
 isr-i586: build
+	${CC} -c kernel/isr.c -o build/isr.o ${CFLAGS}
 	${AS} kernel/arch/i586/isr.s -o build/isr.o
 
 start:
