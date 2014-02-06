@@ -201,7 +201,6 @@ isr31:
 	push 0x0
 	jmp isr_common_stub
 
-
 .extern fault_handler
 
 isr_common_stub:
@@ -218,7 +217,7 @@ isr_common_stub:
     mov %eax, %esp   
     push %eax
     mov %eax, fault_handler
-    call %eax       
+    call *%eax       
     pop %eax
     pop %gs
     pop %fs
