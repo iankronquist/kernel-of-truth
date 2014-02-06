@@ -1,7 +1,7 @@
 #if defined(__linux__)
 	#include <stdio.h>
 #else
-	#include "stdio/stdio.h"
+	#include "../tlibc/stdio/stdio.h"
 #endif
 
 void abort(void)

@@ -1,14 +1,13 @@
-#include "stdlib.h"
+#include "../tlibc/stdio/stdio.h"
+#include "kabort.c"
 
 //Begin assert macro
 #define assert(condition) \
 	if (! condition) \
 	{ \
-		puts("ASSERTION FAILED"); \
-		puts("asserted that "  #condition ""); \
-		/*printf("a %p", &a); \
-		printf("c %p", &c); */\
-		abort(); \
+		kputs("ASSERTION FAILED"); \
+		kputs("asserted that "  #condition ""); \
+		kabort(); \
 	} \
 //End macro
 
