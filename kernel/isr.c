@@ -1,6 +1,7 @@
 #include "kputs.c"
 #include "kabort.c"
 #include "idt.h"
+#include "isr.h"
 
 
 void isrs_install()
