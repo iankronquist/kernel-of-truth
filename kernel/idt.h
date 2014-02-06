@@ -1,3 +1,5 @@
+#ifndef IDT_H
+#define IDT_H
 //Included for the memset function.
 #include "../tlibc/tmem/mem.c"
 // This is modeled after the material on the following tutorial:
@@ -43,4 +45,4 @@ void idt_set_gate(unsigned char num, unsigned long base, unsigned short sel,
 
 void idt_install();
 
-
+#endif

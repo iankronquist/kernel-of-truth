@@ -1,3 +1,6 @@
+#ifndef ISR_H
+#define ISR_H
+
 #include "kputs.c"
 #include "kabort.c"
 #include "idt.h"
@@ -85,3 +88,5 @@ struct regs
 
 
 void fault_handler(struct regs *r);
+
+#endif

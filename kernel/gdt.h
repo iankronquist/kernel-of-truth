@@ -1,3 +1,5 @@
+#ifndef GDT_H
+#define GDT_H
 /*GDT stands for "Global Descriptor Table". 
 It is a table available on i386 (ix86?)
 processors. The GDT is a list of 64 bit entries.
@@ -51,3 +53,4 @@ void gdt_set_gate(int num, unsigned long base, unsigned long limit,
 
 void gdt_install();
 
+#endif
