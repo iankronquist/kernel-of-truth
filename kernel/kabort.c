@@ -1,13 +1,9 @@
-#if defined(__linux__)
-	#include <stdio.h>
-#else
-	#include "../tlibc/stdio/stdio.h"
-#endif
+#include "kputs.c"
 
 void abort(void)
 {
 	// TODO: Add proper kernel panic.
-	printf("Kernel Panic! abort()\n");
+	kputs("Kernel Panic! abort()\n");
 	while ( 1 ) { }
 }
 
