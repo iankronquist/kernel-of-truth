@@ -1,5 +1,6 @@
 #include "../tlibc/stdio/stdio.h"
-#include "kabort.c"
+//#include "kabort.h"
+//#include "kputs.h"
 
 //Begin assert macro
 #define assert(condition) \

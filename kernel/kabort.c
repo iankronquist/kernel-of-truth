@@ -1,6 +1,4 @@
-#ifndef KABORT_C
-#define KABORT_C
-#include "kputs.c"
+#include "kabort.h"
 
 void kabort(void)
 {
@@ -9,4 +7,3 @@ void kabort(void)
 	while ( 1 ) { }
 }
 
-#endif

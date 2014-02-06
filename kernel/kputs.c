@@ -1,11 +1,7 @@
-#ifndef KPUTS_C
-#define KPUTS_C
-
-#include "terminal.h"
+#include "kputs.h"
 
 void kputs(char* string)
 {
 	term_writestring(string);
 }
 
-#endif
