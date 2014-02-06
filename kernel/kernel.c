@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "gdt.c"
 #include "idt.c"
+#include "isr.c"
 #include "terminal.h"
 
 
@@ -20,6 +21,10 @@ void kernel_main()
 {
 	gdt_install();
 	idt_install();
+	isrs_install();
 	term_initialize();
+	term_writestring("Interrupt?\n");
+	int i = 5;
+	i = i / 0;
 	term_writestring("Hello, Kernel!");
 }
