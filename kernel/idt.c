@@ -19,6 +19,7 @@ void idt_install()
 {
 	// 256 is the number of entries in the table. 
 	iidtp.limit = (sizeof(struct idt_entry) * 256) - 1;
+	iidtp.base = &idt;
 	
 	memset(&idt, 0, sizeof(struct idt_entry) * 256);
 	
