@@ -32,6 +32,7 @@
 .global isr31
 
 
+
 #Division By Zero Exception
 isr0:
 	cli
@@ -209,21 +210,20 @@ isr_common_stub:
     push %es
     push %fs
     push %gs
-    mov %ax, 0x10   
-    mov %ds, %ax
-    mov %es, %ax
-    mov %fs, %ax
-    mov %gs, %ax
-    mov %eax, %esp   
+    mov $0x10, %ax
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+    mov %esp, %eax
     push %eax
-    mov %eax, fault_handler
-    call *%eax       
+    call fault_handler
     pop %eax
     pop %gs
     pop %fs
     pop %es
     pop %ds
     popa
-    add %esp, 8     
+    add $8, %esp
     iret           
 
