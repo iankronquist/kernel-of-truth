@@ -10,9 +10,12 @@ bootloader-i586: build
 
 kernel: terminal gdt-i586 idt-i586 isr-i586 tmem build
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
+	${CC} -c kernel/kassert.c -o build/kassert.o  ${CFLAGS}
+	${CC} -c kernel/kputs.c -o build/kputs.o  ${CFLAGS}
+	${CC} -c kernel/kabort.c -o build/kabort.o  ${CFLAGS}
 
 link-i586: build
-	${CC} -T kernel/arch/i586/linker.ld -o build/truthos.bin -ffreestanding -O2 -nostdlib build/boot.o build/kernel.o build/terminal.o build/gdt.o build/idt.o build/isr.o build/gdtc.o build/isrc.o build/idtc.o build/tmem.o -lgcc
+	${CC} -T kernel/arch/i586/linker.ld -o build/truthos.bin -ffreestanding -O2 -nostdlib build/boot.o build/kernel.o build/terminal.o build/gdt.o build/idt.o build/isr.o build/gdtc.o build/isrc.o build/idtc.o build/tmem.o build/kabort.o build/kassert.o build/kputs.o -lgcc
 
 terminal: build
 	${CC} -c kernel/terminal.c -o build/terminal.o ${CFLAGS}

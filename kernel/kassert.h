@@ -1,4 +1,12 @@
-#include "../tlibc/stdio/stdio.h"
+#ifndef KASSERT_H
+#include "kabort.h"
+#include "kputs.h"
+
+void kassert(int value);
+
+
+
+/*
 //#include "kabort.h"
 //#include "kputs.h"
 
@@ -11,4 +19,6 @@
 		kabort(); \
 	} \
 //End macro
+*/
 
+#endif

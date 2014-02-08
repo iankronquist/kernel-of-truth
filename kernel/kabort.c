@@ -1,9 +1,9 @@
 #include "kabort.h"
 
-void kabort(void)
+void kabort()
 {
 	// TODO: Add proper kernel panic.
-	kputs("Kernel Panic! abort()\n");
+	kputs("\nKernel Panic! Aborting!\n");
 	while ( 1 ) { }
 }
 

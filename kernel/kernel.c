@@ -4,6 +4,8 @@
 #include "idt.h"
 #include "isr.h"
 #include "terminal.h"
+#include "kabort.h"
+#include "kassert.h"
 
 
 /* Check if the compiler thinks if we are targeting the wrong operating system. */
@@ -23,8 +25,8 @@ void kernel_main()
 	idt_install();
 	isrs_install();
 	term_initialize();
-	term_writestring("Interrupt?\n");
-	int i = 5;
-	i = i / 0;
+	term_writestring("Interrupt?");
+	kassert(0 == 0);
+	isr0();
 	term_writestring("Hello, Kernel!");
 }
