@@ -74,6 +74,7 @@ void isrs_install()
 
 void fault_handler(struct regs *r)
 {
+	while(1){}
 	/* Is this a fault whose number is from 0 to 31? */
 	if (r->int_no < 32)
 	{
