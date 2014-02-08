@@ -9,6 +9,7 @@ gdt_flush:
 	mov %fs, %ax
 	mov %gs, %ax
 	mov %ss, %ax
-	jmp flush2   
+	#jump to an 0x08 offset from flush2.
+	jmp 0x08+flush2
 flush2:
 	ret
