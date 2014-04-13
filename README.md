@@ -46,22 +46,23 @@ to your binaries.
 
 To Do:
 ------
-[ ] Get stdio working. I can print to the terminal using `term_putchar()`,
+
+- [ ] Get stdio working. I can print to the terminal using `term_putchar()`,
 but I have had issues with declaring `printf`, `puts`, and other functions. 
 Look at the following files:  
 	* kernel/terminal.h  
 	* tlibc/stdio/stdio.c  
-	* tlibc/stdio/stdio.h 
-[ ] Implement the following interrupt tables:
-	[ ] GDT
-	[ ] IDT
-	[ ] ISRs
-* Write a memory manager to use `malloc` and `free`. 
-* Write a keyboard driver, so I can type on the screen.
-* Write tests. There aren't many right now, they're located in the directory 
+	* tlibc/stdio/stdio.h   
+- [ ] Implement the following interrupt tables:  
+	- [ ] GDT  
+	- [ ] IDT  
+	- [ ] ISRs  
+- [ ] Write a memory manager to use `malloc` and `free`. 
+- [ ]  Write a keyboard driver, so I can type on the screen.
+- [ ]  Write tests. There aren't many right now, they're located in the directory 
 `tests`
-* Write more comments and documentation. Again, it's kind of spartan right now.
-* Research how to get a kernel to boot on the Pi. Half the kernel will need
+- [ ]  Write more comments and documentation. Again, it's kind of spartan right now.
+- [ ]  Research how to get a kernel to boot on the Pi. Half the kernel will need
 to be rewritten to target ARM, but that will help form and organize the project.
 A cross compiler for the Pi written by the Raspberry Pi foundation can be found
 on [github][3]  
