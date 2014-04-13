@@ -5,11 +5,11 @@ A simple kernel written in C.
 
 The goal of this project is to build a simple kernel with memory protection and 
 iterrupts which can run simple programs.
-In addition I will experiment with alternate implementations of conversion 
-functions and strings.
 This project currently targets the i586 architecture. Perhaps someday I will 
 port it to ARM so it can run on the Raspberry Pi, but right now I'm focused on 
 implementing the fundamentals of a system.
+
+Pull requests are welcome.
 
 Tutorials & Resources
 ---------------------
@@ -46,16 +46,16 @@ to your binaries.
 
 To Do:
 ------
-* Get stdio working. I can print to the terminal using `term_putchar()`,
+[ ] Get stdio working. I can print to the terminal using `term_putchar()`,
 but I have had issues with declaring `printf`, `puts`, and other functions. 
 Look at the following files:  
 	* kernel/terminal.h  
 	* tlibc/stdio/stdio.c  
 	* tlibc/stdio/stdio.h 
-* Get Interrupt Service Routines working. The code compiles and runs, 
-but interrupts are not triggered when they should be. Check out the `isr` 
-branch.
-* Continue implementing the [OSDever tutorial][2].
+[ ] Implement the following interrupt tables:
+	[ ] GDT
+	[ ] IDT
+	[ ] ISRs
 * Write a memory manager to use `malloc` and `free`. 
 * Write a keyboard driver, so I can type on the screen.
 * Write tests. There aren't many right now, they're located in the directory 
@@ -71,4 +71,3 @@ on [github][3]
 [1]:http://wiki.osdev.org/User:Sortie/Meaty_Skeleton
 [2]:http://www.osdever.net/bkerndev/Docs/gettingstarted.htm
 [3]:https://github.com/raspberrypi/tools
-
