@@ -14,8 +14,10 @@
 struct gdt_record {
     int16_t limit_first;
     int16_t base_first;
-    int16_t base_mid_and_access;
-    int16_t limit_last_and_flags_and_base_last;
+    int8_t base_mid;
+    int8_t access;
+    int8_t flags_and_limit_last;
+    int8_t base_last;
     
 }__attribute__((packed));
 
