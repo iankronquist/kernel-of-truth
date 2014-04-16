@@ -38,3 +38,14 @@ void set_up_gdt()
 {
     
 }
+
+void enter_protected_mode(struct gdt_location gdt)
+{
+    __asm__ __volatile__ (
+    "cli\n" //disable interrupts
+    "lgdt gdt\n" //load GDT register with start address of GDT"
+    "mov %eax, cr0\n"
+    "or %al, 1\n" //set PE (Protection Enable) bit in CR0 (Control Register 0)"
+    "mov cr0, %eax\n"
+    );
+}
