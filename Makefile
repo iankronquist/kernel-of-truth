@@ -9,11 +9,13 @@ bootloader-i586: build
 	${AS} kernel/arch/i586/boot.s -o build/boot.o
 
 #kernel: terminal keyboard timer gdt-i586 idt-i586 isr-i586 irq-i586 tmem build
-kernel: terminal tmem build
+kernel: kernel-functions terminal tmem build
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
-	${CC} -c kernel/kassert.c -o build/kassert.o  ${CFLAGS}
-	${CC} -c kernel/kputs.c -o build/kputs.o  ${CFLAGS}
-	${CC} -c kernel/kabort.c -o build/kabort.o  ${CFLAGS}
+
+kernel-functions: build
+	${CC} -c kernel/kernel-functions/kassert.c -o build/kassert.o  ${CFLAGS}
+	${CC} -c kernel/kernel-functions/kputs.c -o build/kputs.o  ${CFLAGS}
+	${CC} -c kernel/kernel-functions/kabort.c -o build/kabort.o  ${CFLAGS}
 
 link-i586: build
 	${CC} -T kernel/arch/i586/linker.ld -o build/truthos.bin -ffreestanding -O2 -nostdlib build/*.o -lgcc

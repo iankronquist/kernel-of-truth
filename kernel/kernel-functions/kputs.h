@@ -1,6 +1,6 @@
 #ifndef KPUTS_H
 #define KPUTS_H
-#include "terminal.h"
+#include "../terminal.h"
 
 void kputs(char* string);
 

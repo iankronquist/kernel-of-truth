@@ -1,6 +1,7 @@
 #ifndef GDT_H
 #define GDT_H
 #include <stddint.h>
+#include "../../kernel-functions/kassert.h"
 
 /*  For a thorough explanation of gdts go here:
     http://wiki.osdev.org/Global_Descriptor_Table
