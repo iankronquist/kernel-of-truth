@@ -24,19 +24,19 @@ terminal: build
 	${CC} -c kernel/terminal.c -o build/terminal.o ${CFLAGS}
 
 gdt-i586: build
-	${CC} -c kernel/gdt.c -o build/gdtc.o ${CFLAGS}
-	${AS} kernel/arch/i586/gdt.s -o build/gdt.o
+	${CC} -c kernel/arch/i586/gdt.c -o build/gdtc.o ${CFLAGS}
+	#${AS} kernel/arch/i586/gdt.s -o build/gdt.o
 
 idt-i586: build
-	${CC} -c kernel/idt.c -o build/idtc.o ${CFLAGS}
+	${CC} -c kernel/arch/i586/idt.c -o build/idtc.o ${CFLAGS}
 	${AS} kernel/arch/i586/idt.s -o build/idt.o
 
 isr-i586: build
-	${CC} -c kernel/isr.c -o build/isrc.o ${CFLAGS}
+	${CC} -c kernel/arch/i586/isr.c -o build/isrc.o ${CFLAGS}
 	${AS} kernel/arch/i586/isr.s -o build/isr.o
 
 irq-i586: io-i586 build
-	${CC} -c kernel/irq.c -o build/irqc.o ${CFLAGS}
+	${CC} -c kernel/arch/i586/irq.c -o build/irqc.o ${CFLAGS}
 	${AS} kernel/arch/i586/irq.s -o build/irq.o
 
 tmem: build
