@@ -1,6 +1,6 @@
 #ifndef GDT_H
 #define GDT_H
-#include <stddint.h>
+#include <stdint.h>
 #include "../../kernel-functions/kassert.h"
 
 /*  For a thorough explanation of gdts go here:
@@ -46,7 +46,7 @@ void set_up_gdt();
 
 /* calls the lgdt and enter protected mode */
 //TODO decide on how to do this
-//void enter_protected_mode(struct gdt);
+void enter_protected_mode(struct gdt_location gdt);
 
 
 #endif
