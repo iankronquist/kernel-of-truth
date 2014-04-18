@@ -9,7 +9,7 @@ bootloader-i586: build
 	${AS} kernel/arch/i586/boot.s -o build/boot.o
 
 #kernel: terminal keyboard timer gdt-i586 idt-i586 isr-i586 irq-i586 tmem build
-kernel: kernel-functions terminal tmem build
+kernel: kernel-functions terminal tmem build gdt-i586
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
 
 kernel-functions: build
