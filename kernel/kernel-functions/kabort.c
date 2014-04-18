@@ -3,6 +3,6 @@
 void kabort()
 {
 	kputs("\nKernel Panic! Aborting!\n");
-    __asm__("cli");
+    __asm__("cli; hlt;");
 	while ( 1 ) { }
 }
