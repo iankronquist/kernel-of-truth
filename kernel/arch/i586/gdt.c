@@ -1,51 +1,46 @@
 #include "gdt.h"
 
-
-struct gdt_record create_gdt_record(uint32_t base, uint32_t limit, 
-    char access_byte, char flags)
+GDT_t create_gdt_record(uint32_t base, uint32_t limit, uint8_t access_byte, uint8_t flags)
 {
-    struct gdt_record gdt_entry;
-    //limit has a maximum size of 2^20-1
-    kassert(limit < 1048576);
-    // base has a maximum size of 2^23
-    kassert(base < 8388608);
-    // flags has a maximum size of 2^3
-    kassert(flags < 8);
-    // the top bytes of access bytes must be 1
-    kassert(access_byte & 255);
-    /* bytes 0-15 of the GDT are the limit. 1048575 is a bitmask for the
-       twenty high bytes. It equals 2^20-1 */
-    gdt_entry.limit_first = 1048575 & limit;
-    //The first 16 bytes of base are mapped to the second 16 (16-31) of the
-    //gdt entry
-    gdt_entry.base_first = base;
-    // Put bits 16:19 of the limit in bits 51-48 of the gdt,
-    // in other words the first 3 bits of the sixth eighth of the  gdt_record
-    gdt_entry.base_mid = base & 16711680;
-    // Set the access byte
-    gdt_entry.access = access_byte;
-    //Put the last part of the limit into bytes 16-19 of the gdt_entry
-    gdt_entry.flags_and_limit_last |= limit >> 8;  
-    // Put the three flag bits into buts 52:55 of the gdt, in other words,
-    // into bytes 8-11 of the last quarter of the gdt
-    gdt_entry.flags_and_limit_last |= flags << 8;
-    // Put the top 8 bytes of the base into the last quarter of gdt_record
-    gdt_entry.base_last |= (base & 65280) >> 8;
-    return gdt_entry;
+    // The top byte of the access byte should always be 1
+    kassert(access_byte == 0xff);
+    GDT_t gdt_record = 0;
+    GDT_t buffer;
+    gdt_record |= limit                & 0x000000000000ffff; 
+    gdt_record |= (base << 16)         & 0x000000ffffff0000; 
+    buffer = access_byte;
+    gdt_record |= (buffer << 41)  & 0x0000ff0000000000;
+    buffer = limit;
+    gdt_record |= (buffer << (49-16))  & 0x000f000000000000;
+    buffer = flags;
+    gdt_record |= (buffer << 53)       & 0x00f0000000000000;
+    buffer = base ;
+    gdt_record |= (buffer << (56-24))  & 0xff00000000000000;
+    return gdt_record;
 }
 
 void set_up_gdt()
 {
     
+    GDT_t gdt[3];
+    // Null descriptor - will never be used by processor
+    gdt[0] = create_gdt_record(0,0,0,0);
+    // Code segment
+    gdt[1] = create_gdt_record(0, 0xffffffff, 0xff, 7); 
+    // Data segment
+    gdt[2] = create_gdt_record(0, 0xffffffff, 0xff, 7);
+    gdt_ptr->table_start = gdt;
+    gdt_ptr->table_size = 3 * 64 - 1;
+    enter_protected_mode();
 }
 
-void enter_protected_mode(struct gdt_location gdt)
+void enter_protected_mode()
 {
     __asm__ __volatile__ (
     "cli\n" //disable interrupts
-    "lgdt gdt\n" //load GDT register with start address of GDT"
-    "mov %eax, cr0\n"
+    "lgdt gdt_ptr\n" //load GDT register with start address of GDT"
+    "mov %eax, %cr0\n"
     "or %al, 1\n" //set PE (Protection Enable) bit in CR0 (Control Register 0)"
-    "mov cr0, %eax\n"
+    "mov %cr0, %eax\n"
     );
 }
