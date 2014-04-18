@@ -2,8 +2,7 @@
 
 void kabort()
 {
-	// TODO: Add proper kernel panic.
 	kputs("\nKernel Panic! Aborting!\n");
+    __asm__("cli");
 	while ( 1 ) { }
 }
-
