@@ -3,14 +3,15 @@ Compiling
 =========
 
 Compiling my kernel is fairly simple, provided you use a cross compiler and are running some flavor of Linux.
+
 You will need to install the following packages:
-	* `qemu`_
-	* `GCC`_ (for your local machine)
-	* `G++`_ (if you're using a newer version of GCC)
+
+	* `qemu <http://wiki.qemu.org/Download>`_
+	* `GCC <ftp://ftp.gnu.org/gnu/gcc/>`_ (for your local machine)
 
 To compile:
-===========
-1. Build a GCC cross compiler. This may sound daunting, but fear not!  It's actually a pretty easy process.  The following instructions can also be found `here <http://wiki.osdev.org/GCC_Cross-Compiler#Preparing_for_the_build>`_.
+-----------
+1. Build a GCC cross compiler. This may sound daunting, but fear not!  It's actually a pretty easy process.  The following instructions can also be `found here <http://wiki.osdev.org/GCC_Cross-Compiler#Preparing_for_the_build>`_.
 
 a. Download the following libraries:
 	* `GNU GMP <https://gmplib.org/>`_ --See the download link in the top left.
@@ -21,7 +22,8 @@ a. Download the following libraries:
 b. Find a place to install your cross-compiler.  Generally, putting them in "../cross/bin" relative to the project root should be sufficient, but really you can put them wherever you'd like so long as you know how to access them.  Just be sure that your directory does not interfere with any system directories.
 
 c. Once you've got your directory set up, run:
-.. code:: bash
+
+.. code-block:: bash
 	
 	export PREFIX="$HOME/opt/cross"
 	export TARGET=i686-elf
@@ -30,7 +32,8 @@ c. Once you've got your directory set up, run:
 Where PREFIX is the path to the directory you've created.  
 
 d. Next compile your binutils:
-.. code:: bash
+
+.. code-block:: bash
 	cd $HOME/src
 	mkdir build-binutils
 	cd build-binutils
@@ -39,7 +42,8 @@ d. Next compile your binutils:
 	make install
 
 e. Now we're officially ready to build a cross-compiler!
-.. code:: bash
+
+.. code-block:: bash
 	
 	cd $HOME/src
 	 
@@ -60,11 +64,13 @@ e. Now we're officially ready to build a cross-compiler!
 Sweet!  Now we have a very basic compiler.  Please keep in mind that you can't access any C libraries or create runnable binaries with this, but it will be sufficient for building the kernel.
 
 2. To actually compile the kernel, just run:  
+
 .. code-block:: bash
 	
 	$ make
 
 3. To start the kernel, run:
+
 .. code-block:: bash
 	
 	$ make start
