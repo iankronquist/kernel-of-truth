@@ -11,7 +11,7 @@ You will need to install the following packages:
 
 To compile:
 -----------
-1.  Build a GCC cross compiler. This may sound daunting, but fear not!  It's actually a pretty easy process.  The following instructions can also be `found here <http://wiki.osdev.org/GCC_Cross-Compiler#Preparing_for_the_build>`_.
+1.  Build a GCC cross compiler. This may sound daunting, but fear not!  It's actually a pretty easy process.  The following instructions can also be found in greater detail `here <http://wiki.osdev.org/GCC_Cross-Compiler#Preparing_for_the_build>`_.
 
 	a. Download the following libraries:
 		* `GNU GMP <https://gmplib.org/>`_ --See the download link in the top left.
