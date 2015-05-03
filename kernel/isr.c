@@ -74,18 +74,21 @@ void isrs_install()
 
 void fault_handler(struct regs *r)
 {
-	while(1){}
+    kprint_int("---------------------------regs: ", r->int_no);
 	/* Is this a fault whose number is from 0 to 31? */
 	if (r->int_no < 32)
 	{
 		/* Display the description for the Exception that occurred.
 		*  In this tutorial, we will simply halt the system using an
 		*  infinite loop */
-		//kputs(exception_messages[r->int_no]);
-		//kputs(" Exception. System Halted!\n");
-		//kabort();
+		kputs(exception_messages[r->int_no]);
+		kputs(" Exception. System Halted!\n");
+		kabort();
 	}
 	//This should never happen.
+    char *str = " \n\n\n";
+    str[0] = r->int_no + '0';
+	kputs(str);
 	//kputs("ERROR UNEXPECTED INTERRUPT!\n");
-	//kabort();
+	kabort();
 }

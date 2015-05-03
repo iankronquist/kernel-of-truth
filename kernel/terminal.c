@@ -52,7 +52,7 @@ int term_putchar(char c)
 {
         if(c == '\n')
         {
-                term_row = 0;
+                term_row++;
                 term_column = 0;
                 return c;
         }

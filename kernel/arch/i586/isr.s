@@ -225,5 +225,6 @@ isr_common_stub:
     pop %ds
     popa
     add $8, %esp
+	sti
     iret           
 

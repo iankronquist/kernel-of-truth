@@ -1,0 +1,5 @@
+.*.swp
+.vagrant
+build
+compiler
+qemu.log

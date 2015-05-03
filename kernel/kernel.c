@@ -7,17 +7,6 @@
 #include "kabort.h"
 #include "kassert.h"
 
-
-/* Check if the compiler thinks if we are targeting the wrong operating system. */
-#if defined(__linux__)
-#error "You are not using a cross-compiler, you will most certainly run into trouble"
-#endif
- 
-/* This tutorial will only work for the 32-bit ix86 targets. */
-#if !defined(__i386__)
-#error "This tutorial needs to be compiled with a ix86-elf compiler"
-#endif
- 
  
 void kernel_main()
 {
@@ -26,7 +15,17 @@ void kernel_main()
 	isrs_install();
 	term_initialize();
 	term_writestring("Interrupt?");
-	kassert(0 == 0);
-	isr0();
-	term_writestring("Hello, Kernel!");
+	//kassert(0 == 0);
+    int i = 0;
+    int b = 128;
+    int d = 1;
+    kprint_int("\nisr0: ", (int)isr0);
+    kprint_int("\nidt0_low: ", idt[0].base_lo);
+    kprint_int("\nidt0_sel: ", idt[0].sel);
+    kprint_int("\nidt0_always0: ", idt[0].always0);
+    kprint_int("\nidt0_flags: ", idt[0].flags);
+    kprint_int("\nidt0_base_hi: ", idt[0].base_hi);
+
+    d = b/i;
+    kprint_int("\nd: ", d);
 }

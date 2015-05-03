@@ -18,8 +18,7 @@ typedef unsigned char uchar;
 typedef unsigned int uint;
 
 void gdt_set_gate(int num, unsigned long base, unsigned long limit,
-	uchar access, uchar granularity)
-{
+	uchar access, uchar granularity) {
 	//Set descriptor base access
 	gdt[num].base_low = (base & 0xffff);
 	gdt[num].base_middle = (base >> 16) & 0xff;
@@ -34,8 +33,7 @@ void gdt_set_gate(int num, unsigned long base, unsigned long limit,
 	gdt[num].access = access;
 }
 
-void gdt_install()
-{
+void gdt_install() {
 	//Setup GDT pointer and limit
 	gdtp.limit = (sizeof(struct gdt_entry) * 3) - 1;
 	gdtp.base = &gdt;
