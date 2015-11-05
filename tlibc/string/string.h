@@ -1,5 +1,5 @@
-#ifndef TMEM_H
-#define TMEM_H
+#ifndef TLIBC_STRING_H
+#define TLIBC_STRING_H
 #include <stddef.h>
 
 int memcmp(const void*, const void*, size_t);
