@@ -1,9 +1,88 @@
-# Loads the IDT defined in 'idtp' into the processor.
-# This is declared in C as 'extern void idt_load();'
-# based off of http://www.osdever.net/bkerndev/Docs/idt.htm
+.intel_syntax noprefix
+
 .global idt_load
-.extern iidtp
 idt_load:
 	#loads the IDT table. idtp is the IDT pointer.
-	lidt iidtp
+	mov eax, [esp+4]
+	lidt [eax]
 	ret
+
+.global common_handler
+
+.macro interrupt number
+	.global isr\number
+	isr\number:
+		cli
+		push \number
+		jmp common_handler
+.endm
+
+.macro no_error_code_interrupt number
+	.global isr\number
+	isr\number:
+		cli
+		push 0
+		push \number
+		jmp common_handler
+.endm
+
+
+common_handler:
+	pusha
+	mov ax, ds
+	push eax
+
+	mov ax, 0x10
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+
+	call common_interrupt_handler
+
+	pop eax
+
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+
+	popa
+	add esp, 8
+	sti
+	iret
+
+
+no_error_code_interrupt 0
+no_error_code_interrupt 1
+no_error_code_interrupt 2
+no_error_code_interrupt 3
+no_error_code_interrupt 4
+no_error_code_interrupt 5
+no_error_code_interrupt 6
+no_error_code_interrupt 7
+no_error_code_interrupt 8
+no_error_code_interrupt 9
+no_error_code_interrupt 10
+no_error_code_interrupt 11
+no_error_code_interrupt 12
+no_error_code_interrupt 13
+no_error_code_interrupt 14
+no_error_code_interrupt 15
+no_error_code_interrupt 16
+no_error_code_interrupt 17
+no_error_code_interrupt 18
+no_error_code_interrupt 19
+no_error_code_interrupt 20
+no_error_code_interrupt 21
+no_error_code_interrupt 22
+no_error_code_interrupt 23
+no_error_code_interrupt 24
+no_error_code_interrupt 25
+no_error_code_interrupt 26
+no_error_code_interrupt 27
+no_error_code_interrupt 28
+no_error_code_interrupt 29
+no_error_code_interrupt 30
+no_error_code_interrupt 31
+no_error_code_interrupt 32

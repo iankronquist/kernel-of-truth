@@ -1,230 +1,102 @@
-.global isr0
-.global isr1
-.global isr2
-.global isr3
-.global isr4
-.global isr5
-.global isr6
-.global isr7
-.global isr8
-.global isr9
-.global isr10
-.global isr11
-.global isr12
-.global isr13
-.global isr14
-.global isr15
-.global isr16
-.global isr17
-.global isr18
-.global isr19
-.global isr20
-.global isr21
-.global isr22
-.global isr23
-.global isr24
-.global isr25
-.global isr26
-.global isr27
-.global isr28
-.global isr29
-.global isr30
-.global isr31
+.intel_syntax noprefix
+
+.global idt_load
+idt_load:
+	#loads the IDT table. idtp is the IDT pointer.
+	mov eax, [esp+4]
+	lidt [eax]
+	ret
+
+.extern generic_interrupt
+.global common_handler
+
+.macro interrupt number
+	.global isr\number
+	isr\number:
+		cli
+		push \number
+		jmp common_handler
+.endm
+
+.macro no_error_code_interrupt number
+	.global isr\number
+	isr\number:
+		cli
+		push 0
+		push \number
+		jmp common_handler
+.endm
 
 
+common_handler:
+	pusha
+	mov ax, ds
 
-#Division By Zero Exception
-isr0:
-	cli
-	push 0x0
-	push 0x0
-	jmp isr_common_stub
-#Debug Exception
-isr1:
-	cli
-	push 0x0
-	push 0x0
-	jmp isr_common_stub
-#Non Maskable Interrupt Exception
-isr2:
-	cli
-	push 0x0
-	push 0x0
-	jmp isr_common_stub
-#Breakpoint Exception
-isr3:
-	cli
-	push 0x0
-	push 0x0
-	jmp isr_common_stub
-#Into Detected Overflow Exception
-isr4:
-	cli
-	push 0x0
-	push 0x0
-	jmp isr_common_stub
-#Out of Bounds Exception
-isr5:
-	cli
-	push 0x0
-	push 0x0
-	jmp isr_common_stub
-#Invalid Opcode Exception
-isr6:
-	cli
-	push 0x0
-	push 0x0
-	jmp isr_common_stub
-#No Coprocessor Exception
-isr7:
-	cli
-	push 0x0
-	push 0x0
-	jmp isr_common_stub
-#Double Fault Exception
-isr8:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Coprocessor Segment Overrun Exception
-isr9:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Bad TSS Exception
-isr10:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Segment Not Present Exception
-isr11:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Stack Fault Exception
-isr12:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#General Protection Fault Exception
-isr13:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Page Fault Exception
-isr14:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Unknown Interrupt Exception
-isr15:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Coprocessor Fault Exception
-isr16:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Alignment Check Exception (486+)
-isr17:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Machine Check Exception (Pentium/586+)
-isr18:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Reserved Exceptions
-isr19:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Reserved Exceptions
-isr20:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Reserved Exceptions
-isr21:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Reserved Exceptions
-isr22:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Reserved Exceptions
-isr23:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Reserved Exceptions
-isr24:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Reserved Exceptions
-isr25:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Reserved Exceptions
-isr26:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Reserved Exceptions
-isr27:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Reserved Exceptions
-isr28:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Reserved Exceptions
-isr29:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Reserved Exceptions
-isr30:
-	cli
-	push 0x0
-	jmp isr_common_stub
-#Reserved Exceptions
-isr31:
-	cli
-	push 0x0
-	jmp isr_common_stub
+	mov ax, 0x10
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
 
-.extern fault_handler
+	push eax
 
-isr_common_stub:
-    pusha
-    push %ds
-    push %es
-    push %fs
-    push %gs
-    mov $0x10, %ax
-    mov %ax, %ds
-    mov %ax, %es
-    mov %ax, %fs
-    mov %ax, %gs
-    mov %esp, %eax
-    push %eax
-    call fault_handler
-    pop %eax
-    pop %gs
-    pop %fs
-    pop %es
-    pop %ds
-    popa
-    add $8, %esp
+	call common_interrupt_handler
+	pop eax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+
+	popa
+	add esp, 8
 	sti
-    iret           
+	iret
 
+loop:
+	jmp loop
+
+.global interrupt_handler_any
+interrupt_handler_any:
+	push 7
+	jmp common_handler
+
+.global no_error_code_interrupt_handler_any
+no_error_code_interrupt_handler_any:
+	push 0
+	push 8
+	jmp common_handler
+
+
+no_error_code_interrupt 0
+no_error_code_interrupt 1
+no_error_code_interrupt 2
+no_error_code_interrupt 3
+no_error_code_interrupt 4
+no_error_code_interrupt 5
+no_error_code_interrupt 6
+
+no_error_code_interrupt 7
+no_error_code_interrupt 8
+no_error_code_interrupt 9
+no_error_code_interrupt 10
+no_error_code_interrupt 11
+no_error_code_interrupt 12
+no_error_code_interrupt 13
+no_error_code_interrupt 14
+no_error_code_interrupt 15
+no_error_code_interrupt 16
+no_error_code_interrupt 17
+no_error_code_interrupt 18
+no_error_code_interrupt 19
+no_error_code_interrupt 20
+no_error_code_interrupt 21
+no_error_code_interrupt 22
+no_error_code_interrupt 23
+no_error_code_interrupt 24
+no_error_code_interrupt 25
+no_error_code_interrupt 26
+no_error_code_interrupt 27
+no_error_code_interrupt 28
+no_error_code_interrupt 29
+no_error_code_interrupt 30
+no_error_code_interrupt 31

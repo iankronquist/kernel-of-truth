@@ -3,47 +3,70 @@
 //Included for the memset function.
 #include "../tlibc/tmem/mem.h"
 #include <stddef.h>
-// This is modeled after the material on the following tutorial:
-// http://www.osdever.net/bkerndev/Docs/idt.htm
+#include <stdint.h>
 
-typedef unsigned long ulong;
-typedef unsigned int uint;
-typedef unsigned short ushort;
-typedef unsigned char uchar;
-
-// This macro is implemented in assmbly and can be fount in idt.s
-extern void idt_load();
+//extern void idt_load();
 
 // Define an entry in the IDT 
-struct idt_entry
-{
-	ushort base_lo;
-	ushort sel; // Kernel segment goes here.
-	ushort always0; 
-	uchar flags; //Set using the table.
-	ushort base_hi;
+struct idt_entry {
+    uint16_t base_lo;
+    uint16_t sel; // Kernel segment goes here.
+    uint8_t always0; 
+    uint8_t flags; //Set using the table.
+    uint16_t base_hi;
 }__attribute((packed));
 
-struct idt_ptr
-{
-	ushort limit;
-	uint base;
+struct idt_ptr {
+    uint16_t limit;
+    uint32_t base;
 }__attribute((packed));
 
-// http://www.osdever.net/bkerndev/Docs/idt.htm
-/* Declare an IDT of 256 entries. I only plan to use 32 of them,
-*  but this is to prevent unhandeled interrupt exceptions.
-*  If any undefined IDT entry is hit, it normally
-*  will cause an "Unhandled Interrupt" exception. Any descriptor
-*  for which the 'presence' bit is cleared (0) will generate an
-*  "Unhandled Interrupt" exception */
-struct idt_entry idt[256];
-struct idt_ptr iidtp;
+struct regs {
+    uint32_t ds;      /* pushed the segs last */
+    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;  /* pushed by 'pusha' */
+    uint32_t int_no, err_code;    /* our 'push byte #' and ecodes do this */
+    uint32_t eip, cs, eflags, useresp, ss;   /* pushed by the processor automatically */ 
+};
 
 
-void idt_set_gate(unsigned char num, unsigned long base, unsigned short sel, 
-	unsigned char flags);
+extern void idt_load(uint32_t);
+static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel,
+    uint8_t flags);
 
 void idt_install();
+
+extern void isr0();
+extern void isr1();
+extern void isr2();
+extern void isr3();
+extern void isr4();
+extern void isr5();
+extern void isr6();
+extern void isr7();
+extern void isr8();
+extern void isr9();
+extern void isr10();
+extern void isr11();
+extern void isr12();
+extern void isr13();
+extern void isr14();
+extern void isr15();
+extern void isr16();
+extern void isr17();
+extern void isr18();
+extern void isr19();
+extern void isr20();
+extern void isr21();
+extern void isr22();
+extern void isr23();
+extern void isr24();
+extern void isr25();
+extern void isr26();
+extern void isr27();
+extern void isr28();
+extern void isr29();
+extern void isr30();
+extern void isr31();
+extern void isr32();
 
 #endif
