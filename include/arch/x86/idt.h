@@ -4,6 +4,7 @@
 #include "../../../tlibc/string/string.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <kputs.h>
 
 //extern void idt_load();
 
@@ -29,8 +30,7 @@ struct regs {
 };
 
 extern void idt_load(uint32_t);
-static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel,
-                         uint8_t flags);
+void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags);
 
 void idt_install();
 

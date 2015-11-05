@@ -17,7 +17,7 @@ void idt_install()
 {
     // 256 is the number of entries in the table.
     idtp.limit = (sizeof(struct idt_entry) * 256) - 1;
-    idtp.base = &idt;
+    idtp.base = (uint32_t) & idt;
 
     memset(&idt, 0, sizeof(struct idt_entry) * 256);
 
@@ -55,10 +55,10 @@ void idt_install()
     idt_set_gate(31, (uint32_t)isr31, 0x08, 0x8e);
     idt_set_gate(32, (uint32_t)isr31, 0x08, 0x8e);
 
-    idt_load(&idtp);
+    idt_load((uint32_t) & idtp);
 }
 
 void common_interrupt_handler(struct regs* r)
 {
-    kputs("interrupted");
+    kprint_int("interrupted", r->int_no);
 }
