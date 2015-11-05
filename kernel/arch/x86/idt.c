@@ -1,5 +1,4 @@
-// Included for the memset function.
-#include "idt.h"
+#include <arch/x86/idt.h>
 
 struct idt_entry idt[256];
 struct idt_ptr idtp;

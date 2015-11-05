@@ -1,4 +1,4 @@
-#include "gdt.h"
+#include <arch/x86/gdt.h>
 
 typedef unsigned short ushort;
 typedef unsigned char uchar;

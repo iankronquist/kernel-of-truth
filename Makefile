@@ -2,7 +2,7 @@ ARCH=i686-elf
 TEST_CC=clang
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=compiler/$(ARCH)/bin/$(ARCH)-as
-CFLAGS= -std=c99 -ffreestanding -O0 -Wall -Wextra -g -I ./include -I ./include/arch/x86
+CFLAGS= -std=c99 -ffreestanding -O0 -Wall -Wextra -g -I ./include
 
 all: bootloader-x86 kernel link-x86 
 
