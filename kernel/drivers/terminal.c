@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <terminal.h>
+#include <drivers/terminal.h>
 
 uint8_t make_color(enum vga_color fg, enum vga_color bg)
 {

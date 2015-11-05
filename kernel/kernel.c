@@ -1,8 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "./arch/x86/gdt.h"
-#include "./arch/x86/idt.h"
-#include <terminal.h>
+#include <arch/x86/gdt.h>
+#include <arch/x86/idt.h>
+#include <drivers/terminal.h>
 #include <kabort.h>
 #include <kassert.h>
 

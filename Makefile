@@ -19,7 +19,7 @@ link-x86: build
 	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/boot.o build/kernel.o build/terminal.o build/gdts.o build/idts.o build/gdtc.o build/idtc.o build/tlibc.o build/kabort.o build/kassert.o build/kputs.o -lgcc
 
 terminal: build
-	${CC} -c kernel/terminal.c -o build/terminal.o ${CFLAGS}
+	${CC} -c kernel/drivers/terminal.c -o build/terminal.o ${CFLAGS}
 
 gdt-x86: build
 	${CC} -c kernel/arch/x86/gdt.c -o build/gdtc.o ${CFLAGS}
