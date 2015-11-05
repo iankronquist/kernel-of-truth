@@ -1,7 +1,7 @@
 #ifndef IDT_H
 #define IDT_H
 //Included for the memset function.
-#include "../tlibc/tmem/mem.h"
+#include "../../../tlibc/tmem/mem.h"
 #include <stddef.h>
 #include <stdint.h>
 

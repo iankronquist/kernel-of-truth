@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "idt.h"
+#include "./arch/x86/idt.h"
 #include "terminal.h"
 #include "kabort.h"
 #include "kassert.h"
