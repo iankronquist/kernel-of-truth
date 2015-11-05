@@ -1,11 +1,11 @@
-//Included for the memset function.
+// Included for the memset function.
 #include "idt.h"
 
 struct idt_entry idt[256];
 struct idt_ptr idtp;
 
-void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel,
-    uint8_t flags) {
+void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags)
+{
     idt[num].base_lo = base & 0xffff;
     idt[num].base_hi = (base >> 16) & 0xffff;
     idt[num].always0 = 0;
@@ -13,8 +13,9 @@ void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel,
     idt[num].flags = flags;
 }
 
-void idt_install() {
-    // 256 is the number of entries in the table. 
+void idt_install()
+{
+    // 256 is the number of entries in the table.
     idtp.limit = (sizeof(struct idt_entry) * 256) - 1;
     idtp.base = &idt;
 
@@ -58,8 +59,7 @@ void idt_install() {
     kputs("loaded");
 }
 
-
-void common_interrupt_handler(struct regs *r)
+void common_interrupt_handler(struct regs* r)
 {
     kputs("interrupted");
 }

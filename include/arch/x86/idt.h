@@ -7,31 +7,30 @@
 
 //extern void idt_load();
 
-// Define an entry in the IDT 
+// Define an entry in the IDT
 struct idt_entry {
     uint16_t base_lo;
     uint16_t sel; // Kernel segment goes here.
-    uint8_t always0; 
+    uint8_t always0;
     uint8_t flags; //Set using the table.
     uint16_t base_hi;
-}__attribute((packed));
+} __attribute((packed));
 
 struct idt_ptr {
     uint16_t limit;
     uint32_t base;
-}__attribute((packed));
+} __attribute((packed));
 
 struct regs {
-    uint32_t ds;      /* pushed the segs last */
-    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;  /* pushed by 'pusha' */
-    uint32_t int_no, err_code;    /* our 'push byte #' and ecodes do this */
-    uint32_t eip, cs, eflags, useresp, ss;   /* pushed by the processor automatically */ 
+    uint32_t ds; /* pushed the segs last */
+    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; /* pushed by 'pusha' */
+    uint32_t int_no, err_code; /* our 'push byte #' and ecodes do this */
+    uint32_t eip, cs, eflags, useresp, ss; /* pushed by the processor automatically */
 };
-
 
 extern void idt_load(uint32_t);
 static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel,
-    uint8_t flags);
+                         uint8_t flags);
 
 void idt_install();
 

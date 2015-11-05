@@ -2,11 +2,9 @@
 
 void kassert(int value)
 {
-	if(value)
-	{
-		return;
-	}
-	kputs("Assertion failed!");
-	kabort();
+    if (value) {
+        return;
+    }
+    kputs("Assertion failed!");
+    kabort();
 }
-

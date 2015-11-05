@@ -5,8 +5,8 @@
 #include <kabort.h>
 #include <kassert.h>
 
- 
-void kernel_main() {
+void kernel_main()
+{
     term_initialize();
     idt_install();
 
@@ -15,7 +15,8 @@ void kernel_main() {
     int b = 128;
     int d = 1;
 
-    d = b/i;
+    d = b / i;
 
-    while(1);
+    while (1)
+        ;
 }

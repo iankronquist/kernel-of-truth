@@ -23,33 +23,30 @@ extern void gdt_flush();
 tells the compiler not to 'optimize' the struct for us by 
 packing.
 */
-struct gdt_entry
-{
-	ushort limit_low;
-	ushort base_low;
-	uchar  base_middle;
-	uchar  access;
-	uchar  granularity;
-	uchar  base_high;
-}__attribute__((packed));
+struct gdt_entry {
+    ushort limit_low;
+    ushort base_low;
+    uchar base_middle;
+    uchar access;
+    uchar granularity;
+    uchar base_high;
+} __attribute__((packed));
 
 /* the following is a special pointer representing
 the max bytes taken up by the GDT -1 */
-struct gdt_ptr
-{
-	ushort limit;
-	uint   base;
-}__attribute__((packed));
+struct gdt_ptr {
+    ushort limit;
+    uint base;
+} __attribute__((packed));
 
 struct gdt_entry gdt[3];
-struct gdt_ptr   gdtp;
+struct gdt_ptr gdtp;
 /* A function in start.am. Used to properly 
 reload the new segment registers */
 //extern void gdt_flush();
 
 void gdt_set_gate(int num, unsigned long base, unsigned long limit,
-	uchar access, uchar granularity);
-
+                  uchar access, uchar granularity);
 
 void gdt_install();
 

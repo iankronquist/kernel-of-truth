@@ -2,8 +2,8 @@
 
 void kabort()
 {
-	// TODO: Add proper kernel panic.
-	kputs("\nKernel Panic! Aborting!\n");
-	while ( 1 ) { }
+    // TODO: Add proper kernel panic.
+    kputs("\nKernel Panic! Aborting!\n");
+    while (1) {
+    }
 }
-

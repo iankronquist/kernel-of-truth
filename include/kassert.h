@@ -4,8 +4,6 @@
 
 void kassert(int value);
 
-
-
 /*
 //#include "kabort.h"
 //#include "kputs.h"
