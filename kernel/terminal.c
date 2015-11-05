@@ -2,16 +2,6 @@
 #include <stdint.h>
 #include <terminal.h>
 
-/* Check if the compiler thinks if we are targeting the wrong operating system. */
-#if defined(__linux__)
-#error "You are not using a cross-compiler, you will most certainly run into trouble"
-#endif
-
-/* This tutorial will only work for the 32-bit ix86 targets. */
-#if !defined(__i386__)
-#error "This tutorial needs to be compiled with a ix86-elf compiler"
-#endif
-
 uint8_t make_color(enum vga_color fg, enum vga_color bg)
 {
     return fg | bg << 4;
@@ -55,12 +45,6 @@ int term_putchar(char c)
         term_column = 0;
         term_row++;
     }
-    /*
-        if(term_row >= VGA_HEIGHT-1)
-        {
-                term_copy_up_lines();
-                term_writestring("hey there");
-        }*/
     term_putentryat(c, term_color, term_column, term_row);
     if (++term_column == VGA_WIDTH) {
         term_column = 0;
