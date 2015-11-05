@@ -1,9 +1,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "./arch/x86/idt.h"
-#include "terminal.h"
-#include "kabort.h"
-#include "kassert.h"
+#include <terminal.h>
+#include <kabort.h>
+#include <kassert.h>
 
  
 void kernel_main() {
