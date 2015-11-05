@@ -56,7 +56,6 @@ void idt_install()
     idt_set_gate(32, (uint32_t)isr31, 0x08, 0x8e);
 
     idt_load(&idtp);
-    kputs("loaded");
 }
 
 void common_interrupt_handler(struct regs* r)
