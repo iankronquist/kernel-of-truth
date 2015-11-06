@@ -1,4 +1,5 @@
 #include <arch/x86/idt.h>
+#include <drivers/keyboard.h>
 
 struct idt_entry idt[256];
 struct idt_ptr idtp;
@@ -41,7 +42,7 @@ void idt_install()
     idt_set_gate(18, (uint32_t)isr18, 0x08, 0x8e);
     idt_set_gate(19, (uint32_t)isr19, 0x08, 0x8e);
     idt_set_gate(20, (uint32_t)isr20, 0x08, 0x8e);
-    idt_set_gate(21, (uint32_t)isr21, 0x08, 0x8e);
+    idt_set_gate(21, (uint32_t)keyboard_irq_handler, 0x08, 0x8e);
     idt_set_gate(22, (uint32_t)isr22, 0x08, 0x8e);
     idt_set_gate(23, (uint32_t)isr23, 0x08, 0x8e);
     idt_set_gate(24, (uint32_t)isr24, 0x08, 0x8e);
