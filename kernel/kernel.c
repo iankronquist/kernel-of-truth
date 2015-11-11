@@ -2,9 +2,11 @@
 #include <stdint.h>
 #include <arch/x86/gdt.h>
 #include <arch/x86/idt.h>
+#include <arch/x86/io.h>
 #include <drivers/terminal.h>
 #include <kabort.h>
 #include <kassert.h>
+#include <drivers/keyboard.h>
 
 void kernel_main()
 {
