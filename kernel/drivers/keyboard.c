@@ -50,7 +50,7 @@ void keyboard_install() {
 
 void keyboard_irq_handler() {
     unsigned char status;
-    char key_code;
+    int8_t key_code;
 
     // End interrupt
     write_port(0x20, 0x20);
