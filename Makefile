@@ -9,11 +9,13 @@ all: bootloader-x86 kernel link-x86
 bootloader-x86: build
 	${AS} kernel/arch/x86/boot.s -o build/boot.o
 
-kernel: terminal gdt-x86 idt-x86 tlibc build keyboard timer
+libk: build
+	${CC} -c kernel/libk/kabort.c -o build/kabort.o  ${CFLAGS}
+	${CC} -c kernel/libk/kassert.c -o build/kassert.o  ${CFLAGS}
+	${CC} -c kernel/libk/kputs.c -o build/kputs.o  ${CFLAGS}
+
+kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
-	${CC} -c kernel/kassert.c -o build/kassert.o  ${CFLAGS}
-	${CC} -c kernel/kputs.c -o build/kputs.o  ${CFLAGS}
-	${CC} -c kernel/kabort.c -o build/kabort.o  ${CFLAGS}
 
 link-x86: build
 	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/*.o -lgcc

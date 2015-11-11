@@ -1,4 +1,4 @@
-#include "kabort.h"
+#include <libk/kabort.h>
 
 void kabort()
 {

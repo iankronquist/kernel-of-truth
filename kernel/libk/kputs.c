@@ -1,4 +1,4 @@
-#include "kputs.h"
+#include <libk/kputs.h>
 
 void kputs(char* string)
 {

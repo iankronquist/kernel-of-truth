@@ -2,7 +2,7 @@
 #define TIMER_H
 #include <stdint.h>
 #include <arch/x86/io.h>
-#include <kputs.h>
+#include <libk/kputs.h>
 
 #define TIMER_INTERRUPT_MASK (~1)
 // Comes from hardware clock cycle of 1.19 MHz

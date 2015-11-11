@@ -4,7 +4,7 @@
 #include "../../../tlibc/string/string.h"
 #include <stddef.h>
 #include <stdint.h>
-#include <kputs.h>
+#include <libk/kputs.h>
 
 #include <drivers/timer.h>
 

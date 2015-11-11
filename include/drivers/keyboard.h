@@ -1,7 +1,7 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
-#include <kputs.h>
+#include <libk/kputs.h>
 #include <arch/x86/io.h>
 
 #define KB_STATUS_PORT 0x64
