@@ -68,4 +68,6 @@ extern void isr30();
 extern void isr31();
 extern void isr32();
 
+extern void keyboard_handler();
+
 #endif

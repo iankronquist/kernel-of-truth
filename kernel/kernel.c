@@ -9,8 +9,9 @@
 void kernel_main()
 {
     term_initialize();
-    gdt_install();
+    //gdt_install();
     idt_install();
+    keyboard_install();
 
     kputs("Hello kernel!");
 

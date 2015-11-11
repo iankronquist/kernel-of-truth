@@ -1,10 +1,51 @@
 .intel_syntax noprefix
 
+.global read_port
+read_port:
+	mov edx, [esp + 4]
+	in al, dx
+	ret
+
+.global write_port
+write_port:
+	mov   edx, [esp + 4]
+	mov   al, [esp + 4 + 4]
+	out   dx, al
+	ret
+
+
+.global keyboard_handler
+keyboard_handler:
+	pusha
+	mov ax, ds
+	push eax
+
+	mov ax, 0x10
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+
+
+	call    keyboard_irq_handler
+
+	pop eax
+
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+
+	popa
+	sti
+	iret
+
+
 .global idt_load
 idt_load:
-	#loads the IDT table. idtp is the IDT pointer.
 	mov eax, [esp+4]
 	lidt [eax]
+	sti
 	ret
 
 .global common_handler
