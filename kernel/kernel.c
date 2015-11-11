@@ -7,6 +7,7 @@
 #include <kabort.h>
 #include <kassert.h>
 #include <drivers/keyboard.h>
+#include <drivers/timer.h>
 
 void kernel_main()
 {
@@ -14,6 +15,9 @@ void kernel_main()
     gdt_install();
     idt_install();
     keyboard_install();
+    // Periodically prints 'tick!' on the screen. This will be useful later for
+    // multi-tasking.
+    // timer_install();
 
     kputs("Hello kernel!");
 

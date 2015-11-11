@@ -44,7 +44,7 @@ unsigned char keyboard_map[128] = {
 
 void keyboard_install() {
     uint8_t current_mask = read_port(0x21);
-    write_port(0x21 , current_mask & ~2);
+    write_port(0x21 , current_mask & KB_INTERRUPT_MASK);
 }
 
 

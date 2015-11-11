@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <kputs.h>
 
+#include <drivers/timer.h>
+
 //extern void idt_load();
 
 // Define an entry in the IDT

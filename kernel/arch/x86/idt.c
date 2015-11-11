@@ -1,5 +1,6 @@
 #include <arch/x86/idt.h>
 #include <drivers/keyboard.h>
+#include <drivers/keyboard.h>
 
 struct idt_entry idt[256];
 struct idt_ptr idtp;
@@ -55,6 +56,7 @@ void idt_install()
     idt_set_gate(31, (uint32_t)isr31, 0x08, 0x8e);
     idt_set_gate(32, (uint32_t)isr31, 0x08, 0x8e);
 
+    idt_set_gate(0x20, (uint32_t)timer_handler, 0x08, 0x8e);
     idt_set_gate(0x21, (uint32_t)keyboard_handler, 0x08, 0x8e);
 
     // There are 4 Interrupt Command Word Registers and I'm not entirely sure
