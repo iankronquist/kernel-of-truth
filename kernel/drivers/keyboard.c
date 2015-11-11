@@ -43,8 +43,8 @@ unsigned char keyboard_map[128] = {
 
 
 void keyboard_install() {
-    // Enable only IRQ1
-    write_port(0x21 , 0xFD);
+    uint8_t current_mask = read_port(0x21);
+    write_port(0x21 , current_mask & ~2);
 }
 
 
