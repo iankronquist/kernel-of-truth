@@ -10,6 +10,7 @@ bootloader-x86: build
 	${AS} kernel/arch/x86/boot.s -o build/boot.o
 
 libk: build
+	${CC} -c kernel/libk/kmem.c -o build/kmem.o  ${CFLAGS}
 	${CC} -c kernel/libk/kabort.c -o build/kabort.o  ${CFLAGS}
 	${CC} -c kernel/libk/kassert.c -o build/kassert.o  ${CFLAGS}
 	${CC} -c kernel/libk/kputs.c -o build/kputs.o  ${CFLAGS}
