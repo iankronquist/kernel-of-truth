@@ -88,7 +88,7 @@ void keyboard_install() {
 
 
 void keyboard_irq_handler() {
-    static shift_held = false;
+    static bool shift_held = false;
     uint8_t status;
     uint8_t key_code;
     char c = 0;
