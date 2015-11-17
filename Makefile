@@ -14,7 +14,7 @@ libk: build
 	${CC} -c kernel/libk/kabort.c -o build/kabort.o  ${CFLAGS}
 	${CC} -c kernel/libk/kputs.c -o build/kputs.o  ${CFLAGS}
 
-kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer
+kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
 
 link-x86: build
@@ -26,6 +26,11 @@ terminal: build
 timer: build
 	${AS} -c kernel/drivers/timer.s -o build/timers.o ${ASFLAGS}
 	${CC} -c kernel/drivers/timer.c -o build/timerc.o ${CFLAGS}
+
+paging-x86: build
+	${AS} -c kernel/arch/x86/paging.s -o build/pagings.o ${ASFLAGS}
+	${CC} -c kernel/arch/x86/paging.c -o build/pagingc.o ${CFLAGS}
+
 
 gdt-x86: build
 	${CC} -c kernel/arch/x86/gdt.c -o build/gdtc.o ${CFLAGS}
