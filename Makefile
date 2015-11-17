@@ -12,7 +12,6 @@ bootloader-x86: build
 libk: build
 	${CC} -c kernel/libk/kmem.c -o build/kmem.o  ${CFLAGS}
 	${CC} -c kernel/libk/kabort.c -o build/kabort.o  ${CFLAGS}
-	${CC} -c kernel/libk/kassert.c -o build/kassert.o  ${CFLAGS}
 	${CC} -c kernel/libk/kputs.c -o build/kputs.o  ${CFLAGS}
 
 kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer

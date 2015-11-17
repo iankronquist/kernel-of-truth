@@ -2,21 +2,9 @@
 #include "kabort.h"
 #include "kputs.h"
 
-void kassert(int value);
-
-/*
-//#include "kabort.h"
-//#include "kputs.h"
-
-//Begin assert macro
-#define assert(condition) \
-	if (! condition) \
-	{ \
-		kputs("ASSERTION FAILED"); \
-		kputs("asserted that "  #condition ""); \
-		kabort(); \
-	} \
-//End macro
-*/
+#define kassert(value) if (!(value)) { \
+    kputs("Assertion failed: (#value) function __FUNCTION__, file __FILE__, line __LINE__."); \
+    kabort();\
+}
 
 #endif
