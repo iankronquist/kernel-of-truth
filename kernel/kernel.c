@@ -3,6 +3,7 @@
 #include <arch/x86/gdt.h>
 #include <arch/x86/idt.h>
 #include <arch/x86/io.h>
+#include <arch/x86/paging.h>
 #include <drivers/terminal.h>
 #include <drivers/keyboard.h>
 #include <drivers/timer.h>
@@ -20,9 +21,14 @@ void kernel_main()
     // Periodically prints 'tick!' on the screen. This will be useful later for
     // multi-tasking.
     // timer_install();
+    char *hi = "Hello kernel!\n";
+    void *testing = kmalloc(16);
+    memcpy(testing, hi, 16);
+    kputs(testing);
+    kfree(testing);
 
-    kputs("Hello kernel!");
-    void *testing = kmalloc(100);
+    kernel_page_table_install();
+
 
     while (1) {
     }
