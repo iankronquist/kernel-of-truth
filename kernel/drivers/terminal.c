@@ -47,7 +47,7 @@ int term_putchar(char c)
     }
 
     if(term_column >= VGA_WIDTH) {
-        term_color = 0;
+        term_column = 0;
         term_row++;
     }
 
