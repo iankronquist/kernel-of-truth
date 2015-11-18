@@ -23,7 +23,7 @@ enum vga_color {
 };
 
 static const size_t VGA_WIDTH = 80;
-static const size_t VGA_HEIGHT = 24;
+static const size_t VGA_HEIGHT = 25;
 
 size_t term_row;
 size_t term_column;
