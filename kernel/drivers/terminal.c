@@ -46,6 +46,11 @@ int term_putchar(char c)
         return c;
     }
 
+    if(term_column >= VGA_WIDTH) {
+        term_color = 0;
+        term_row++;
+    }
+
     term_putentryat(c, term_color, term_column, term_row);
     if (++term_column == VGA_WIDTH) {
         term_column = 0;
