@@ -46,11 +46,6 @@ int term_putchar(char c)
         return c;
     }
 
-    if(term_column >= VGA_WIDTH) {
-        term_column = 0;
-        term_row++;
-    }
-
     term_putentryat(c, term_color, term_column, term_row);
     if (++term_column == VGA_WIDTH) {
         term_column = 0;
@@ -78,7 +73,7 @@ void term_copy_up_lines()
             size_t index_to = y*VGA_WIDTH+x;
             size_t index_from = (y+1)*VGA_WIDTH+x;
 
-            if(x == VGA_HEIGHT)
+            if(y == VGA_HEIGHT)
             {
                 term_buffer[index_to] = make_vgaentry(' ', term_color);
             }
