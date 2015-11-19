@@ -12,38 +12,38 @@ uint16_t make_vgaentry(char c, uint8_t color)
     return c16 | color16 << 8;
 }
 
-void term_putentryat(char c, uint8_t color, size_t x, size_t y)
+void terminal_putentryat(char c, uint8_t color, size_t x, size_t y)
 {
     const size_t index = y * VGA_WIDTH + x;
-    term_buffer[index] = make_vgaentry(c, color);
+    terminal_buffer[index] = make_vgaentry(c, color);
 }
 
 void terminal_deleteentryat(size_t x, size_t y) {
     const size_t index = y*VGA_WIDTH+x;
-    term_buffer[index] = make_vgaentry(' ', term_color);
+    terminal_buffer[index] = make_vgaentry(' ', terminal_color);
 }
 
-void term_initialize()
+void terminal_initialize()
 {
-    term_row = 0;
-    term_column = 0;
-    term_color = make_color(COLOR_LIGHT_GREY, COLOR_BLACK);
-    term_buffer = (uint16_t*)VIDEO_MEMORY_BEGIN;
+    terminal_row = 0;
+    terminal_column = 0;
+    terminal_color = make_color(COLOR_LIGHT_GREY, COLOR_BLACK);
+    terminal_buffer = (uint16_t*)VIDEO_MEMORY_BEGIN;
     for (size_t y = 0; y < VGA_HEIGHT; y++) {
         for (size_t x = 0; x < VGA_WIDTH; x++) {
             const size_t index = y * VGA_WIDTH + x;
-            term_buffer[index] = make_vgaentry(' ', term_color);
+            terminal_buffer[index] = make_vgaentry(' ', terminal_color);
         }
     }
 }
 
-int term_putchar(char c)
+int terminal_putchar(char c)
 {
     if (c == '\n') {
-        term_column = 0;
+        terminal_column = 0;
 
-        if(++term_row == VGA_HEIGHT) {
-            term_copy_up_lines();
+        if(++terminal_row == VGA_HEIGHT) {
+            terminal_scroll();
         }
 
         return c;
@@ -54,38 +54,37 @@ int term_putchar(char c)
         return c;
     }
 
-    term_putentryat(c, term_color, term_column, term_row);
-    if (++term_column == VGA_WIDTH) {
-        term_column = 0;
-        if (++term_row == VGA_HEIGHT) {
-            term_copy_up_lines();
+    terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
+    if (++terminal_column == VGA_WIDTH) {
+        terminal_column = 0;
+        if (++terminal_row == VGA_HEIGHT) {
+            terminal_scroll();
         }
     }
     return c;
 }
 
 void terminal_deletechar() {
-    if(--term_column < 0) {
-        term_column = VGA_WIDTH-1;
-        
-        if(--term_row < 0) {
-            term_row = 1;
-            term_column = 1;
-        }
-    }
+	if(--terminal_column == 0 || terminal_column > VGA_WIDTH) {
+		terminal_column = VGA_WIDTH-1;
+	}
 
-    terminal_deleteentryat(term_column, term_row);
+	if(--terminal_column == 0 || terminal_column > VGA_HEIGHT) {
+
+	}
+
+    terminal_deleteentryat(terminal_column, terminal_row);
 }
 
-int term_writestring(char* data)
+int terminal_writestring(char* data)
 {
     size_t i;
     for (i = 0; data[i] != 0; i++)
-        term_putchar(data[i]);
+        terminal_putchar(data[i]);
     return data[i];
 }
 
-void term_copy_up_lines()
+void terminal_scroll()
 {
     for(size_t y = 0; y < VGA_HEIGHT; y++)
     {
@@ -96,15 +95,19 @@ void term_copy_up_lines()
 
             if(y == VGA_HEIGHT)
             {
-                term_buffer[index_to] = make_vgaentry(' ', term_color);
+                terminal_buffer[index_to] = make_vgaentry(' ', terminal_color);
             }
             else
             {
-                term_buffer[index_to] = term_buffer[index_from];
+                terminal_buffer[index_to] = terminal_buffer[index_from];
             }
         } 
     }
 
-    term_row = VGA_HEIGHT-1;
-    term_column = 0;
+    terminal_row = VGA_HEIGHT-1;
+    terminal_column = 0;
+}
+
+void terminal_writebuffer() {
+	return;
 }
