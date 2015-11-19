@@ -1,23 +1,5 @@
 #include <arch/x86/paging.h>
 
-/*
-static struct kmap {
-    uint32_t physical_address_start;
-    uint32_t physical_address_end;
-    uint8_t permissions;
-    void *virtual_memory;
-};
-
-struct kmap kmap[] = {
-    {
-        .physical_address_start = KERNEL_START,
-        .physical_address_end = KERNEL_START+KERNEL_SIZE,
-        .virtual_memory = (void *)KERNEL_START,
-        .permissions = PAGE_WRITE,
-    },
-};
-*/
-
 static struct page_entry *walk_page_directory(struct page_dir_entry *dir, const
         void *virtual_address, bool allocate);
 
