@@ -1,5 +1,3 @@
-#include <stddef.h>
-#include <stdint.h>
 #include <drivers/terminal.h>
 
 uint8_t make_color(enum vga_color fg, enum vga_color bg)
@@ -30,7 +28,7 @@ void term_initialize()
     term_row = 0;
     term_column = 0;
     term_color = make_color(COLOR_LIGHT_GREY, COLOR_BLACK);
-    term_buffer = (uint16_t*)0xB8000;
+    term_buffer = (uint16_t*)VIDEO_MEMORY_BEGIN;
     for (size_t y = 0; y < VGA_HEIGHT; y++) {
         for (size_t x = 0; x < VGA_WIDTH; x++) {
             const size_t index = y * VGA_WIDTH + x;

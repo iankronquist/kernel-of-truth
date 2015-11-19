@@ -25,7 +25,19 @@ The following resources may also prove useful:
 	https://www.cl.cam.ac.uk/projects/raspberrypi/tutorials/os/index.html
 	http://elinux.org/RPi_Easy_SD_Card_Setup
 
+After a certain point the tutorials become significantly less useful. It is
+helpful to refer to implementations of several hobbyist and professional
+kernels including:
 
+* [ToaruOS](https://github.com/klange/toaruos)
+* [Minix 3](https://github.com/minix3/minix)
+* [xv6](https://pdos.csail.mit.edu/6.828/2014/xv6.html)
+* and, if you are desperate, [Linux](https://github.com/torvalds/linux/)
+
+If you prefer reading textbooks, Tanenbaum's *Operating Systems Design and
+Implementation* is quite useful. Copies can be found floating around the
+internet. The [FreeBSD developer's handbook][4] can also offer useful insights.
+The [Little OS Book][5] is approachable, but hardly thorough.
 
 Getting Started
 ---------------
@@ -59,4 +71,5 @@ $ gdb
 [1]:http://wiki.osdev.org/User:Sortie/Meaty_Skeleton
 [2]:http://www.osdever.net/bkerndev/Docs/gettingstarted.htm
 [3]:https://github.com/raspberrypi/tools
-
+[4]:https://www.freebsd.org/doc/en/books/developers-handbook/
+[5]:http://littleosbook.github.io/book.pdf

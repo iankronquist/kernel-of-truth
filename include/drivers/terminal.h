@@ -1,7 +1,11 @@
 #ifndef TERMINAL_H
 #define TERMINAL_H
+
 #include <stdint.h>
 #include <stddef.h>
+
+#include <arch/x86/memlayout.h>
+
 /* Hardware text mode color constants. */
 enum vga_color {
     COLOR_BLACK = 0,
