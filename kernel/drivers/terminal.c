@@ -20,6 +20,11 @@ void term_putentryat(char c, uint8_t color, size_t x, size_t y)
     term_buffer[index] = make_vgaentry(c, color);
 }
 
+void terminal_deleteentryat(size_t x, size_t y) {
+    const size_t index = y*VGA_WIDTH+x;
+    term_buffer[index] = make_vgaentry(' ', term_color);
+}
+
 void term_initialize()
 {
     term_row = 0;
@@ -46,6 +51,11 @@ int term_putchar(char c)
         return c;
     }
 
+    if(c == '\b') {
+        terminal_deletechar();
+        return c;
+    }
+
     term_putentryat(c, term_color, term_column, term_row);
     if (++term_column == VGA_WIDTH) {
         term_column = 0;
@@ -54,6 +64,19 @@ int term_putchar(char c)
         }
     }
     return c;
+}
+
+void terminal_deletechar() {
+    if(--term_column < 0) {
+        term_column = VGA_WIDTH-1;
+        
+        if(--term_row < 0) {
+            term_row = 1;
+            term_column = 1;
+        }
+    }
+
+    terminal_deleteentryat(term_column, term_row);
 }
 
 int term_writestring(char* data)

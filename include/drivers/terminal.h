@@ -33,8 +33,10 @@ uint16_t* term_buffer;
 void term_copy_up_lines();
 int term_writestring(char* data);
 int term_putchar(char c);
+void terminal_deletechar();
 void term_initialize();
 void term_putentryat(char c, uint8_t color, size_t x, size_t y);
+void terminal_deleteentrat(size_t x, size_t y);
 uint16_t make_vgaentry(char c, uint8_t color);
 uint8_t make_color(enum vga_color fg, enum vga_color bg);
 
