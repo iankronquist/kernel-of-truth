@@ -72,7 +72,4 @@ make install-gcc
 make install-target-libgcc
 cd -
 
-mv compiler ../
-rm -rd compiler
-
 echo 'Done!'
