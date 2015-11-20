@@ -60,3 +60,11 @@ void* memmove(void* destination, const void* source, size_t size)
 	}
 	return destination;
 }
+
+size_t strlen(const char* str) {
+	size_t ret = 0;
+	while(str[ret] != 0) {
+		ret++;
+	}
+	return ret;
+}
