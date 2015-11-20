@@ -65,17 +65,18 @@ int terminal_putchar(char c)
 }
 
 void terminal_deletechar() {
-	size_t max = (size_t)-1;
-	if(--terminal_column == max) {
+	size_t size_t_max = (size_t)-1;
+	
+	if(--terminal_column == size_t_max) {
 		if(terminal_row == 0) {
 			terminal_column = 0;
 		} else {
 			terminal_column = VGA_WIDTH-1;
 		}
-	}
 
-	if(--terminal_row == max) {
-		terminal_row = 0;
+		if(--terminal_row == size_t_max) {
+			terminal_row = 0;
+		}
 	}
 
     terminal_deleteentryat(terminal_column, terminal_row);
