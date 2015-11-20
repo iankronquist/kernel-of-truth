@@ -118,7 +118,7 @@ void keyboard_irq_handler() {
             }
         }
         if (c != 0)
-            term_putchar(c);
+            terminal_putchar(c);
     }
 
 }
