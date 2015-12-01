@@ -7,7 +7,9 @@
 
 #define KHEAP_PHYS_ROOT ((void*)0xc0000000)
 #define KHEAP_PHYS_END  ((void*)0xc1000000)
-#define KHEAP_END_SENTINEL NULL
+#define KHEAP_END_SENTINEL (NULL)
+
+#define KHEAP_BLOCK_SLOP 32
 
 
 struct kheap_metadata {
@@ -21,9 +23,10 @@ struct kheap_metadata *root;
 
 struct kheap_metadata *kheap_init();
 
-void kheap_extend();
-void kheap_install();
+int kheap_extend();
+void kheap_install(struct kheap_metadata *root, size_t initial_heap_size);
 void *kmalloc(size_t bytes);
+void *kmalloc_aligned(size_t bytes);
 void kfree(void *mem);
 void kheap_defragment();
 #endif
