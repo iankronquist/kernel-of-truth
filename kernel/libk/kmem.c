@@ -81,6 +81,7 @@ int kheap_extend(size_t bytes) {
 }
 
 void kfree(void *mem) {
+    if (mem == NULL) return;
     // Get the metadata section right before the memory.
     struct kheap_metadata *freeme = mem - sizeof(struct kheap_metadata);
     // Mark the block as free.
