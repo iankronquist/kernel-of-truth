@@ -1,110 +1,153 @@
 #include <stdlib.h>
+#include <assert.h>
 
 #include <tests/tests.h>
 #include <libk/kmem.h>
 
+// Useful for debugging
+void kprint_heap() {
+    struct kheap_metadata *cur = root;
+    while (cur != KHEAP_END_SENTINEL) {
+        printf("location: %p\n", cur);
+        printf("is free?: %s\n", cur->is_free ? "yes": "no");
+        printf("size: %zu\n", cur->size);
+        printf("next: %p\n", cur->next);
+        cur = cur->next;
+    }
+}
+
 int main() {
+    size_t playground_size = PAGE_SIZE * 5;
     char *playground = malloc(PAGE_SIZE * 5);
-    kheap_install((void*)playground);
+    memset(playground, 0, playground_size);
+
+    puts("Initializing heap");
+    kheap_install((void*)playground, playground_size);
     struct kheap_metadata *root = (struct kheap_metadata*)playground;
     EXPECT_EQ(root->next, KHEAP_END_SENTINEL);
     EXPECT_EQ(root->is_free, true);
-    EXPECT_EQ(root->size, 0);
+    EXPECT_EQ(root->size, PAGE_SIZE * 5);
 
+    puts("Creating first allocation");
     void *first = kmalloc(100);
-    EXPECT_EQ(root, first + sizeof(struct kheap_metadata));
-    EXPECT_EQ(root->next, KHEAP_END_SENTINEL);
+    struct kheap_metadata *first_md = root + 100 + sizeof(struct kheap_metadata);
+    EXPECT_EQ(first, root + 1);
+    EXPECT_EQ(root->next, root + sizeof(struct kheap_metadata) + 100);
     EXPECT_EQ(root->is_free, false);
     EXPECT_EQ(root->size, 100);
 
+    EXPECT_EQ(first_md->next, KHEAP_END_SENTINEL);
+    EXPECT_EQ(first_md->size, playground_size - 100 -
+            sizeof(struct kheap_metadata));
+    EXPECT_EQ(first_md->is_free, true);
+
+    puts("Creating second allocation");
     void *second = kmalloc(200);
-    struct kheap_metadata *second_metadata = second -
+    struct kheap_metadata *second_md = first_md + 200 +
         sizeof(struct kheap_metadata);
-    // root's next element is second, but nothing else changes about root
-    EXPECT_EQ(root->next, second);
+    EXPECT_EQ(second, first_md + 1);
+    EXPECT_EQ(first, root + 1);
+    EXPECT_EQ(root->next, first_md);
     EXPECT_EQ(root->is_free, false);
     EXPECT_EQ(root->size, 100);
 
-    // second is not free. The next block is the end
-    EXPECT_EQ(second_metadata->next, KHEAP_END_SENTINEL);
-    EXPECT_EQ(second_metadata->is_free, false);
-    EXPECT_EQ(second_metadata->size, 200);
+    EXPECT_EQ(first_md->next, second_md);
+    EXPECT_EQ(first_md->is_free, false);
+    EXPECT_EQ(first_md->size, 200);
 
+    EXPECT_EQ(second_md->next, KHEAP_END_SENTINEL);
+    EXPECT_EQ(second_md->is_free, true);
+    // We're using 2 kheap_metadata structures which have a total of 300 bytes
+    EXPECT_EQ(second_md->size, playground_size - 300 -
+            2 * sizeof(struct kheap_metadata));
+
+    puts("Creating third allocation");
     void *third = kmalloc(300);
-    struct kheap_metadata *third_metadata = third -
+    struct kheap_metadata *third_md = second_md + 300 +
         sizeof(struct kheap_metadata);
-    // nothing else changes about root
-    EXPECT_EQ(root->next, second);
+    EXPECT_EQ(third, second_md + 1);
+    EXPECT_EQ(root->next, first_md);
     EXPECT_EQ(root->is_free, false);
     EXPECT_EQ(root->size, 100);
 
-    // second's next element is third, but nothing else changes
-    EXPECT_EQ(second_metadata->next, third);
-    EXPECT_EQ(second_metadata->is_free, false);
-    EXPECT_EQ(second_metadata->size, 200);
+    EXPECT_EQ(first_md->next, second_md);
+    EXPECT_EQ(first_md->is_free, false);
+    EXPECT_EQ(first_md->size, 200);
 
-    // third is not free. The next block is the end
-    EXPECT_EQ(third_metadata->next, KHEAP_END_SENTINEL);
-    EXPECT_EQ(third_metadata->is_free, false);
-    EXPECT_EQ(third_metadata->size, 300);
+    EXPECT_EQ(second_md->next, third_md);
+    EXPECT_EQ(second_md->is_free, false);
+    // We're using 2 kheap_metadata structures which have a total of 300 bytes
+    EXPECT_EQ(second_md->size, 300);
+
+    EXPECT_EQ(third_md->next, KHEAP_END_SENTINEL);
+    EXPECT_EQ(third_md->is_free, true);
+    // We're using 3 kheap_metadata structures which have a total of 600 bytes
+    EXPECT_EQ(third_md->size, playground_size - 600 -
+            3 * sizeof(struct kheap_metadata));
 
 
-
+    puts("Freeing second allocation");
     kfree(second);
 
-    // nothing changes
-    EXPECT_EQ(root->next, second);
+    EXPECT_EQ(second, first_md + 1);
+
+    EXPECT_EQ(root->next, first_md);
     EXPECT_EQ(root->is_free, false);
     EXPECT_EQ(root->size, 100);
 
-    // second is free but nothing else changes
-    EXPECT_EQ(second_metadata->next, third);
-    EXPECT_EQ(second_metadata->is_free, true);
-    EXPECT_EQ(second_metadata->size, 200);
+    EXPECT_EQ(first_md->next, second_md);
+    EXPECT_EQ(first_md->is_free, true);
+    EXPECT_EQ(first_md->size, 200);
 
-    // nothing changes for third
-    EXPECT_EQ(third_metadata->next, KHEAP_END_SENTINEL);
-    EXPECT_EQ(third_metadata->is_free, false);
-    EXPECT_EQ(third_metadata->size, 300);
+    EXPECT_EQ(second_md->next, third_md);
+    EXPECT_EQ(second_md->is_free, false);
+    // We're using 2 kheap_metadata structures which have a total of 300 bytes
+    EXPECT_EQ(second_md->size, 300);
 
+    EXPECT_EQ(third_md->next, KHEAP_END_SENTINEL);
+    EXPECT_EQ(third_md->is_free, true);
+    // We're using 3 kheap_metadata structures which have a total of 600 bytes
+    EXPECT_EQ(third_md->size, playground_size - 600 -
+            3 * sizeof(struct kheap_metadata));
 
-    kfree(root);
+    kfree(first);
 
     // root is free but nothing else changes
-    EXPECT_EQ(root->next, second);
+    EXPECT_EQ(root->next, second_md);
     EXPECT_EQ(root->is_free, true);
-    EXPECT_EQ(root->size, 100);
+    EXPECT_EQ(root->size, 324);
+
 
     // nothing changes for second
-    EXPECT_EQ(second_metadata->next, third);
-    EXPECT_EQ(second_metadata->is_free, true);
-    EXPECT_EQ(second_metadata->size, 200);
+    EXPECT_EQ(second_md->next, third_md);
+    EXPECT_EQ(second_md->is_free, false);
+    EXPECT_EQ(second_md->size, 300);
 
     // nothing changes for third
-    EXPECT_EQ(third_metadata->next, KHEAP_END_SENTINEL);
-    EXPECT_EQ(third_metadata->is_free, false);
-    EXPECT_EQ(third_metadata->size, 300);
+    EXPECT_EQ(third_md->next, KHEAP_END_SENTINEL);
+    EXPECT_EQ(third_md->is_free, true);
+    EXPECT_EQ(third_md->size, playground_size - 600 -
+            3 * sizeof(struct kheap_metadata));
 
-    // Allocate a new element the size of second
-    void *fourth = kmalloc(200);
-    EXPECT_EQ(second, fourth);
+    // Free first again -- nothing should change
+    kfree(first);
 
+    EXPECT_EQ(root->next, second_md);
+    EXPECT_EQ(root->is_free, true);
+    EXPECT_EQ(root->size, 324);
+
+    // Allocate a new element the size of the first block
+    void *fourth = kmalloc(300);
+    EXPECT_EQ(first, fourth);
+    EXPECT_EQ(root->is_free, false);
+
+    // Free all memory
     kfree(third);
-    EXPECT_EQ(third_metadata->next, KHEAP_END_SENTINEL);
-    EXPECT_EQ(third_metadata->is_free, true);
-    EXPECT_EQ(third_metadata->size, 300);
-
-    // Allocate a new element bigger than second but smaller than third
-    void *fifth = kmalloc(250);
-    EXPECT_EQ(fifth, third);
-    EXPECT_EQ(third_metadata->is_free, false);
-    EXPECT_EQ(third_metadata->size, 250);
-    EXPECT_EQ(third_metadata->next, third + 50);
-
-    struct kheap_metadata *sixth_metadata = third + 50;
-    EXPECT_EQ(sixth_metadata->is_free, true);
-    EXPECT_EQ(sixth_metadata->size, 50 - sizeof(struct kheap_metadata));
-    EXPECT_EQ(sixth_metadata->next, KHEAP_END_SENTINEL);
+    kfree(fourth);
+    EXPECT_EQ(root->next, KHEAP_END_SENTINEL);
+    EXPECT_EQ(root->is_free, true);
+    EXPECT_EQ(root->size, PAGE_SIZE * 5);
 
     free(playground);
+    return RETURN_VALUE;
 }
