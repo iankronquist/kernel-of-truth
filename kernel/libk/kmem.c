@@ -14,7 +14,7 @@ void *kmalloc(size_t bytes) {
     // If there wasn't one, grow the heap
     if (cur == KHEAP_END_SENTINEL) {
         cur = heap_end;
-        size_t new_bytes = kheap_extend(bytes);
+        size_t new_bytes = kheap_extend(bytes + sizeof(struct kheap_metadata));
         cur->size = new_bytes - sizeof(struct kheap_metadata);
         if (new_bytes == 0) {
             return NULL;
@@ -72,6 +72,7 @@ void *kmalloc_aligned(size_t blocks) {
 // Extend heap by page sized increments
 int kheap_extend(size_t bytes) {
     size_t new_bytes = (bytes - 1) / (PAGE_SIZE + 1);
+    kassert(new_bytes % PAGE_SIZE == 0);
     if (heap_end + new_bytes > KHEAP_PHYS_END) {
         kputs("Out of kernel heap memory");
         kabort();
