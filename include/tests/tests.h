@@ -11,17 +11,19 @@ int RETURN_VALUE = 0;
 
 #define PRINTF_FORMAT(x) _Generic(x, int: "%i", long: "%l", \
         unsigned int: "%iu", unsigned long: "%lu", char*: "%s", void*: "%p", \
-        struct kheap_metadata*: "%p", default: "Unknown type!")
+        struct kheap_metadata*: "%p", bool: "%d", default: "Unknown type!")
 
 #define DIAGNOSTICS(a, b) \
         printf("Expected "); \
-        printf("%s: ", #a); \
-        printf(PRINTF_FORMAT(a), (a)); \
-        printf("\n");\
-        printf("Actual "); \
         printf("%s: ", #b); \
         printf(PRINTF_FORMAT(b), (b)); \
-        printf("\n");
+        printf("\n");\
+        printf("Actual "); \
+        printf("%s: ", #a); \
+        printf(PRINTF_FORMAT(a), (a)); \
+        printf("\n"); \
+        printf("Function %s, file %s, line %d.\n", __FUNCTION__, __FILE__, \
+                __LINE__); \
 
 
 #define EXPECT_EQ(a, b); printf("Test %s == %s ", (#a), (#b));\
