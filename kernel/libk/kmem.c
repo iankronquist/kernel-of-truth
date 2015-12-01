@@ -4,14 +4,12 @@ void *heap_end = KHEAP_PHYS_ROOT + PAGE_SIZE;
 
 void *kmalloc(size_t bytes) {
     struct kheap_metadata *cur = root;
-    struct kheap_metadata *prev;
     if (bytes == 0) {
         return NULL;
     }
     // Find the first free block
     while (cur != KHEAP_END_SENTINEL && !cur->is_free && cur->size < bytes) {
         cur = cur->next;
-        prev = cur;
     }
     // If there wasn't one, grow the heap
     if (cur == KHEAP_END_SENTINEL) {
