@@ -2,9 +2,12 @@ ARCH=i686-elf
 TEST_CC=clang
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=compiler/$(ARCH)/bin/$(ARCH)-as
-CFLAGS= -std=c99 -ffreestanding -O0 -Wall -Wextra -g -I ./include -I tlibc/include
+CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Wextra -g -I ./include -I tlibc/include
+TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include
 
 all: bootloader-x86 kernel link-x86 
+
+tests: build libk-tests
 
 bootloader-x86: build
 	${AS} kernel/arch/x86/boot.s -o build/boot.o
@@ -13,6 +16,10 @@ libk: build
 	${CC} -c kernel/libk/kmem.c -o build/kmem.o  ${CFLAGS}
 	${CC} -c kernel/libk/kabort.c -o build/kabort.o  ${CFLAGS}
 	${CC} -c kernel/libk/kputs.c -o build/kputs.o  ${CFLAGS}
+
+libk-tests:
+	${TEST_CC} kernel/libk/kmem.c kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c -o build/tests/kmem ${TEST_CFLAGS}
+
 
 kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
@@ -57,6 +64,7 @@ start-debug:
 
 build:
 	mkdir build
+	mkdir -p build/tests
 
 clean:
 	rm -rf build
