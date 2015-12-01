@@ -17,17 +17,16 @@ void kernel_main()
     gdt_install();
     idt_install();
     keyboard_install();
-    kheap_install();
+    kheap_install(KHEAP_PHYS_ROOT, PAGE_SIZE);
     // Periodically prints 'tick!' on the screen. This will be useful later for
     // multi-tasking.
-    // timer_install();
+    //timer_install();
     char *hi = "Hello kernel!\n";
     void *testing = kmalloc(16);
     memcpy(testing, hi, 16);
     kputs(testing);
     kfree(testing);
 
-    kernel_page_table_install();
 
 
     while (1) {
