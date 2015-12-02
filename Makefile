@@ -4,6 +4,7 @@ CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=compiler/$(ARCH)/bin/$(ARCH)-as
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Wextra -g -I ./include -I tlibc/include
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include
+QEMU_FLAGS= -m 1G
 
 all: bootloader-x86 kernel link-x86 
 
@@ -54,13 +55,13 @@ tlibc: build
 	${CC} -c tlibc/string/string.c -o build/tlibc.o ${CFLAGS}
 
 start:
-	qemu-system-i386 -kernel build/truthos.bin
+	qemu-system-i386 -kernel build/truthos.bin ${QEMU_FLAGS}
 
 start-log:
-	qemu-system-i386 -kernel build/truthos.bin -d in_asm,cpu_reset,exec,int,op,guest_errors,pcall -no-reboot 2> qemu.log
+	qemu-system-i386 -kernel build/truthos.bin -d in_asm,cpu_reset,exec,int,ioport,guest_errors,pcall -no-reboot ${QEMU_FLAGS} &> qemu.log
 
 start-debug:
-	qemu-system-i386 -S -s -kernel build/truthos.bin
+	qemu-system-i386 -S -s -kernel build/truthos.bin ${QEMU_FLAGS}
 
 build:
 	mkdir build
