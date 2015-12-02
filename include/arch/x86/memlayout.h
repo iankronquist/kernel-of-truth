@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 // 1 MB
-#define KERNEL_START 0x1000000
+#define KERNEL_START 0x100000
 
 // 4 KB
 #define KERNEL_SIZE (4096*4)
