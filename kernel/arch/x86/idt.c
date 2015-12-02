@@ -54,10 +54,9 @@ void idt_install()
     idt_set_gate(29, (uint32_t)isr29, 0x08, 0x8e);
     idt_set_gate(30, (uint32_t)isr30, 0x08, 0x8e);
     idt_set_gate(31, (uint32_t)isr31, 0x08, 0x8e);
-    idt_set_gate(32, (uint32_t)isr31, 0x08, 0x8e);
 
-    idt_set_gate(0x20, (uint32_t)timer_handler, 0x08, 0x8e);
-    idt_set_gate(0x21, (uint32_t)keyboard_handler, 0x08, 0x8e);
+    idt_set_gate(32, (uint32_t)timer_handler, 0x08, 0x8e);
+    idt_set_gate(33, (uint32_t)keyboard_handler, 0x08, 0x8e);
 
     // There are 4 Interrupt Command Word Registers and I'm not entirely sure
     // what they do. I can only find a brief mention of them in section
