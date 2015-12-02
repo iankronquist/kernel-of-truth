@@ -26,7 +26,6 @@ struct kheap_metadata *kheap_init();
 int kheap_extend();
 void kheap_install(struct kheap_metadata *root, size_t initial_heap_size);
 void *kmalloc(size_t bytes);
-void *kmalloc_aligned(size_t bytes);
 void kfree(void *mem);
 void kheap_defragment();
 #endif
