@@ -37,6 +37,7 @@ SECTIONS
 		*(COMMON)
 		*(.bss)
 		*(.bootstrap_stack)
+		kernel_end = .;
 	}
 
 	/* The compiler may produce other sections, by default it will put them in
