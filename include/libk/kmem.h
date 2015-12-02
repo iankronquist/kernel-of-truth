@@ -5,11 +5,16 @@
 #include <arch/x86/paging.h>
 #include <libk/kabort.h>
 
-#define KHEAP_PHYS_ROOT ((void*)0xc0000000)
-#define KHEAP_PHYS_END  ((void*)0xc1000000)
+#define KHEAP_PHYS_ROOT ((void*)0x100000)
+//#define KHEAP_PHYS_END  ((void*)0xc1000000)
 #define KHEAP_END_SENTINEL (NULL)
+// 1 GB
+#define PHYS_MEMORY_SIZE (1*1024*1024*1024)
 
 #define KHEAP_BLOCK_SLOP 32
+
+#define PAGE_ALIGN(x) ((uint32_t)x >> 12)
+
 
 
 struct kheap_metadata {
