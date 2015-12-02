@@ -38,36 +38,6 @@ void *kmalloc(size_t bytes) {
     return cur + 1;
 }
 
-void *kmalloc_aligned(size_t blocks) {
-    struct kheap_metadata *cur = root;
-    // Find a free block.
-    while (cur->is_free == false && cur->size < (blocks * PAGE_SIZE)) {
-        uint32_t leftover = cur->size % PAGE_SIZE;
-        if (leftover > 0 && leftover >= sizeof(struct kheap_metadata)) {
-            cur += leftover - sizeof(struct kheap_metadata);
-            break;
-        }
-        // If we hit the end of the heap extend it.
-        if (cur->next == KHEAP_END_SENTINEL) {
-            kheap_extend(blocks * PAGE_SIZE);
-            cur->size += blocks * PAGE_SIZE;
-            break;
-        }
-        cur = cur->next;
-    }
-    // Now that we have a free block in hand, get the address of the memory,
-    // which is right after the metadata.
-    void *actual_memory = cur + sizeof(struct kheap_metadata);
-    // If our current block is bigger than we need, partition it.
-    if ((blocks * PAGE_SIZE) + sizeof(struct kheap_metadata) > cur->size) {
-        struct kheap_metadata *new = actual_memory + (blocks * PAGE_SIZE);
-        new->next = cur->next;
-        cur->next = new;
-        new->is_free = true;
-    }
-    cur->is_free = false;
-    return actual_memory;
-}
 
 // Extend heap by page sized increments
 int kheap_extend(size_t bytes) {
