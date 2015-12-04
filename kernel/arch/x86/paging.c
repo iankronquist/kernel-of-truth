@@ -108,48 +108,36 @@ void unmap_page(void *virtual) {
     memset(&entries[bottom10], 0, sizeof(struct page_dir_entry));
     kfree_frame(entries[bottom10].address);
 }
+
+void map_page(struct page_entry *page, uint32_t phys_address) {
+    page->address = TOP20(phys_address);
+    page->rw = 1;
+    page->present = 1;
+}
+
 */
 
-
 void kernel_page_table_install() {
+    // Place pages right after the kernel
+    struct page_dir_entry *dirs = (void*)&kernel_end;
+    struct page_entry *entries = (void*)&kernel_end + PAGE_TABLE_SIZE *
+        sizeof(struct page_dir_entry);
+    for (size_t i = 0; i < PAGE_TABLE_SIZE; ++i) {
+        dirs[i].address = TOP20(&kernel_end + i * PAGE_SIZE);
+        dirs[i].present = 1;
+        dirs[i].rw = 1;
+        dirs[i].super_user = 0;
+        for (size_t j = 0; j < PAGE_TABLE_SIZE; ++j) {
+            entries[i].address = MIDDLE20(&kernel_end + j * PAGE_SIZE);
+            //entries[j].address = TOP20(i * PAGE_TABLE_SIZE + j) *
+                sizeof(struct page_entry);
+            entries[j].present = 1;
+            entries[j].rw = 1;
+            entries[j].super_user = 0;
+        }
+    }
 
-    memset(page_frame_map, 0, PAGE_FRAME_MAP_SIZE);
 
-    // Mark the kernel as mapped
-    page_frame_map[KERNEL_START/8] = 1 << (KERNEL_START % 8);
-    page_frame_t phys_page_dir = kalloc_frame();
-    page_frame_t phys_page_entries = kalloc_frame();
-    // Zero page table
-    memset((void*)phys_page_dir, 0, PAGE_SIZE);
-    memset((void*)phys_page_entries, 0, PAGE_SIZE);
-
-    struct page_dir_entry *dirs = phys_page_dir;
-    struct page_entry *entries = phys_page_entries;;
-    dirs[TOP10(KERNEL_START)].present = 1;
-    dirs[TOP10(KERNEL_START)].address = phys_page_entries >> 12;
-
-    entries[BOTTOM10(KERNEL_START)].present = 1;
-    entries[BOTTOM10(KERNEL_START)].address = KHEAP_PHYS_ROOT;
-
-    entries[BOTTOM10(KERNEL_START+PAGE_SIZE)].present = 1;
-    entries[BOTTOM10(KERNEL_START+PAGE_SIZE)].address = PAGE_ALIGN(KHEAP_PHYS_ROOT+PAGE_SIZE);
-
-    entries[BOTTOM10(KERNEL_START+2*PAGE_SIZE)].present = 1;
-    entries[BOTTOM10(KERNEL_START+2*PAGE_SIZE)].address = PAGE_ALIG(NKHEAP_PHYS_ROOT+2*PAGE_SIZE);
-
-    entries[BOTTOM10(KERNEL_START+3*PAGE_SIZE)].present = 1;
-    entries[BOTTOM10(KERNEL_START+3*PAGE_SIZE)].address = PAGE_ALIGN(KHEAP_PHYS_ROOT+3*PAGE_SIZE);
-
-    int foo;
-    kprint_int("item: ", KERNEL_START);
-    kprint_int("item: ", (int*)&foo);
-    /*
-    entries[(phys_page_dir)].present = 1;
-    entries[(phys_page_dir)].address = 0x5;
-
-    entries[phys_page_entries].present = 1;
-    entries[phys_page_entries].address = 0x9;
-    */
-
-    enable_paging(phys_page_dir);
+    enable_paging(dirs);
 }
+
