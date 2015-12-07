@@ -51,36 +51,29 @@ page_frame_t kalloc_frame() {
 */
 
 #define PAGE_ALIGN(x) (((uintptr_t)(x)+PAGE_SIZE) & ~0xfff)
-#define NEXT_PAGE(x) ((uintptr_t)(x) & ~0xfff)
-#define TOP20(x) (((uint32_t)(x)) & 0xfffff000)
+#define TOP20(x) ((uintptr_t)(x) & 0xfffff000)
 #define TOP10(x) ((uintptr_t)(x) & 0xffc00000)
 #define MID10(x) ((uintptr_t)(x) & 0x003ff000)
 #define LOW10(x) ((uintptr_t)(x) & 0x000003ff)
 #define PAGE_TABLE_SIZE 1024
 #define PAGE_ENTRY_SIZE 4
-#define PAGE_DIRECTORY NEXT_PAGE(&kernel_end)
+#define PAGE_DIRECTORY PAGE_ALIGN(&kernel_end)
 #define PAGE_TABLES (PAGE_DIRECTORY + PAGE_TABLE_SIZE * PAGE_ENTRY_SIZE)
 #define PAGE_END (PAGE_TABLES + PAGE_TABLE_SIZE * PAGE_TABLE_SIZE * PAGE_ENTRY_SIZE)
 
 
 void kernel_page_table_install() {
-    kassert(sizeof(uint32_t) == sizeof(uint32_t*));
-    kassert(sizeof(uint32_t) == sizeof(uintptr_t));
     uint32_t *page_dir = PAGE_DIRECTORY;
     uint32_t *cur_page_entry = PAGE_DIRECTORY + PAGE_SIZE;
     for (uint32_t table_i = 0; table_i < PAGE_TABLE_SIZE; table_i++) {
         page_dir[table_i] = TOP20(cur_page_entry) | 1;
-        //kprintf("cpe %p ", cur_page_entry);
-        //kprintf("cpd %p ", page_dir[table_i]);
-        //kassert((page_dir[table_i] & 0xfff) == 1);
         for (uint32_t entry_i = 0; entry_i < PAGE_TABLE_SIZE; entry_i++) {
             cur_page_entry[entry_i] = LOW10(table_i) << 20 | LOW10(entry_i) << 10 | 1;
-            //kprintf("cpe %u ", cur_page_entry[entry_i]);
         }
         cur_page_entry += PAGE_SIZE;
     }
     enable_paging(page_dir);
-    kprintf("hi");
+    //kprintf("%p\n", &a);
     //kprintf("%s\n", _start < KERNEL_END ? "true" : "false");
     /*
     first_frame = (uint32_t)KERNEL_END & 0xffffc000;
