@@ -1,8 +1,8 @@
 #include <libk/kputs.h>
 
 void kputs(char* string) {
-    term_writestring(string);
-    term_putchar('\n');
+    terminal_writestring(string);
+    terminal_putchar('\n');
 }
 
 static void kprint_ptr(void *p) {
@@ -20,10 +20,10 @@ static void kprint_ptr(void *p) {
         buf[c] = number;
         n /= 16;
     }
-    term_putchar('0');
-    term_putchar('x');
+    terminal_putchar('0');
+    terminal_putchar('x');
     for (; c < 10; ++c) {
-        term_putchar(buf[c]+'0');
+        terminal_putchar(buf[c]+'0');
     }
 }
 
@@ -38,13 +38,13 @@ static void kprint_uint(unsigned int i) {
         }
     }
     for (; c < 10; ++c) {
-        term_putchar(buf[c]+'0');
+        terminal_putchar(buf[c]+'0');
     }
 }
 
 static void kprint_int(int i) {
     if (i < 0) {
-        term_putchar('-');
+        terminal_putchar('-');
     }
     unsigned char buf[10] = {0};
     unsigned int c;
@@ -56,7 +56,7 @@ static void kprint_int(int i) {
         }
     }
     for (; c < 10; ++c) {
-        term_putchar(buf[c]+'0');
+        terminal_putchar(buf[c]+'0');
     }
 }
 
@@ -70,7 +70,7 @@ void kprintf(char* string, ...) {
             ++i;
             switch(string[i]) {
                 case '%':
-                    term_putchar('%');
+                    terminal_putchar('%');
                     break;
                 case 'p':
                     kprint_ptr(va_arg(args, void*));
@@ -80,7 +80,7 @@ void kprintf(char* string, ...) {
                     kprint_int(va_arg(args, int));
                     break;
                 case 's':
-                    term_writestring(va_arg(args, char*));
+                    terminal_writestring(va_arg(args, char*));
                     break;
                 case 'u':
                     kprint_uint(va_arg(args, unsigned int));
@@ -89,7 +89,7 @@ void kprintf(char* string, ...) {
             }
             continue;
         }
-        term_putchar(string[i]);
+        terminal_putchar(string[i]);
     }
     va_end(args);
 }
