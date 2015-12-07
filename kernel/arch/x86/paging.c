@@ -2,13 +2,13 @@
 
 static uint8_t page_frame_map[PAGE_FRAME_MAP_SIZE];
 static page_frame_t frame_cache[PAGE_FRAME_CACHE_SIZE];
-static page_frame_t first_frame = &kernel_end;
+static page_frame_t first_frame = 0;
 
 
-struct page_entry *init_page(page_frame_t phys_addr, void* virt_addr,
-        struct page_dir_entry *dir, bool super_user, bool rw);
+void init_page(page_frame_t phys_addr, uint32_t virt_addr, uint32_t *dirs);
 struct page_entry *get_page(page_frame_t phys_addr, struct page_dir_entry *dir);
 
+/*
 // Linear search of page frame bitmap
 page_frame_t kalloc_frame_helper() {
     for (size_t i = 0; i < PAGE_FRAME_MAP_SIZE; ++i) {
@@ -44,33 +44,86 @@ page_frame_t kalloc_frame() {
     }
     new_frame = frame_cache[frame_count];
     frame_count++;
+    kassert(new_frame % PAGE_SIZE == 0);
+    kprintf("New frame address: %p\n", new_frame);
     return new_frame;
 }
+*/
+
+#define PAGE_ALIGN(x) (((uintptr_t)(x)+PAGE_SIZE) & ~0xfff)
+#define NEXT_PAGE(x) ((uintptr_t)(x) & ~0xfff)
+#define TOP20(x) (((uint32_t)(x)) & 0xfffff000)
+#define TOP10(x) ((uintptr_t)(x) & 0xffc00000)
+#define MID10(x) ((uintptr_t)(x) & 0x003ff000)
+#define LOW10(x) ((uintptr_t)(x) & 0x000003ff)
+#define PAGE_TABLE_SIZE 1024
+#define PAGE_ENTRY_SIZE 4
+#define PAGE_DIRECTORY NEXT_PAGE(&kernel_end)
+#define PAGE_TABLES (PAGE_DIRECTORY + PAGE_TABLE_SIZE * PAGE_ENTRY_SIZE)
+#define PAGE_END (PAGE_TABLES + PAGE_TABLE_SIZE * PAGE_TABLE_SIZE * PAGE_ENTRY_SIZE)
 
 
 void kernel_page_table_install() {
-    memset(&page_frame_map, 0 , PAGE_FRAME_MAP_SIZE);
-    page_frame_t dirs = kalloc_frame();
-    memset(dirs, 0, PAGE_SIZE);
-    // Get all the kernel frames and identity map them
-    for (page_frame_t phys_addr = KERNEL_START;
-            phys_addr < (page_frame_t)&kernel_end; phys_addr += PAGE_SIZE) {
-        page_frame_map[phys_addr/8] |= 1 << (phys_addr % 8);
-        init_page(phys_addr, (void*)phys_addr, dirs, 0, 0);
+    kassert(sizeof(uint32_t) == sizeof(uint32_t*));
+    kassert(sizeof(uint32_t) == sizeof(uintptr_t));
+    uint32_t *page_dir = PAGE_DIRECTORY;
+    uint32_t *cur_page_entry = PAGE_DIRECTORY + PAGE_SIZE;
+    for (uint32_t table_i = 0; table_i < PAGE_TABLE_SIZE; table_i++) {
+        page_dir[table_i] = TOP20(cur_page_entry) | 1;
+        //kprintf("cpe %p ", cur_page_entry);
+        //kprintf("cpd %p ", page_dir[table_i]);
+        //kassert((page_dir[table_i] & 0xfff) == 1);
+        for (uint32_t entry_i = 0; entry_i < PAGE_TABLE_SIZE; entry_i++) {
+            cur_page_entry[entry_i] = LOW10(table_i) << 20 | LOW10(entry_i) << 10 | 1;
+            //kprintf("cpe %u ", cur_page_entry[entry_i]);
+        }
+        cur_page_entry += PAGE_SIZE;
     }
-    enable_paging((struct page_dir_entry*)dirs);
+    enable_paging(page_dir);
+    kprintf("hi");
+    //kprintf("%s\n", _start < KERNEL_END ? "true" : "false");
+    /*
+    first_frame = (uint32_t)KERNEL_END & 0xffffc000;
+    memset(&page_frame_map, 0 , PAGE_FRAME_MAP_SIZE);
+    page_frame_t dirs = (uint32_t)KERNEL_END + PAGE_SIZE;
+    kprintf("dirs: %p\n", dirs);
+    memset((void*)dirs, 0, PAGE_SIZE);
+    // Get all the kernel frames and identity map them
+    kprintf("ks %p\n ke %p\n", KERNEL_START, KERNEL_END);
+    for (page_frame_t phys_addr = KERNEL_START;
+            phys_addr < (page_frame_t)KERNEL_END; phys_addr += PAGE_SIZE) {
+        page_frame_map[phys_addr/8] |= 1 << (phys_addr % 8);
+        init_page(phys_addr, phys_addr, (void*)dirs);
+        kputs("iter");
+    }
+    kprintf("Page directory: %p\n", dirs);
+    //kprintf("Page frame: %p\n", phys_addr);
+    //enable_paging((void*)dirs);
+    */
 }
 
-struct page_entry *init_page(page_frame_t phys_addr, void* virt_addr,
-        struct page_dir_entry *dir, bool super_user, bool rw) {
-    uint32_t table_index = TOP10(phys_addr);
-    struct page_entry *pages = dir[table_index].address;
-    struct page_entry page = pages[BOTTOM10(phys_addr)];
+void init_page(page_frame_t phys_addr, uint32_t virt_addr, uint32_t *dirs) {
+    static uint32_t last_page_frame = (uint32_t)KERNEL_END + 2 * PAGE_SIZE;
+    uint32_t top10 = phys_addr >> 22;
+    uint32_t bottom10 = (phys_addr >> 12) & 0x3ff;
+    page_frame_t *page_frame;
+    // If the page table is not present, allocate it
+    if ((dirs[top10] & 0x1) == 0) {
+        page_frame = (uint32_t*)last_page_frame;
+        last_page_frame += PAGE_SIZE;
+        // Set pointer to page table
+        dirs[top10] |= (uint32_t)page_frame & 0xffffc000;
+        // Set present bit
+        dirs[top10] |= 0x1;
+    }
+    page_frame = (page_frame_t*)(dirs[top10] & 0xffffc000);
 
-    dir[table_index].present = 1;
-    page.address = (uint32_t) virt_addr;
-    page.present = 1;
-    page.rw = rw;
-    page.super_user = super_user;
-    return &page;
+    // Set pointer to the virt_addr
+    page_frame[bottom10] = virt_addr & 0xffffc000;
+    // Set present bit
+    page_frame[bottom10] |= 0x1;
+    //kprintf("Page frame: %p\n", page_frame);
+    kprintf("Page frame bt: %p\n", page_frame[bottom10]);
+    //kprintf("Page dir: %p\n", dirs);
+    kprintf("Page dir tt: %p\n", dirs[top10]);
 }
