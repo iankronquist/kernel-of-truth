@@ -68,3 +68,7 @@ build:
 
 clean:
 	rm -rf build
+
+run: all start
+	rm -rf build
+

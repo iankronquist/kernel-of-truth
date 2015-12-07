@@ -13,7 +13,7 @@
 
 void kernel_main()
 {
-    term_initialize();
+    terminal_initialize();
     gdt_install();
     idt_install();
     keyboard_install();
