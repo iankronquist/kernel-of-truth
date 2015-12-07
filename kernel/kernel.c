@@ -31,6 +31,14 @@ void kernel_main()
     //char *foo = 0x324981389124;
     //memcpy(testing, foo, 16);
 
+    /*
+    // Causes a division by 0 exception
+    unsigned int a, b;
+    a = 10;
+    kprintf("Dividing %u/%u\n", a, b);
+    b = 0;
+    a /= b;
+    */
 
 
     while (1) {
