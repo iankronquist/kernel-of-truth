@@ -7,7 +7,6 @@ void kputs(char* string) {
 
 static void kprint_ptr(void *p) {
     unsigned char buf[8] = {0};
-    unsigned short number;
     unsigned int c;
     uintptr_t n = (uintptr_t)p;
     for (c = 7; c > 0; --c) {
