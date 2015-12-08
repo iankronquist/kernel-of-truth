@@ -1,14 +1,15 @@
 #include <arch/x86/paging.h>
 
+
+/*
+void init_page(page_frame_t phys_addr, uint32_t virt_addr, uint32_t *dirs);
 static uint8_t page_frame_map[PAGE_FRAME_MAP_SIZE];
 static page_frame_t frame_cache[PAGE_FRAME_CACHE_SIZE];
 static page_frame_t first_frame = 0;
 
 
-void init_page(page_frame_t phys_addr, uint32_t virt_addr, uint32_t *dirs);
 struct page_entry *get_page(page_frame_t phys_addr, struct page_dir_entry *dir);
 
-/*
 // Linear search of page frame bitmap
 page_frame_t kalloc_frame_helper() {
     for (size_t i = 0; i < PAGE_FRAME_MAP_SIZE; ++i) {
@@ -73,6 +74,7 @@ void kernel_page_table_install() {
     enable_paging(page_dir);
 }
 
+/*
 void init_page(page_frame_t phys_addr, uint32_t virt_addr, uint32_t *dirs) {
     static uint32_t last_page_frame = (uint32_t)KERNEL_END + 2 * PAGE_SIZE;
     uint32_t top10 = phys_addr >> 22;
@@ -98,3 +100,4 @@ void init_page(page_frame_t phys_addr, uint32_t virt_addr, uint32_t *dirs) {
     //kprintf("Page dir: %p\n", dirs);
     kprintf("Page dir tt: %p\n", dirs[top10]);
 }
+*/
