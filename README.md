@@ -4,7 +4,8 @@ Kernel of Truth
 A simple kernel written in C.
 
 The goal of this project is to build a simple kernel with memory protection and 
-iterrupts which can run simple programs.
+interrupts which can run simple programs.
+
 This project currently targets the x86 architecture. Perhaps someday I will 
 port it to ARM so it can run on the Raspberry Pi, but right now I'm focused on 
 implementing the fundamentals of a system.
