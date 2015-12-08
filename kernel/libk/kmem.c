@@ -43,7 +43,7 @@ void *kmalloc(size_t bytes) {
 int kheap_extend(size_t bytes) {
     size_t new_bytes = (bytes - 1) / (PAGE_SIZE + 1);
     kassert(new_bytes % PAGE_SIZE == 0);
-    if (heap_end + new_bytes > &kernel_end) {
+    if (heap_end + new_bytes > KHEAP_PHYS_END) {
         kputs("Out of kernel heap memory");
         kabort();
     }
