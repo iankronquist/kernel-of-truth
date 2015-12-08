@@ -50,16 +50,14 @@ page_frame_t kalloc_frame() {
 }
 */
 
-#define PAGE_ALIGN(x) (((uintptr_t)(x)+PAGE_SIZE) & ~0xfff)
+#define PAGE_ALIGN(x) (((uintptr_t)(x)) & ~0xfff)
+#define NEXT_PAGE(x) (((uintptr_t)(x)+PAGE_SIZE) & ~0xfff)
 #define TOP20(x) ((uintptr_t)(x) & 0xfffff000)
 #define TOP10(x) ((uintptr_t)(x) & 0xffc00000)
 #define MID10(x) ((uintptr_t)(x) & 0x003ff000)
 #define LOW10(x) ((uintptr_t)(x) & 0x000003ff)
 #define PAGE_TABLE_SIZE 1024
-#define PAGE_ENTRY_SIZE 4
-#define PAGE_DIRECTORY PAGE_ALIGN(&kernel_end)
-#define PAGE_TABLES (PAGE_DIRECTORY + PAGE_TABLE_SIZE * PAGE_ENTRY_SIZE)
-#define PAGE_END (PAGE_TABLES + PAGE_TABLE_SIZE * PAGE_TABLE_SIZE * PAGE_ENTRY_SIZE)
+#define PAGE_DIRECTORY NEXT_PAGE(&kernel_end)
 
 
 void kernel_page_table_install() {
@@ -68,31 +66,11 @@ void kernel_page_table_install() {
     for (uint32_t table_i = 0; table_i < PAGE_TABLE_SIZE; table_i++) {
         page_dir[table_i] = TOP20(cur_page_entry) | 1;
         for (uint32_t entry_i = 0; entry_i < PAGE_TABLE_SIZE; entry_i++) {
-            cur_page_entry[entry_i] = LOW10(table_i) << 20 | LOW10(entry_i) << 10 | 1;
+            cur_page_entry[entry_i] = LOW10(table_i) << 22 | LOW10(entry_i) << 12 | 1;
         }
         cur_page_entry += PAGE_SIZE;
     }
     enable_paging(page_dir);
-    //kprintf("%p\n", &a);
-    //kprintf("%s\n", _start < KERNEL_END ? "true" : "false");
-    /*
-    first_frame = (uint32_t)KERNEL_END & 0xffffc000;
-    memset(&page_frame_map, 0 , PAGE_FRAME_MAP_SIZE);
-    page_frame_t dirs = (uint32_t)KERNEL_END + PAGE_SIZE;
-    kprintf("dirs: %p\n", dirs);
-    memset((void*)dirs, 0, PAGE_SIZE);
-    // Get all the kernel frames and identity map them
-    kprintf("ks %p\n ke %p\n", KERNEL_START, KERNEL_END);
-    for (page_frame_t phys_addr = KERNEL_START;
-            phys_addr < (page_frame_t)KERNEL_END; phys_addr += PAGE_SIZE) {
-        page_frame_map[phys_addr/8] |= 1 << (phys_addr % 8);
-        init_page(phys_addr, phys_addr, (void*)dirs);
-        kputs("iter");
-    }
-    kprintf("Page directory: %p\n", dirs);
-    //kprintf("Page frame: %p\n", phys_addr);
-    //enable_paging((void*)dirs);
-    */
 }
 
 void init_page(page_frame_t phys_addr, uint32_t virt_addr, uint32_t *dirs) {
