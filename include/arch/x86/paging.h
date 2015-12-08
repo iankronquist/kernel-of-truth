@@ -14,24 +14,24 @@
 #include <arch/x86/memlayout.h>
 
 
-#define PHYS_MEMORY_SIZE (1*1024*1024*1024)
-
 #define PAGE_TABLE_SIZE 1024
 #define PAGE_SIZE 4096
-
-#define PAGE_DIR_SHIFT 12
-#define PAGE_TABLE_SHIFT 12
-
-#define PAGE_DIR_INDEX(virtual_address) ((uint32_t)(virtual_address) >> PAGE_DIR_SHIFT & 0x3ff)
-#define PAGE_TABLE_INDEX(virtual_address) ((uint32_t)(virtual_address) >> PAGE_TABLE_SHIFT & 0x3ff)
 
 typedef uint32_t page_frame_t;
 #define PAGE_FRAME_CACHE_SIZE 32
 #define PAGE_FRAME_MAP_SIZE (PHYS_MEMORY_SIZE/8/PAGE_SIZE)
 extern uint32_t kernel_end;
 
-#define TOP10(x) ((uint32_t)x >> 22)
-#define BOTTOM10(x) (((uint32_t)x >> 12) & 0x3ff)
+
+#define PAGE_ALIGN(x) (((uintptr_t)(x)) & ~0xfff)
+#define NEXT_PAGE(x) (((uintptr_t)(x)+PAGE_SIZE) & ~0xfff)
+#define TOP20(x) ((uintptr_t)(x) & 0xfffff000)
+#define TOP10(x) ((uintptr_t)(x) & 0xffc00000)
+#define MID10(x) ((uintptr_t)(x) & 0x003ff000)
+#define LOW10(x) ((uintptr_t)(x) & 0x000003ff)
+#define PAGE_TABLE_SIZE 1024
+#define PAGE_DIRECTORY NEXT_PAGE(&kernel_end)
+
 
 struct page_dir_entry {
     uint32_t present:1;
