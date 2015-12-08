@@ -68,6 +68,6 @@ void *alloc_page(void *virtual, bool rw, bool super_user, bool write_cache,
 void free_page(void *virtual);
 
 extern void flush_tlb(void);
-extern void enable_paging(struct page_dir_entry page_dir[1024]);
+extern void enable_paging(uint32_t *page_dir);
 
 #endif
