@@ -2,6 +2,7 @@ ARCH=i686-elf
 TEST_CC=clang
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=compiler/$(ARCH)/bin/$(ARCH)-as
+ASFLAGS=-g
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Wextra -g -I ./include -I tlibc/include
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include
 QEMU_FLAGS= -m 1G
@@ -11,7 +12,7 @@ all: bootloader-x86 kernel link-x86
 tests: build libk-tests
 
 bootloader-x86: build
-	${AS} kernel/arch/x86/boot.s -o build/boot.o
+	${AS} kernel/arch/x86/boot.s -o build/boot.o ${ASFLAGS}
 
 libk: build
 	${CC} -c kernel/libk/kmem.c -o build/kmem.o  ${CFLAGS}
@@ -28,6 +29,9 @@ kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86
 link-x86: build
 	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/*.o -lgcc
 
+handlers: build
+	${CC} -c kernel/arch/x86/handlers.c -o build/handlers.o ${CFLAGS}
+
 terminal: build
 	${CC} -c kernel/drivers/terminal.c -o build/terminal.o ${CFLAGS}
 
@@ -42,11 +46,11 @@ paging-x86: build
 
 gdt-x86: build
 	${CC} -c kernel/arch/x86/gdt.c -o build/gdtc.o ${CFLAGS}
-	${AS} kernel/arch/x86/gdt.s -o build/gdts.o
+	${AS} kernel/arch/x86/gdt.s -o build/gdts.o ${ASFLAGS}
 
-idt-x86: build keyboard
-	${CC} -c kernel/arch/x86/idt.c build/keyboard.o -o build/idtc.o ${CFLAGS}
-	${AS} kernel/arch/x86/idt.s -o build/idts.o
+idt-x86: build keyboard handlers
+	${CC} -c kernel/arch/x86/idt.c build/handlers.o build/keyboard.o -o build/idtc.o ${CFLAGS}
+	${AS} kernel/arch/x86/idt.s -o build/idts.o ${ASFLAGS}
 
 keyboard: build
 	${CC} -c kernel/drivers/keyboard.c -o build/keyboard.o ${CFLAGS}
