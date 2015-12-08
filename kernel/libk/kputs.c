@@ -6,24 +6,22 @@ void kputs(char* string) {
 }
 
 static void kprint_ptr(void *p) {
-    unsigned char buf[10] = {0};
+    unsigned char buf[8] = {0};
     unsigned short number;
     unsigned int c;
     uintptr_t n = (uintptr_t)p;
-    for (c = 9; c > 0; --c) {
-        number = (n % 16) + '0';
-        if (number >= 10) {
-            number += 'a' - 10;
-        } else {
-            number += '0';
-        }
-        buf[c] = number;
+    for (c = 7; c > 0; --c) {
+        buf[c] = n % 16;
         n /= 16;
     }
     terminal_putchar('0');
     terminal_putchar('x');
-    for (; c < 10; ++c) {
-        terminal_putchar(buf[c]+'0');
+    for (; c < 8; ++c) {
+        if (buf[c] >= 10) {
+            terminal_putchar(buf[c] + 'a' - 10);
+        } else {
+            terminal_putchar(buf[c] + '0');
+        }
     }
 }
 
