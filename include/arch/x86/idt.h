@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <libk/kputs.h>
+#include <libk/kabort.h>
 
 #include <drivers/timer.h>
 
