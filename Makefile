@@ -29,9 +29,6 @@ kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86
 link-x86: build
 	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/*.o -lgcc
 
-handlers: build
-	${CC} -c kernel/arch/x86/handlers.c -o build/handlers.o ${CFLAGS}
-
 terminal: build
 	${CC} -c kernel/drivers/terminal.c -o build/terminal.o ${CFLAGS}
 
@@ -48,8 +45,8 @@ gdt-x86: build
 	${CC} -c kernel/arch/x86/gdt.c -o build/gdtc.o ${CFLAGS}
 	${AS} kernel/arch/x86/gdt.s -o build/gdts.o ${ASFLAGS}
 
-idt-x86: build keyboard handlers
-	${CC} -c kernel/arch/x86/idt.c build/handlers.o build/keyboard.o -o build/idtc.o ${CFLAGS}
+idt-x86: build keyboard
+	${CC} -c kernel/arch/x86/idt.c build/keyboard.o -o build/idtc.o ${CFLAGS}
 	${AS} kernel/arch/x86/idt.s -o build/idts.o ${ASFLAGS}
 
 keyboard: build
