@@ -3,10 +3,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <arch/x86/paging.h>
+#include <arch/x86/memlayout.h>
 #include <libk/kabort.h>
 
-#define KHEAP_PHYS_ROOT ((void*)0x100000)
-//#define KHEAP_PHYS_END  ((void*)0xc1000000)
+
+// KHEAP_PHYS_ROOT is defined in memlayout.h because it is architecture
+// specific.
 #define KHEAP_END_SENTINEL (NULL)
 
 #define KHEAP_BLOCK_SLOP 32
