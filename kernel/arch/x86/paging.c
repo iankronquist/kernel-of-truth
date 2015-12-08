@@ -51,19 +51,9 @@ page_frame_t kalloc_frame() {
 }
 */
 
-#define PAGE_ALIGN(x) (((uintptr_t)(x)) & ~0xfff)
-#define NEXT_PAGE(x) (((uintptr_t)(x)+PAGE_SIZE) & ~0xfff)
-#define TOP20(x) ((uintptr_t)(x) & 0xfffff000)
-#define TOP10(x) ((uintptr_t)(x) & 0xffc00000)
-#define MID10(x) ((uintptr_t)(x) & 0x003ff000)
-#define LOW10(x) ((uintptr_t)(x) & 0x000003ff)
-#define PAGE_TABLE_SIZE 1024
-#define PAGE_DIRECTORY NEXT_PAGE(&kernel_end)
-
-
 void kernel_page_table_install() {
-    uint32_t *page_dir = PAGE_DIRECTORY;
-    uint32_t *cur_page_entry = PAGE_DIRECTORY + PAGE_SIZE;
+    uint32_t *page_dir = (uint32_t*)PAGE_DIRECTORY;
+    uint32_t *cur_page_entry = (uint32_t*)PAGE_DIRECTORY + PAGE_SIZE;
     for (uint32_t table_i = 0; table_i < PAGE_TABLE_SIZE; table_i++) {
         page_dir[table_i] = TOP20(cur_page_entry) | 1;
         for (uint32_t entry_i = 0; entry_i < PAGE_TABLE_SIZE; entry_i++) {
