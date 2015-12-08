@@ -3,7 +3,7 @@
 #include "kputs.h"
 
 #define kassert(value) if (!(value)) { \
-    kputs("Assertion failed: (#value) function __FUNCTION__, file __FILE__, line __LINE__."); \
+    kprintf("Assertion failed: (%s) function %s, file %s, line %d.", #value, __FUNCTION__, __FILE__, __LINE__); \
     kabort();\
 }
 
