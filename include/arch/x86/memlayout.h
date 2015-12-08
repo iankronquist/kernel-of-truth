@@ -3,11 +3,9 @@
 
 #include <stdint.h>
 
-// 1 MB
-#define KERNEL_START 0x100000
-
-// 4 KB
-#define KERNEL_SIZE (4096*4)
+#define KERNEL_START ((uint32_t)&kernel_start)
+#define KERNEL_END ((uint32_t)&kernel_end)
+#define KERNEL_SIZE (KERNEL_START - KERNEL_END)
 
 #define VIDEO_MEMORY_BEGIN 0xB8000
 #define VIDEO_MEMORY_SIZE (80 * 24)
