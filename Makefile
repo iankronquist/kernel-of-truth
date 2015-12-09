@@ -21,8 +21,8 @@ libk: build
 	${CC} -c kernel/libk/physical_allocator.c -o build/physical_allocator.o  ${CFLAGS}
 
 libk-tests:
-	${TEST_CC} kernel/libk/kmem.c kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c -o build/tests/kmem ${TEST_CFLAGS}
-
+	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c kernel/libk/kmem.c  -o build/tests/kmem ${TEST_CFLAGS}
+	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c -o build/tests/physical_allocator ${TEST_CFLAGS}
 
 kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
