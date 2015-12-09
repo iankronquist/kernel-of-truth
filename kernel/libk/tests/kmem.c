@@ -19,6 +19,7 @@ void kprint_heap() {
 int main() {
     size_t playground_size = PAGE_SIZE * 5;
     char *playground = malloc(PAGE_SIZE * 5);
+    dependencies_suck = (uintptr_t)playground;
     memset(playground, 0, playground_size);
 
     puts("Initializing heap");
