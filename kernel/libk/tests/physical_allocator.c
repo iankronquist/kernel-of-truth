@@ -104,19 +104,16 @@ void test_alloc_frame() {
     reset_bitmap();
     EXPECT_EQ(frame_count, PAGE_FRAME_CACHE_SIZE);
     page_frame_t first = alloc_frame();
-    printf("%u\n", first);
     EXPECT_EQ(first % PAGE_SIZE, 0);
     EXPECT_EQ(page_frame_map[0], 1);
     EXPECT_EQ(frame_count, 1);
 
     page_frame_t second = alloc_frame();
-    printf("%u\n", second);
     EXPECT_EQ(second % PAGE_SIZE, 0);
     EXPECT_EQ(page_frame_map[0], 3);
     EXPECT_EQ(frame_count, 2);
 
     page_frame_t third = alloc_frame();
-    printf("%u\n", third);
     EXPECT_EQ(third % PAGE_SIZE, 0);
     EXPECT_EQ(page_frame_map[0], 7);
     EXPECT_EQ(frame_count, 3);
