@@ -18,6 +18,7 @@ libk: build
 	${CC} -c kernel/libk/kmem.c -o build/kmem.o  ${CFLAGS}
 	${CC} -c kernel/libk/kabort.c -o build/kabort.o  ${CFLAGS}
 	${CC} -c kernel/libk/kputs.c -o build/kputs.o  ${CFLAGS}
+	${CC} -c kernel/libk/physical_allocator.c -o build/physical_allocator.o  ${CFLAGS}
 
 libk-tests:
 	${TEST_CC} kernel/libk/kmem.c kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c -o build/tests/kmem ${TEST_CFLAGS}
