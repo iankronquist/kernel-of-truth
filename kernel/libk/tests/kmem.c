@@ -150,6 +150,11 @@ int main() {
     EXPECT_EQ(root->is_free, true);
     EXPECT_EQ(root->size, PAGE_SIZE * 5);
 
+    // Allocating no bytes returns NULL.
+    void *nada = kmalloc(0);
+    EXPECT_EQ(nada, 0);
+
+
     free(playground);
     return RETURN_VALUE;
 }
