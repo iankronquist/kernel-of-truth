@@ -3,6 +3,13 @@
 
 #include <stdint.h>
 
+#define KB 1024
+#define MB 1024*1024
+#define GB 1024*1024*1024
+
+#define PHYS_MEMORY_SIZE 1*GB
+#define PAGE_SIZE 4096
+
 // These two variables are defined by the linker. They are located where you
 // would expect based on the names.
 extern uint32_t kernel_start;
@@ -16,11 +23,13 @@ extern uint32_t kernel_end;
 // Paging related
 #define PAGE_ALIGN(x) (((uintptr_t)(x)) & ~0xfff)
 #define NEXT_PAGE(x) (((uintptr_t)(x)+PAGE_SIZE) & ~0xfff)
-#define PAGE_DIRECTORY NEXT_PAGE(KERNEL_END)
 
 // Heap related
-#define KHEAP_PHYS_ROOT ((void*)0x100000)
+#define KHEAP_PHYS_ROOT NEXT_PAGE(KERNEL_END)
 #define KHEAP_PHYS_END ((void*)NEXT_PAGE(KHEAP_PHYS_ROOT))
+
+// Also paging related
+#define PAGE_DIRECTORY NEXT_PAGE(KERNEL_END)
 
 // Video memory related
 #define VIDEO_MEMORY_BEGIN 0xB8000
