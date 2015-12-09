@@ -32,7 +32,7 @@ libk: build serial
 	${CC} -c kernel/libk/physical_allocator.c -o build/physical_allocator.o  ${CFLAGS}
 
 libk-tests:
-	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c kernel/libk/kmem.c  -o build/tests/kmem ${TEST_CFLAGS}
+	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c  -o build/tests/kmem ${TEST_CFLAGS}
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c -o build/tests/physical_allocator ${TEST_CFLAGS}
 
 io: build

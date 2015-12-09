@@ -3,6 +3,7 @@
 
 #include <tests/tests.h>
 #include <libk/kmem.h>
+#include "../kmem.c"
 
 // Useful for debugging
 void kprint_heap() {
