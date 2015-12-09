@@ -17,7 +17,7 @@ void kernel_main()
     gdt_install();
     idt_install();
     keyboard_install();
-    kheap_install(KHEAP_PHYS_ROOT, PAGE_SIZE);
+    kheap_install((struct kheap_metadata*)KHEAP_PHYS_ROOT, PAGE_SIZE);
     // Periodically prints 'tick!' on the screen. This will be useful later for
     // multi-tasking.
     //timer_install();
