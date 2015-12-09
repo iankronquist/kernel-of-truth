@@ -2,16 +2,18 @@
 #define TESTS_H
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define RED "\x1B[0;31m"
 #define GREEN "\x1B[0;32m"
 #define NOCOLOR "\x1B[0m"
 
 int RETURN_VALUE = 0;
+int passed;
 
 #define PRINTF_FORMAT(x) _Generic(x, int: "%i", long: "%l", \
-        unsigned int: "%iu", unsigned long: "%lu", char*: "%s", void*: "%p", \
-        struct kheap_metadata*: "%p", bool: "%d", default: "Unknown type!")
+        unsigned int: "%u", unsigned long: "%lu", char*: "%s", void*: "%p", \
+        bool: "%d", default: "%u")
 
 #define DIAGNOSTICS(a, b) \
         printf("Expected "); \
@@ -64,6 +66,23 @@ else {\
     printf(" %sFailed%s\n", RED, NOCOLOR);\
     DIAGNOSTICS(a, b); \
     RETURN_VALUE = EXIT_FAILURE;\
+}
+
+#define EXPECT_SLICE_EMPTY(sequence, begin, end)\
+printf("Test %s is empty between %s and %s ", (#sequence), (#begin), (#end));\
+passed = 1;\
+for (size_t i = (begin); i < (end); i++) {\
+    if (sequence[i] != 0) {\
+        printf("%sFailed%s\n", RED, NOCOLOR);\
+        printf("At index %zu\n", i); \
+        DIAGNOSTICS(sequence[i], 0); \
+        RETURN_VALUE = EXIT_FAILURE;\
+        passed = 0;\
+        break;\
+    }\
+}\
+if (passed) {\
+    printf("%sPassed%s\n", GREEN, NOCOLOR);\
 }
 
 #define EXPECT_CONTAINS(value, sequence, range)\
