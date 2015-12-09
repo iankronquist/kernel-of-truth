@@ -1,15 +1,22 @@
 ARCH=i686-elf
-TEST_CC=clang
+TEST_CC=gcc
+GCOV=gcov
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=compiler/$(ARCH)/bin/$(ARCH)-as
 ASFLAGS=-g
-CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Wextra -g -I ./include -I tlibc/include
-TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include
+CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
+TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
 QEMU_FLAGS= -m 1G
 
 all: bootloader-x86 kernel link-x86 
 
 tests: build libk-tests
+
+run-tests: tests
+	./build/tests/kmem
+	${GCOV} kmem.gcno
+	./build/tests/physical_allocator
+	${GCOV} physical_allocator.gcno
 
 bootloader-x86: build
 	${AS} kernel/arch/x86/boot.s -o build/boot.o ${ASFLAGS}
@@ -71,6 +78,12 @@ build:
 
 clean:
 	rm -rf build
+
+clean-all: clean
+	rm -f qemu.log
+	rm -f *.gcno
+	rm -f *.gcov
+	rm -f *.gcda
 
 run: all start
 	rm -rf build
