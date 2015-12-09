@@ -3,3 +3,6 @@
 build
 compiler
 qemu.log
+
+*.gcda
+*.gcno
