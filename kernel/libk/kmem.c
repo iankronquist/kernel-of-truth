@@ -1,6 +1,6 @@
 #include <libk/kmem.h>
 
-void *heap_end = KHEAP_PHYS_ROOT + PAGE_SIZE;
+void *heap_end = NULL;
 
 void *kmalloc(size_t bytes) {
     struct kheap_metadata *cur = root;
