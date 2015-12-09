@@ -2,9 +2,17 @@
 #define KMEM_H
 #include <stdbool.h>
 #include <stdint.h>
-#include <arch/x86/paging.h>
-#include <arch/x86/memlayout.h>
 #include <libk/kabort.h>
+#include <libk/kassert.h>
+
+#ifdef ARCH_X86
+#include <arch/x86/memlayout.h>
+#include <arch/x86/paging.h>
+#endif
+
+#ifdef ARCH_USERLAND
+#include "tests/memlayout.h"
+#endif
 
 
 // KHEAP_PHYS_ROOT is defined in memlayout.h because it is architecture
