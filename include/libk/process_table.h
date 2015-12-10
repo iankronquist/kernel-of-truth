@@ -8,6 +8,7 @@
 
 struct process_table {
     struct process *head;
+    struct process *tail;
 };
 
 struct process_table *init_process_table();

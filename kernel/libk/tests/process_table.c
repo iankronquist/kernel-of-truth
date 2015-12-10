@@ -23,17 +23,20 @@ int main() {
     insert_pid(t, p0);
     EXPECT_EQ(t->head, p0);
     EXPECT_EQ(p0->next, PROCESS_TABLE_END_SENTINEL);
+    EXPECT_EQ(t->tail, p0);
 
     insert_pid(t, p1);
     EXPECT_EQ(t->head, p1);
     EXPECT_EQ(p1->next, p0);
     EXPECT_EQ(p0->next, PROCESS_TABLE_END_SENTINEL);
+    EXPECT_EQ(t->tail, p0);
 
     insert_pid(t, p2);
     EXPECT_EQ(t->head, p2);
     EXPECT_EQ(p2->next, p1);
     EXPECT_EQ(p1->next, p0);
     EXPECT_EQ(p0->next, PROCESS_TABLE_END_SENTINEL);
+    EXPECT_EQ(t->tail, p0);
 
     EXPECT_EQ(contains_pid(t, p1->id), true);
 
@@ -42,6 +45,7 @@ int main() {
     EXPECT_EQ(t->head, p2);
     EXPECT_EQ(p2->next, p0);
     EXPECT_EQ(p0->next, PROCESS_TABLE_END_SENTINEL);
+    EXPECT_EQ(t->tail, p0);
 
     EXPECT_EQ(contains_pid(t, p1->id), false);
 
@@ -54,6 +58,7 @@ int main() {
     EXPECT_EQ(t->head, p2);
     EXPECT_EQ(p2->next, p0);
     EXPECT_EQ(p0->next, PROCESS_TABLE_END_SENTINEL);
+    EXPECT_EQ(t->tail, p0);
 
     // Already removed. Should fail.
     ret = remove_pid(t, p3->id);
@@ -62,10 +67,20 @@ int main() {
     EXPECT_EQ(t->head, p2);
     EXPECT_EQ(p2->next, p0);
     EXPECT_EQ(p0->next, PROCESS_TABLE_END_SENTINEL);
+    EXPECT_EQ(t->tail, p0);
 
 
+    ret = remove_pid(t, p0->id);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(t->head, p2);
+    EXPECT_EQ(p2->next, PROCESS_TABLE_END_SENTINEL);
+    EXPECT_EQ(t->tail, p2);
 
+    ret = remove_pid(t, p2->id);
+    EXPECT_EQ(t->head, PROCESS_TABLE_END_SENTINEL);
+    EXPECT_EQ(t->tail, PROCESS_TABLE_END_SENTINEL);
 
+    free(t);
 
     return RETURN_VALUE;
 }

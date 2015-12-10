@@ -5,6 +5,7 @@
 struct process_table *init_process_table() {
     struct process_table *table = kmalloc(sizeof(struct process_table));
     table->head = PROCESS_TABLE_END_SENTINEL;
+    table->tail = PROCESS_TABLE_END_SENTINEL;
     return table;
 }
 
@@ -15,6 +16,9 @@ int remove_pid(struct process_table *table, true_pid_t pid) {
     if (table->head->id == pid) {
         struct process *free_me = table->head;
         table->head = table->head->next;
+        if (table->head == PROCESS_TABLE_END_SENTINEL) {
+            table->tail = PROCESS_TABLE_END_SENTINEL;
+        }
         kfree(free_me);
         return 0;
     }
@@ -27,6 +31,9 @@ int remove_pid(struct process_table *table, true_pid_t pid) {
     }
     struct process *free_me = cur->next;
     cur->next = cur->next->next;
+    if (free_me->next == PROCESS_TABLE_END_SENTINEL) {
+        table->tail = cur;
+    }
     kfree(free_me);
 
     return 0;
@@ -35,6 +42,9 @@ int remove_pid(struct process_table *table, true_pid_t pid) {
 void insert_pid(struct process_table *table, struct process *proc) {
     proc->next = table->head;
     table->head = proc;
+    if (table->tail == PROCESS_TABLE_END_SENTINEL) {
+        table->tail = proc;
+    }
 }
 
 bool contains_pid(struct process_table *table, true_pid_t id) {
