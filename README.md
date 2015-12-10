@@ -1,4 +1,4 @@
-Kernel of Truth ![build_status](https://travis-ci.org/Herbstein/kernel-of-truth.svg?branch=master)
+Kernel of Truth ![build_status](https://travis-ci.org/iankronquist/kernel-of-truth.svg?branch=master)
 ===============
 
 A simple kernel written in C.
