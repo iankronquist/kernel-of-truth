@@ -19,14 +19,14 @@ int remove_pid(struct process_table *table, true_pid_t pid) {
         return 0;
     }
     struct process *cur = table->head;
-    do {
+    while (cur->next->id != pid) {
+        cur = cur->next;
         if (cur->next == PROCESS_TABLE_END_SENTINEL) {
             return -1;
         }
-        cur = cur->next;
-    } while (cur->next->id != pid);
+    }
     struct process *free_me = cur->next;
-    cur = cur->next->next;
+    cur->next = cur->next->next;
     kfree(free_me);
 
     return 0;
@@ -43,6 +43,7 @@ bool contains_pid(struct process_table *table, true_pid_t id) {
         if (cur->id == id) {
             return true;
         }
+        cur = cur->next;
     }
     return false;
 }
