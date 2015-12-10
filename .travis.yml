@@ -5,4 +5,8 @@ addons:
         - libgmp-dev
         - libmpfr-dev
 install: bash scripts/build_cross_compiler.sh
+cache:
+    apt: true
+    directories:
+        - compiler/
 script: make
