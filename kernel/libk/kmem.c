@@ -2,6 +2,54 @@
 
 void *heap_end = NULL;
 
+void *krealloc(void *ptr, size_t bytes) {
+    struct kheap_metadata *ptr_md = ptr - sizeof(struct kheap_metadata);
+    // If we are shrinking the block
+    if (ptr_md->size >= bytes) {
+        // If the new allocation is slightly smaller than the current one, but
+        // not small enough to bother with, return the old pointer.
+        if (ptr_md->size <= bytes + KHEAP_BLOCK_SLOP) {
+            return ptr;
+        } else { // However, if it is big enough to partition, split it and
+                 // create a new block.
+            struct kheap_metadata *new = ptr + bytes;
+            new->size = ptr_md->size - bytes - sizeof(struct kheap_metadata);
+            new->next = ptr_md->next;
+            ptr_md->next = new;
+            ptr_md->size = bytes;
+            return ptr;
+        }
+    }
+    // We're growing the partition. Walk through the following blocks. If there is a chain
+    struct kheap_metadata *cur = ptr_md;
+    // FIXME: This is kind of gross.
+    size_t gobbled_size = 0;
+    do {
+        gobbled_size += cur->size + sizeof(struct kheap_metadata);
+        cur = cur->next;
+        // If we're at the end of the heap, just extend it.
+        if (cur == KHEAP_END_SENTINEL) {
+            size_t new_bytes = kheap_extend(bytes - gobbled_size +
+                    sizeof(struct kheap_metadata));
+            ptr_md->size = new_bytes;
+            ptr_md->next = KHEAP_END_SENTINEL;
+            return ptr;
+        }
+    } while (cur->is_free &&
+             gobbled_size - sizeof(struct kheap_metadata) < bytes);
+
+    if (gobbled_size < bytes) {
+        ptr_md->size = gobbled_size - sizeof(struct kheap_metadata);
+        ptr_md->next = cur->next;
+        return ptr;
+    } else {
+        void *new = kmalloc(bytes);
+        memcpy(new, ptr, ptr_md->size);
+        ptr_md->is_free = true;
+        return new;
+    }
+}
+
 void *kmalloc(size_t bytes) {
     struct kheap_metadata *cur = root;
     if (bytes == 0) {
