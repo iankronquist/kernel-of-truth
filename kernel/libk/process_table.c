@@ -13,7 +13,9 @@ int remove_pid(struct process_table *table, true_pid_t pid) {
         return -1;
     }
     if (table->head->id == pid) {
+        struct process *free_me = table->head;
         table->head = table->head->next;
+        kfree(free_me);
         return 0;
     }
     struct process *cur = table->head;
