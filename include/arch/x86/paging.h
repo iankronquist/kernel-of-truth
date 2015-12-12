@@ -29,9 +29,14 @@
 
 #define PAGE_PRESENT 1
 
+page_frame_t kernel_pages;
+
 void kernel_page_table_install();
 
 extern void enable_paging(uint32_t *page_dir);
-int map_page(page_frame_t physical_page, void *virtual_address,
-        uint16_t permissions);
+int map_page(uint32_t *page_dir, page_frame_t physical_page,
+        void *virtual_address, uint16_t permissions);
+uint32_t create_new_page_table(page_frame_t kernel_page);
+void map_kernel_pages(uint32_t *page_dir);
+void free_table(uint32_t *page_dir);
 #endif
