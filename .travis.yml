@@ -1,13 +1,18 @@
-language: C
+# Make sure we run in the docker container
+sudo: false
+language: c
 addons:
     apt:
         packages:
-        - libgmp-dev
-        - libmpfr-dev
+        # Libraries needed to build cross compiler
+            - libgmp-dev
+            - libmpfr-dev
 cache:
     apt: true
-    #directories:
-    #    - compiler/
-#install: bash scripts/build_cross_compiler.sh
+    directories:
+        - compiler/
+# Compiles the cross compiler into the projects root
+before_install: bash scripts/build_cross_compiler.sh
 script:
+    - make
     - make run-tests
