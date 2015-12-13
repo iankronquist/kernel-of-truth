@@ -11,8 +11,6 @@ cache:
     apt: true
     directories:
         - compiler/
-# Compiles the cross compiler into the projects root
-before_install: bash scripts/build_cross_compiler.sh
 script:
     - make
     - make run-tests
