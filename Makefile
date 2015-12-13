@@ -1,6 +1,7 @@
 ARCH=i686-elf
 TEST_CC=gcc
 GCOV=gcov
+GRUB_MKRESCUE=grub2-mkrescue
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=compiler/$(ARCH)/bin/$(ARCH)-as
 ASFLAGS=-g
@@ -71,6 +72,12 @@ start-log:
 
 start-debug:
 	qemu-system-i386 -S -s -kernel build/truthos.bin ${QEMU_FLAGS}
+
+iso: build kernel
+	mkdir -p isodir/boot/grub
+	cp build/truthos.bin isodir/boot/truthos.bin
+	cp grub.cfg isodir/boot/grub/grub.cfg
+	${GRUB_MKRESCUE} -o truthos.iso isodir
 
 build:
 	mkdir build
