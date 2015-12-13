@@ -1,14 +1,7 @@
 # Make sure we run in the docker container
 sudo: false
 language: c
-addons:
-    apt:
-        packages:
-        # Libraries needed to build cross compiler
-            - libgmp-dev
-            - libmpfr-dev
 cache:
-    apt: true
     directories:
         - compiler/
 script:
