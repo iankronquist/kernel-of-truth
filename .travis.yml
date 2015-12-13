@@ -1,0 +1,9 @@
+# Make sure we run in the docker container
+sudo: false
+language: c
+cache:
+    directories:
+        - compiler/
+script:
+    - make
+    - make run-tests

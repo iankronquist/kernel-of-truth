@@ -1,5 +1,5 @@
 ARCH=i686-elf
-TEST_CC=gcc
+TEST_CC=clang
 GCOV=gcov
 GRUB_MKRESCUE=grub2-mkrescue
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
