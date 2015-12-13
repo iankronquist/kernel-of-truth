@@ -1,5 +1,5 @@
 ARCH=i686-elf
-TEST_CC=gcc
+TEST_CC=clang
 GCOV=gcov
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=compiler/$(ARCH)/bin/$(ARCH)-as
