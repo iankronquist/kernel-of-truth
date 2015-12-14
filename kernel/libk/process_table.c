@@ -57,3 +57,14 @@ bool contains_pid(struct process_table *table, true_pid_t id) {
     }
     return false;
 }
+
+void move_head_to_end(struct process_table *table) {
+    if (table->tail == table->head) {
+        return;
+    }
+    struct process* cur = table->head;
+    table->head = table->head->next;
+    table->tail->next = cur;
+    table->tail = cur;
+    cur->next = PROCESS_TABLE_END_SENTINEL;
+}
