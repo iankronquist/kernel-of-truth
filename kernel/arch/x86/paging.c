@@ -1,6 +1,6 @@
 #include <arch/x86/paging.h>
 
-void kernel_page_table_install() {
+uint32_t *kernel_page_table_install() {
     // Certain very important things already exist in physical memory. They
     // need to be marked as present so that the allocator doesn't grab them by
     // accident.
@@ -18,11 +18,10 @@ void kernel_page_table_install() {
     // Mark the paging directory as in use
     use_frame(PAGE_DIRECTORY);
 
-    uint32_t *page_dir = (uint32_t*)PAGE_DIRECTORY;
+    uint32_t *page_dir = (uint32_t*)alloc_frame();
     memset(page_dir, 0, PAGE_TABLE_SIZE);
 
     kernel_pages = GETADDRESS(page_dir[PAGE_TABLE_SIZE-2]);
-
 
     // Fractal page mapping
     page_dir[PAGE_TABLE_SIZE-1] |= GETADDRESS(page_dir) | PAGE_PRESENT;
@@ -30,15 +29,21 @@ void kernel_page_table_install() {
     map_kernel_pages(page_dir);
 
     enable_paging(page_dir);
+    return page_dir;
 }
 
 uint32_t create_new_page_table(page_frame_t kernel_page) {
     page_frame_t *page_dir = alloc_frame();
+
+    // Clear page directory
+    memset(page_dir, 0, PAGE_TABLE_SIZE);
+
     // Map it into the kernel's master page table
     map_page(page_dir, page_dir, page_dir, 0);
 
     // Fractal page mapping
     page_dir[PAGE_TABLE_SIZE-1] |= GETADDRESS(page_dir) | PAGE_PRESENT;
+    // Map kernel pages
     page_dir[PAGE_TABLE_SIZE-2] |= GETADDRESS(kernel_page) | PAGE_PRESENT;
 
     map_kernel_pages(page_dir);

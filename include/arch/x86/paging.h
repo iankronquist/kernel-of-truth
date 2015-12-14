@@ -31,7 +31,7 @@
 
 page_frame_t kernel_pages;
 
-void kernel_page_table_install();
+uint32_t *kernel_page_table_install();
 
 extern void enable_paging(uint32_t *page_dir);
 int map_page(uint32_t *page_dir, page_frame_t physical_page,
