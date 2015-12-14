@@ -4,25 +4,30 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include <libk/kmem.h>
+#include <libk/process_table.h>
 
-#ifdef ARCH_x86
+// FIXME: make all of this architecture independent!
+#include <arch/x86/idt.h>
+#include <drivers/timer.h>
 #include <arch/x86/cpu_state.h>
-#endif
-
-#ifdef ARCH_USERLAND
-// There is no reason to have this differ from the original x86 version. It
-// just contains the struct definition.
-#include <arch/x86/cpu_state.h>
-#endif
+extern void _resume_proc(uint32_t new_eip, uint32_t new_ebp, uint32_t new_esp);
 
 #define PROC_SPECIAL 0
+
+// 30 ms in between wakeups
+#define QUANTUM 30
+
+
 
 typedef uint32_t true_pid_t;
 
 struct process {
     true_pid_t id;
     uint32_t priority;
-    struct cpu_state state;
+    struct regs state;
+
+    uint32_t *directory;
     // This may come in handy soon...
     // bool kernel_mode;
 
@@ -33,8 +38,12 @@ struct process {
 
 // Later on I will change the entry point to a pointer to an elf executable,
 // but that requires a loader.
-int start_proc(void (*entry_point)(void));
-int resume_proc(true_pid_t pid);
-int finish_proc(true_pid_t pid);
+void start_proc(void (*entry_point)(void));
+void resume_proc(struct process *resume);
+void finish_proc(struct process *resume);
+void init_scheduler(uint32_t *kernel_page_dir);
+
+true_pid_t get_next_pid();
+
 
 #endif

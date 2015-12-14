@@ -34,6 +34,11 @@ libk: build serial
 	${CC} -c kernel/libk/physical_allocator.c -o build/physical_allocator.o  ${CFLAGS}
 	${CC} -c kernel/libk/process_table.c -o build/process_table.o  ${CFLAGS}
 
+processes: libk
+	${AS} kernel/arch/x86/process.s -o build/process.o ${ASFLAGS}
+	${CC} -c kernel/libk/proc.c -o build/proc.o  ${CFLAGS}
+
+
 libk-tests:
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c  -o build/tests/kmem ${TEST_CFLAGS}
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c -o build/tests/physical_allocator ${TEST_CFLAGS}
@@ -42,7 +47,7 @@ libk-tests:
 io: build
 	${AS} -c kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
 
-kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io
+kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io processes
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
 
 link-x86: build

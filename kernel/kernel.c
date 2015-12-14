@@ -30,6 +30,7 @@ void kernel_main()
     klog(testing);
     kfree(testing);
     uint32_t *page_dir = kernel_page_table_install();
+    init_scheduler(page_dir);
 
     //char *foo = 0x324981389124;
     //memcpy(testing, foo, 16);
