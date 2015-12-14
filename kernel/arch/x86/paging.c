@@ -60,7 +60,7 @@ int map_page(page_frame_t physical_page, void *virtual_address,
     } else {
         page_entry = (uint32_t*)GETADDRESS(page_dir[dir_index]);
     }
-    page_entry[entry_index] |= GETADDRESS(virtual_address) | permissions |
+    page_entry[entry_index] = GETADDRESS(virtual_address) | permissions |
         PAGE_PRESENT;
     return 0;
 }
