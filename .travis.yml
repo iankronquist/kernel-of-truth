@@ -1,9 +1,18 @@
 # Make sure we run in the docker container
 sudo: false
 language: c
+addons:
+    apt:
+        packages:
+        # Libraries needed to build cross compiler
+            - libgmp-dev
+            - libmpfr-dev
 cache:
     directories:
         - compiler/
 script:
+    - if [[ ! -d compiler/i686-elf/bin/i686-elf-gcc ]]; then
+        bash ./scripts/build_cross_compiler.sh;
+      fi
     - make
     - make run-tests
