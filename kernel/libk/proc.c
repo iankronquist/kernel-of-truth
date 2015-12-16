@@ -49,14 +49,12 @@ void start_proc(void (*entrypoint)(void)) {
     struct process *proc = kmalloc(sizeof(struct process));
     proc->id = get_next_pid();
     proc->directory = create_new_page_table(kernel_pages);
-    flush_tlb();
     enable_paging(proc->directory);
     entrypoint();
 }
 
 void resume_proc(struct process *resume) {
     kputs("resume");
-    flush_tlb();
     enable_paging(resume->directory);
 
     // Restore interrupts. We should probably call an assembly routine which
