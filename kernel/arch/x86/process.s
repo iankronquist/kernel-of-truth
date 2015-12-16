@@ -4,12 +4,12 @@
 .global _resume_proc
 _resume_proc:
 	cli
-	# ebx gets new eip
-	mov ebx, [esp + 12]
+	# ebx gets new esp
+	mov ebx, [esp + 4]
 	# ecx gets new ebp
 	mov ecx, [esp + 8]
-	# edx gets new esp
-	mov edx, [esp + 4]
+	# edx gets new eip
+	mov edx, [esp + 12]
 	mov ebp, ecx
 	mov esp, edx
 	sti
