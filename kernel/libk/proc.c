@@ -16,6 +16,9 @@ void scheduler_wakeup(struct regs r) {
     move_head_to_end(scheduling_queue);
     // Signal end of interrupt
     write_port(0x20, 0x20);
+
+    // resume_proc does not return! Blindly jump into your future.
+    // FIXME: This probably leaves some detritus on the stack I should clean up.
     resume_proc(scheduling_queue->head);
 }
 
@@ -33,7 +36,7 @@ void init_scheduler(uint32_t *kernel_page_dir) {
     //set_timer_phase(QUANTUM);
 
     // FIXME make this have an architecture independent api
-    idt_set_gate(32, (uint32_t)scheduler_wakeup, 0x08, 0x8e);
+    idt_set_gate(32, (uint32_t)process_handler, 0x08, 0x8e);
 
     uint8_t current_mask = read_port(0x21);
     write_port(0x21 , current_mask & TIMER_INTERRUPT_MASK);
@@ -55,8 +58,13 @@ void resume_proc(struct process *resume) {
     kputs("resume");
     flush_tlb();
     enable_paging(resume->directory);
-    //_resume_proc(resume->state.eip, resume->state.ebp, resume->state.esp);
+
+    // Restore interrupts. We should probably call an assembly routine which
+    // cleans up the stack here.
     __asm__ volatile ("sti");
+    _resume_proc(resume->state.eip, resume->state.ebp, resume->state.esp);
+    // NOT REACHED
+    kabort();
 }
 
 void finish_proc(struct process *finish) {
