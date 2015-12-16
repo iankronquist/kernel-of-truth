@@ -14,3 +14,34 @@ _resume_proc:
 	mov esp, edx
 	sti
 	jmp ebx
+
+.global process_handler
+process_handler:
+	cli
+	push 0
+	push 0x20
+	pusha
+	mov		ax,		ds
+	push	eax
+
+	mov		ax,		0x10
+	mov		ds,		ax
+	mov		es,		ax
+	mov		fs,		ax
+	mov		gs,		ax
+
+
+	call	scheduler_wakeup
+
+	pop		eax
+
+	mov		ds,		ax
+	mov		es,		ax
+	mov		fs,		ax
+	mov		gs,		ax
+
+	popa
+	# Remove error code and interrupt number from the stack
+	add esp, 8
+	sti
+	iret

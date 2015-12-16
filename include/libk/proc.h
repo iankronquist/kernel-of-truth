@@ -12,6 +12,7 @@
 #include <drivers/timer.h>
 #include <arch/x86/cpu_state.h>
 extern void _resume_proc(uint32_t new_eip, uint32_t new_ebp, uint32_t new_esp);
+extern void process_handler();
 
 #define PROC_SPECIAL 0
 
