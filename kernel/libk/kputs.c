@@ -7,14 +7,15 @@ void kputs(char* string) {
 
 static void kprint_ptr(void *p) {
     unsigned char buf[8] = {0};
-    unsigned int c;
+    int c;
     uintptr_t n = (uintptr_t)p;
-    for (c = 7; c > 0; --c) {
+    for (c = 7; c >= 0; --c) {
         buf[c] = n % 16;
         n /= 16;
     }
     terminal_putchar('0');
     terminal_putchar('x');
+    ++c;
     for (; c < 8; ++c) {
         if (buf[c] >= 10) {
             terminal_putchar(buf[c] + 'a' - 10);
