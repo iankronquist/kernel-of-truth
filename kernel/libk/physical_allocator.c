@@ -30,6 +30,11 @@ static void rebuild_frame_cache() {
     return;
 }
 
+bool is_free_frame(page_frame_t frame) {
+    frame >>= 12;
+    return page_frame_map[BYTE_INDEX(frame)] & BIT_INDEX(frame);
+}
+
 void use_frame(page_frame_t frame) {
     frame >>= 12;
     page_frame_map[BYTE_INDEX(frame)] |= BIT_INDEX(frame);
