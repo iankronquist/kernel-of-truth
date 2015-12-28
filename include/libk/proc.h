@@ -28,6 +28,8 @@ struct process {
     uint32_t priority;
     struct regs state;
 
+    void *link_loc;
+
     uint32_t *directory;
     // This may come in handy soon...
     // bool kernel_mode;

@@ -11,7 +11,7 @@ true_pid_t get_next_pid() {
 }
 
 void scheduler_wakeup(struct regs r) {
-    kputs("wakeup");
+    kprintf("wu h: %p hn: %p\n", scheduling_queue->head, scheduling_queue->head->next);
     scheduling_queue->head->state = r;
     move_head_to_end(scheduling_queue);
     // Signal end of interrupt
@@ -26,6 +26,8 @@ void init_scheduler(uint32_t *kernel_page_dir) {
     kputs("init");
     scheduling_queue = init_process_table();
     struct process *kernel_main_proc = kmalloc(sizeof(struct process));
+
+    kernel_main_proc->link_loc = KERNEL_START;
     kernel_main_proc->directory = kernel_page_dir;
     // Zero
     kernel_main_proc->id = get_next_pid();
@@ -45,16 +47,30 @@ void init_scheduler(uint32_t *kernel_page_dir) {
 // Later on I will change the entry point to a pointer to an elf executable,
 // but that requires a loader.
 void start_proc(void (*entrypoint)(void)) {
-    kputs("start");
     struct process *proc = kmalloc(sizeof(struct process));
+    // Might as well run here. This will be provided by the loader later I
+    // believe.
+    proc->link_loc = 0x200000;
     proc->id = get_next_pid();
-    proc->directory = create_new_page_table(kernel_pages);
+    kprintf("start %d\n", proc->id);
+
+    disable_paging();
+    // Law of Demeter violation?
+    proc->directory = create_new_page_dir(scheduling_queue->head->directory,
+    kernel_pages, proc->link_loc);
+    //proc->directory = clone_directory(scheduling_queue->head->directory);
+    map_page(proc->directory, proc->link_loc, proc->link_loc, PAGE_PRESENT |
+        PAGE_USER_MODE);
     enable_paging(proc->directory);
+
+    //__asm__ volatile ("cli");
+    //kabort();
+    insert_pid(scheduling_queue, proc);
     entrypoint();
 }
 
 void resume_proc(struct process *resume) {
-    kputs("resume");
+    kprintf("resume %p\n", resume->id);
     enable_paging(resume->directory);
 
     // Restore interrupts. We should probably call an assembly routine which
