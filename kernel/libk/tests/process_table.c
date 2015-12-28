@@ -47,13 +47,13 @@ void test_process_table() {
     EXPECT_EQ(p0->next, PROCESS_TABLE_END_SENTINEL);
     EXPECT_EQ(t->tail, p0);
 
-    EXPECT_EQ(contains_pid(t, p1->id), false);
+    EXPECT_EQ(contains_pid(t, 1), false);
 
     insert_pid(t, p3);
     EXPECT_EQ(t->head, p3);
 
     ret = remove_pid(t, p3->id);
-    EXPECT_EQ(contains_pid(t, p3->id), false);
+    EXPECT_EQ(contains_pid(t, 3), false);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(t->head, p2);
     EXPECT_EQ(p2->next, p0);
@@ -61,7 +61,7 @@ void test_process_table() {
     EXPECT_EQ(t->tail, p0);
 
     // Already removed. Should fail.
-    ret = remove_pid(t, p3->id);
+    ret = remove_pid(t, 3);
     EXPECT_EQ(ret, -1);
     // Nothing changed
     EXPECT_EQ(t->head, p2);
@@ -150,6 +150,11 @@ void test_move_head_to_end() {
     EXPECT_EQ(t->head->next->next->next, p0);
     EXPECT_EQ(t->head->next->next->next->next, PROCESS_TABLE_END_SENTINEL);
 
+    kfree(p0);
+    kfree(p1);
+    kfree(p2);
+    kfree(p3);
+    kfree(t);
 }
 
 int main() {
