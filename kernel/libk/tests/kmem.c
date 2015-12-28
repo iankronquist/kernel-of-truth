@@ -17,7 +17,22 @@ void kprint_heap() {
     }
 }
 
-int main() {
+
+void test_kmalloc_regression() {
+    size_t playground_size = PAGE_SIZE * 5;
+    char *playground = malloc(PAGE_SIZE * 5);
+    dependencies_suck = (uintptr_t)playground;
+    memset(playground, 0, playground_size);
+
+    puts("Initializing heap");
+    kheap_install((void*)playground, playground_size);
+
+    void *a = kmalloc(16);
+    void *b = kmalloc(16);
+    EXPECT_NEQ(a, b);
+}
+
+void test_kmalloc_and_kfree() {
     size_t playground_size = PAGE_SIZE * 5;
     char *playground = malloc(PAGE_SIZE * 5);
     dependencies_suck = (uintptr_t)playground;
@@ -156,5 +171,10 @@ int main() {
 
 
     free(playground);
+}
+
+int main() {
+    test_kmalloc_regression();
+    test_kmalloc_and_kfree();
     return RETURN_VALUE;
 }

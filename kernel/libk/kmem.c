@@ -56,7 +56,7 @@ void *kmalloc(size_t bytes) {
         return NULL;
     }
     // Find the first free block
-    while (cur != KHEAP_END_SENTINEL && !cur->is_free && cur->size < bytes) {
+    while (cur != KHEAP_END_SENTINEL && (!cur->is_free || cur->size < bytes)) {
         cur = cur->next;
     }
     // If there wasn't one, grow the heap
