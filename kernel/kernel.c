@@ -12,6 +12,12 @@
 #include <libk/kputs.h>
 #include <libk/klog.h>
 
+void worker() {
+    while(1) {
+        kputs("worker");
+    }
+}
+
 void kernel_main()
 {
     terminal_initialize();
@@ -31,6 +37,7 @@ void kernel_main()
     kfree(testing);
     uint32_t *page_dir = kernel_page_table_install();
     init_scheduler(page_dir);
+    start_proc(worker);
 
     //char *foo = 0x324981389124;
     //memcpy(testing, foo, 16);
@@ -48,3 +55,4 @@ void kernel_main()
     while (1) {
     }
 }
+

@@ -33,12 +33,14 @@ uint32_t *kernel_page_table_install() {
     map_kernel_pages(page_dir);
 
     enable_paging(page_dir);
+    kprintf("page dir %p\n", page_dir);
     return page_dir;
 }
 
 uint32_t create_new_page_dir(page_frame_t *cur_page_dir,
         page_frame_t kernel_page, void *initial_location) {
 
+    kputs("create new pd");
     __asm__ volatile ("cli");
     page_frame_t *page_dir = alloc_frame();
     //uint32_t *page_dir_addr = just_give_me_a_page(cur_page_dir, page_dir, 0);
@@ -67,11 +69,14 @@ uint32_t create_new_page_dir(page_frame_t *cur_page_dir,
     // Fractal page mapping
     page_dir[PAGE_TABLE_SIZE-1] = GETADDRESS(page_dir) | PAGE_PRESENT;
     // Map kernel pages
-    page_dir[PAGE_TABLE_SIZE-2] = GETADDRESS(kernel_page) | PAGE_PRESENT;
+    //page_dir[PAGE_TABLE_SIZE-2] = GETADDRESS(kernel_page) | PAGE_PRESENT;
 
+    kputs("map k p");
     map_kernel_pages(page_dir);
 
     //unmap_page(page_dir_addr);
+    kputs("tell");
+    tell_me_a_bit(page_dir);
 
     __asm__ volatile ("sti");
 
