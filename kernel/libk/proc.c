@@ -23,7 +23,9 @@ void scheduler_wakeup(struct regs r) {
 
     // resume_proc does not return! Blindly jump into your future.
     // FIXME: This probably leaves some detritus on the stack I should clean up.
-    resume_proc(scheduling_queue->head);
+    //resume_proc(scheduling_queue->head);
+    enable_paging(scheduling_queue->head->directory);
+    r = scheduling_queue->head->state;
 }
 
 void init_scheduler(uint32_t *kernel_page_dir) {
@@ -74,11 +76,11 @@ void start_proc(void (*entrypoint)(void)) {
             proc->state.esp);
             */
     disable_paging();
-    ///*
+    /*
     proc->directory = create_new_page_dir(scheduling_queue->head->directory,
         kernel_pages, proc->link_loc);
-    // */
-    //proc->directory = scheduling_queue->head->directory;
+     */
+    proc->directory = scheduling_queue->head->directory;
     ///*
     map_page(proc->directory, proc->link_loc, proc->link_loc, PAGE_USER_MODE);
     map_page(proc->directory, stack_page, stack_page, PAGE_USER_MODE);
