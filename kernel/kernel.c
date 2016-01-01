@@ -10,14 +10,17 @@
 
 #include <libk/kmem.h>
 #include <libk/kputs.h>
+#include <libk/klog.h>
 
 void kernel_main()
 {
     terminal_initialize();
+    initialize_klog();
     gdt_install();
     idt_install();
     keyboard_install();
     kheap_install((struct kheap_metadata*)KHEAP_PHYS_ROOT, PAGE_SIZE);
+    klog("hi!");
     // Periodically prints 'tick!' on the screen. This will be useful later for
     // multi-tasking.
     //timer_install();

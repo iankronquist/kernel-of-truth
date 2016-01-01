@@ -7,7 +7,7 @@ AS=compiler/$(ARCH)/bin/$(ARCH)-as
 ASFLAGS=-g
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
-QEMU_FLAGS= -m 1G
+QEMU_FLAGS= -m 1G -serial file:truth.log
 VB=virtualbox
 VBM=VBoxManage
 
@@ -24,10 +24,11 @@ run-tests: tests
 bootloader-x86: build
 	${AS} kernel/arch/x86/boot.s -o build/boot.o ${ASFLAGS}
 
-libk: build
+libk: build serial
 	${CC} -c kernel/libk/kmem.c -o build/kmem.o  ${CFLAGS}
 	${CC} -c kernel/libk/kabort.c -o build/kabort.o  ${CFLAGS}
 	${CC} -c kernel/libk/kputs.c -o build/kputs.o  ${CFLAGS}
+	${CC} -c kernel/libk/klog.c -o build/klog.o  ${CFLAGS}
 	${CC} -c kernel/libk/physical_allocator.c -o build/physical_allocator.o  ${CFLAGS}
 
 libk-tests:
@@ -59,6 +60,9 @@ gdt-x86: build
 idt-x86: build keyboard
 	${CC} -c kernel/arch/x86/idt.c build/keyboard.o -o build/idtc.o ${CFLAGS}
 	${AS} kernel/arch/x86/idt.s -o build/idts.o ${ASFLAGS}
+
+serial: build
+	${CC} -c kernel/drivers/serial_port.c -o build/serial_port.o ${CFLAGS}
 
 keyboard: build
 	${CC} -c kernel/drivers/keyboard.c -o build/keyboard.o ${CFLAGS}
