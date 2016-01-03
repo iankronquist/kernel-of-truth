@@ -1,6 +1,5 @@
 #include <arch/x86/idt.h>
 #include <drivers/keyboard.h>
-#include <drivers/keyboard.h>
 
 struct idt_entry idt[256];
 struct idt_ptr idtp;
@@ -62,24 +61,24 @@ void idt_install()
     // what they do. I can only find a brief mention of them in section
     // 33.3.2.1 of the IA-32 Manual. More reading is necessary.
     // ICW1 - begin initialization
-    write_port(0x20, 0x11);
-    write_port(0xA0, 0x11);
+    write_port(PIC_MASTER_CONTROL, 0x11);
+    write_port(PIC_SLAVE_CONTROL, 0x11);
 
     // Remap interrupts beyond 0x20 because the first 32 are cpu exceptions
-    write_port(0x21, 0x20);
-    write_port(0xA1, 0x28);
+    write_port(PIC_MASTER_MASK, 0x21);
+    write_port(PIC_SLAVE_MASK, 0x28);
 
     // ICW3 - setup cascading
-    write_port(0x21, 0x00);
-    write_port(0xA1, 0x00);
+    write_port(PIC_MASTER_MASK, 0x00);
+    write_port(PIC_SLAVE_MASK, 0x00);
 
     // ICW4 - environment info
-    write_port(0x21, 0x01);
-    write_port(0xA1, 0x01);
+    write_port(PIC_MASTER_MASK, 0x01);
+    write_port(PIC_SLAVE_MASK, 0x01);
 
     // mask interrupts
-    write_port(0x21, 0xff);
-    write_port(0xA1, 0xff);
+    write_port(PIC_MASTER_MASK, 0xff);
+    write_port(PIC_SLAVE_MASK, 0xff);
 
     idt_load((uint32_t) & idtp);
 }
