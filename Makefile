@@ -8,8 +8,10 @@ ASFLAGS=-g
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
 QEMU_FLAGS= -m 1G
+VB=virtualbox
+VBM=VBoxManage
 
-all: bootloader-x86 kernel link-x86 
+all: bootloader-x86 kernel link-x86
 
 tests: build libk-tests
 
@@ -95,3 +97,29 @@ clean-all: clean
 run: all start
 	rm -rf build
 
+iso: build kernel
+	mkdir -p isodir/boot/grub
+	cp build/truthos.bin isodir/boot/truthos.bin
+	cp grub.cfg isodir/boot/grub/grub.cfg
+	${GRUB_MKRESCUE} -o truthos.iso isodir
+
+start-virtualbox: iso
+	-${VBM} unregistervm TruthOS --delete;
+	rm -f ~/VirtualBox\ VMs/TruthOS/TruthOS.vbox
+	rm -f harddrive.vdi
+	rm -f harddrive.vdi
+	echo "Create VM"
+	${VBM} createvm --name TruthOS --register
+	${VBM} modifyvm TruthOS --memory 1024
+	${VBM} modifyvm TruthOS --vram 64
+	${VBM} modifyvm TruthOS --nic1 nat
+	${VBM} modifyvm TruthOS --nictype1 82540EM
+	${VBM} modifyvm TruthOS --nictrace1 on
+	${VBM} modifyvm TruthOS --nictracefile1 build/network.pcap
+	${VBM} modifyvm TruthOS --uart1 0x3F8 4
+	${VBM} modifyvm TruthOS --uartmode1 file build/serial.log
+	${VBM} storagectl TruthOS --name "IDE Controller" --add ide
+	${VBM} storageattach TruthOS --storagectl "IDE Controller" --port 0 \
+	--device 0 --type dvddrive --medium truthos.iso
+	echo "Run VM"
+	${VB} --startvm TruthOS --dbg
