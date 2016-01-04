@@ -23,25 +23,33 @@
 #define ERROR 0x4
 #define STATUS_CHANGE 0x8
 
+/*
 enum serial_port {
     COM1 = 0x3f8,
     COM2 = 0x2f8,
     COM3 = 0x3e8,
     COM4 = 0x2e8,
 };
+*/
 
-void initialize_serial_port(enum serial_port com_port);
+#define COM1 0x3f8
+#define COM2 0x2f8
+#define COM3 0x3e8
+#define COM4 0x2e8
 
-bool is_data_available(enum serial_port com_port);
+extern void _serial_handler(void);
+//void serial_handler(struct regs r);
 
-char read_serial(enum serial_port com_port);
+void initialize_serial_port(int com_port);
 
-bool is_transmit_empty(enum serial_port com_port);
+bool is_data_available(int com_port);
 
-void write_serial(enum serial_port com_port, char data);
+char read_serial(int com_port);
 
-void write_serial_string(enum serial_port com_port, char *data);
-void read_serial_string(enum serial_port com_port, char *buf, size_t len);
+void write_serial(int com_port, char data);
+
+void write_serial_string(int com_port, char *data);
+void read_serial_string(int com_port, char *buf, size_t len);
 
 
 #endif
