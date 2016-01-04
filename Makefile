@@ -103,11 +103,8 @@ iso: build kernel
 	cp grub.cfg isodir/boot/grub/grub.cfg
 	${GRUB_MKRESCUE} -o truthos.iso isodir
 
-start-virtualbox: iso
+start-virtualbox:
 	-${VBM} unregistervm TruthOS --delete;
-	rm -f ~/VirtualBox\ VMs/TruthOS/TruthOS.vbox
-	rm -f harddrive.vdi
-	rm -f harddrive.vdi
 	echo "Create VM"
 	${VBM} createvm --name TruthOS --register
 	${VBM} modifyvm TruthOS --memory 1024
