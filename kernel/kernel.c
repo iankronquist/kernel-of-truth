@@ -20,7 +20,6 @@ void kernel_main()
     idt_install();
     keyboard_install();
     kheap_install((struct kheap_metadata*)KHEAP_PHYS_ROOT, PAGE_SIZE);
-    klog("hi!");
     // Periodically prints 'tick!' on the screen. This will be useful later for
     // multi-tasking.
     //timer_install();
@@ -28,6 +27,7 @@ void kernel_main()
     void *testing = kmalloc(16);
     memcpy(testing, hi, 16);
     kputs(testing);
+    klog(testing);
     kfree(testing);
     kernel_page_table_install();
 
