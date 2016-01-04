@@ -75,12 +75,6 @@ start-log:
 start-debug:
 	qemu-system-i386 -S -s -kernel build/truthos.bin ${QEMU_FLAGS}
 
-iso: build kernel
-	mkdir -p isodir/boot/grub
-	cp build/truthos.bin isodir/boot/truthos.bin
-	cp grub.cfg isodir/boot/grub/grub.cfg
-	${GRUB_MKRESCUE} -o truthos.iso isodir
-
 build:
 	mkdir build
 	mkdir -p build/tests
@@ -97,11 +91,11 @@ clean-all: clean
 run: all start
 	rm -rf build
 
-iso: build kernel
-	mkdir -p isodir/boot/grub
-	cp build/truthos.bin isodir/boot/truthos.bin
-	cp grub.cfg isodir/boot/grub/grub.cfg
-	${GRUB_MKRESCUE} -o truthos.iso isodir
+iso: all
+	mkdir -p build/isodir/boot/grub
+	cp build/truthos.bin build/isodir/boot/truthos.bin
+	cp grub.cfg build/isodir/boot/grub/grub.cfg
+	cd build && ${GRUB_MKRESCUE} -o truthos.iso isodir
 
 start-virtualbox:
 	-${VBM} unregistervm TruthOS --delete;
@@ -117,6 +111,6 @@ start-virtualbox:
 	${VBM} modifyvm TruthOS --uartmode1 file build/serial.log
 	${VBM} storagectl TruthOS --name "IDE Controller" --add ide
 	${VBM} storageattach TruthOS --storagectl "IDE Controller" --port 0 \
-	--device 0 --type dvddrive --medium truthos.iso
+	--device 0 --type dvddrive --medium build/truthos.iso
 	echo "Run VM"
 	${VB} --startvm TruthOS --dbg
