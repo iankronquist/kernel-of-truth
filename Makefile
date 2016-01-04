@@ -67,7 +67,6 @@ idt-x86: build keyboard
 
 serial: build
 	${CC} -c kernel/drivers/serial_port.c -o build/serial_port.o ${CFLAGS}
-	${AS} kernel/drivers/serial_port.s -o build/_serial_port.o ${ASFLAGS}
 
 keyboard: build
 	${CC} -c kernel/drivers/keyboard.c -o build/keyboard.o ${CFLAGS}
