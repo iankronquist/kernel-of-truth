@@ -84,7 +84,7 @@ void idt_install()
     idt_load((uint32_t) & idtp);
 }
 
-void common_interrupt_handler(struct regs* r)
+void common_interrupt_handler(struct regs r)
 {
     kprintf("Interrupt Triggered!\nRegisters:");
     kprintf("ds: %u edi: %u esi: %u ebp: %u esp: %u ebx: %u edx: %u ecx: %u eax: %u int_no: %u err_code: %u eip: %u cs: %u eflags: %u useresp: %u ss: %u", r);
