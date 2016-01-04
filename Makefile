@@ -97,6 +97,9 @@ clean-all: clean
 	rm -f *.gcov
 	rm -f *.gcda
 
+docs:
+	cldoc generate -I ./include -DARCH_X86 -- --output docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/libk/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
+
 run: all start
 	rm -rf build
 
