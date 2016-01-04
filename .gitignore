@@ -7,5 +7,3 @@ qemu.log
 *.gcda
 *.gcno
 *.gcov
-
-docs/
