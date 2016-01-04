@@ -8,6 +8,7 @@ addons:
             - libgmp-dev
             - libmpfr-dev
             - python-virtualenv
+            - libclang-dev
 cache:
     directories:
         - compiler/
@@ -18,7 +19,7 @@ before_script:
     - pip install cldoc
 
 script:
-    - if [[ ! -d compiler/i686-elf/bin/i686-elf-gcc ]]; then
+    - if [[ ! -e compiler/i686-elf/bin/i686-elf-gcc ]]; then
         bash ./scripts/build_cross_compiler.sh;
       fi
     - make
