@@ -23,22 +23,11 @@
 #define ERROR 0x4
 #define STATUS_CHANGE 0x8
 
-/*
-enum serial_port {
-    COM1 = 0x3f8,
-    COM2 = 0x2f8,
-    COM3 = 0x3e8,
-    COM4 = 0x2e8,
-};
-*/
-
 #define COM1 0x3f8
 #define COM2 0x2f8
 #define COM3 0x3e8
 #define COM4 0x2e8
 
-extern void _serial_handler(void);
-//void serial_handler(struct regs r);
 
 void initialize_serial_port(int com_port);
 
@@ -49,6 +38,7 @@ char read_serial(int com_port);
 void write_serial(int com_port, char data);
 
 void write_serial_string(int com_port, char *data);
+
 void read_serial_string(int com_port, char *buf, size_t len);
 
 
