@@ -82,7 +82,9 @@ void kprintf(char* string, ...) {
                 case 'u':
                     kprint_uint(va_arg(args, unsigned int));
                     break;
-
+                case 'c':
+                    terminal_putchar(va_arg(args, int));
+                    break;
             }
             continue;
         }

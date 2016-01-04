@@ -11,6 +11,11 @@
 
 //extern void idt_load();
 
+#define PIC_MASTER_CONTROL 0x20
+#define PIC_MASTER_MASK 0x21
+#define PIC_SLAVE_CONTROL 0xa0
+#define PIC_SLAVE_MASK 0xa1
+
 // Define an entry in the IDT
 struct idt_entry {
     uint16_t base_lo;

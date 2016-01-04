@@ -10,10 +10,12 @@
 
 #include <libk/kmem.h>
 #include <libk/kputs.h>
+#include <libk/klog.h>
 
 void kernel_main()
 {
     terminal_initialize();
+    initialize_klog();
     gdt_install();
     idt_install();
     keyboard_install();
@@ -25,6 +27,7 @@ void kernel_main()
     void *testing = kmalloc(16);
     memcpy(testing, hi, 16);
     kputs(testing);
+    klog(testing);
     kfree(testing);
     kernel_page_table_install();
 
