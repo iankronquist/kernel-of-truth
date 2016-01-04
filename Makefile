@@ -7,7 +7,7 @@ AS=compiler/$(ARCH)/bin/$(ARCH)-as
 ASFLAGS=-g
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
-QEMU_FLAGS= -m 1G
+QEMU_FLAGS= -m 1G -serial file:build/qemu-serial.log
 VB=virtualbox
 VBM=VBoxManage
 
@@ -24,17 +24,21 @@ run-tests: tests
 bootloader-x86: build
 	${AS} kernel/arch/x86/boot.s -o build/boot.o ${ASFLAGS}
 
-libk: build
+libk: build serial
 	${CC} -c kernel/libk/kmem.c -o build/kmem.o  ${CFLAGS}
 	${CC} -c kernel/libk/kabort.c -o build/kabort.o  ${CFLAGS}
 	${CC} -c kernel/libk/kputs.c -o build/kputs.o  ${CFLAGS}
+	${CC} -c kernel/libk/klog.c -o build/klog.o  ${CFLAGS}
 	${CC} -c kernel/libk/physical_allocator.c -o build/physical_allocator.o  ${CFLAGS}
 
 libk-tests:
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c kernel/libk/kmem.c  -o build/tests/kmem ${TEST_CFLAGS}
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c -o build/tests/physical_allocator ${TEST_CFLAGS}
 
-kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86
+io: build
+	${AS} -c kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
+
+kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
 
 link-x86: build
@@ -60,8 +64,13 @@ idt-x86: build keyboard
 	${CC} -c kernel/arch/x86/idt.c build/keyboard.o -o build/idtc.o ${CFLAGS}
 	${AS} kernel/arch/x86/idt.s -o build/idts.o ${ASFLAGS}
 
+
+serial: build
+	${CC} -c kernel/drivers/serial_port.c -o build/serial_port.o ${CFLAGS}
+
 keyboard: build
 	${CC} -c kernel/drivers/keyboard.c -o build/keyboard.o ${CFLAGS}
+	${AS} -c kernel/drivers/keyboard.s -o build/keyboards.o ${ASFLAGS}
 
 tlibc: build
 	${CC} -c tlibc/string/string.c -o build/tlibc.o ${CFLAGS}
@@ -73,7 +82,7 @@ start-log:
 	qemu-system-i386 -kernel build/truthos.bin -d in_asm,cpu_reset,exec,int,ioport,guest_errors,pcall -no-reboot ${QEMU_FLAGS} &> qemu.log
 
 start-debug:
-	qemu-system-i386 -S -s -kernel build/truthos.bin ${QEMU_FLAGS}
+	qemu-system-i386 -S -s -kernel build/truthos.bin ${QEMU_FLAGS} -curses
 
 build:
 	mkdir build
@@ -108,7 +117,7 @@ start-virtualbox:
 	${VBM} modifyvm TruthOS --nictrace1 on
 	${VBM} modifyvm TruthOS --nictracefile1 build/network.pcap
 	${VBM} modifyvm TruthOS --uart1 0x3F8 4
-	${VBM} modifyvm TruthOS --uartmode1 file build/serial.log
+	${VBM} modifyvm TruthOS --uartmode1 file build/virtualbox-serial.log
 	${VBM} storagectl TruthOS --name "IDE Controller" --add ide
 	${VBM} storageattach TruthOS --storagectl "IDE Controller" --port 0 \
 	--device 0 --type dvddrive --medium build/truthos.iso
