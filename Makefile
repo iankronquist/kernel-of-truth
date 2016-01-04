@@ -36,7 +36,7 @@ libk-tests:
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c -o build/tests/physical_allocator ${TEST_CFLAGS}
 
 io: build
-	#${CC} -c kernel/arch/x86/io.c -o build/io.o ${CFLAGS}
+	${AS} -c kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
 
 kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
@@ -70,6 +70,7 @@ serial: build
 
 keyboard: build
 	${CC} -c kernel/drivers/keyboard.c -o build/keyboard.o ${CFLAGS}
+	${AS} -c kernel/drivers/keyboard.s -o build/keyboards.o ${ASFLAGS}
 
 tlibc: build
 	${CC} -c tlibc/string/string.c -o build/tlibc.o ${CFLAGS}
