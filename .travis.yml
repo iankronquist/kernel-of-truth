@@ -7,12 +7,21 @@ addons:
         # Libraries needed to build cross compiler
             - libgmp-dev
             - libmpfr-dev
+            - python-virtualenv
+            - libclang1-3.4
 cache:
     directories:
         - compiler/
+
+before_script:
+    - virtualenv ~/venv
+    - source ~/venv/bin/activate
+    - pip install cldoc
+
 script:
-    - if [[ ! -d compiler/i686-elf/bin/i686-elf-gcc ]]; then
+    - if [[ ! -e compiler/i686-elf/bin/i686-elf-gcc ]]; then
         bash ./scripts/build_cross_compiler.sh;
       fi
     - make
     - make run-tests
+    - make docs
