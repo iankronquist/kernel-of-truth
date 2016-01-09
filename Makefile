@@ -88,7 +88,7 @@ start:
 	qemu-system-i386 -kernel build/truthos.bin ${QEMU_FLAGS}
 
 start-log:
-	qemu-system-i386 -kernel build/truthos.bin -d in_asm,cpu_reset,exec,int,ioport,guest_errors,pcall -no-reboot ${QEMU_FLAGS} &> qemu.log
+	qemu-system-i386 -kernel build/truthos.bin -d in_asm,cpu_reset,exec,int,guest_errors,pcall -no-reboot ${QEMU_FLAGS} &> qemu.log
 
 start-debug:
 	qemu-system-i386 -S -s -kernel build/truthos.bin ${QEMU_FLAGS} -curses
