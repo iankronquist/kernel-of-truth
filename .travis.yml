@@ -8,7 +8,7 @@ addons:
             - libgmp-dev
             - libmpfr-dev
             - python-virtualenv
-            - libclang-dev
+            - libclang1-3.4
 cache:
     directories:
         - compiler/
