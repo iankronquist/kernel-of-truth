@@ -41,6 +41,8 @@ page_frame_t *kernel_pages;
 uint32_t *kernel_page_table_install();
 
 extern void enable_paging(uint32_t *page_dir);
+extern void disable_paging();
+
 int map_page(uint32_t *page_dir, page_frame_t physical_page,
     void *virtual_address, uint16_t permissions);
 uint32_t create_new_page_dir(page_frame_t *cur_page_dir,

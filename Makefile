@@ -20,8 +20,6 @@ run-tests: tests
 	${GCOV} kmem.gcno
 	./build/tests/physical_allocator
 	${GCOV} physical_allocator.gcno
-	./build/tests/process_table
-	${GCOV} process_table.gcno
 
 bootloader-x86: build
 	${AS} kernel/arch/x86/boot.s -o build/boot.o ${ASFLAGS}
@@ -32,17 +30,14 @@ libk: build serial
 	${CC} -c kernel/libk/kputs.c -o build/kputs.o  ${CFLAGS}
 	${CC} -c kernel/libk/klog.c -o build/klog.o  ${CFLAGS}
 	${CC} -c kernel/libk/physical_allocator.c -o build/physical_allocator.o  ${CFLAGS}
-	${CC} -c kernel/libk/process_table.c -o build/process_table.o  ${CFLAGS}
 
 processes: libk
 	${AS} kernel/arch/x86/process.s -o build/process.o ${ASFLAGS}
-	${CC} -c kernel/libk/proc.c -o build/proc.o  ${CFLAGS}
-
+	${CC} -c kernel/arch/x86/process.c -o build/processc.o ${CFLAGS}
 
 libk-tests:
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c  -o build/tests/kmem ${TEST_CFLAGS}
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c -o build/tests/physical_allocator ${TEST_CFLAGS}
-	${TEST_CC} kernel/libk/tests/stubs.c  kernel/libk/tests/kmem_stubs.c kernel/libk/process_table.c kernel/libk/tests/process_table.c -o build/tests/process_table ${TEST_CFLAGS}
 
 io: build
 	${AS} -c kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
