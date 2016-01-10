@@ -102,7 +102,7 @@ clean-all: clean
 	rm -f *.gcda
 
 docs:
-	cldoc generate -I ./include -DARCH_X86 -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/libk/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
+	cldoc generate -I ./include -DARCH_X86 -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/libk/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
 
 run: all start
 	rm -rf build
