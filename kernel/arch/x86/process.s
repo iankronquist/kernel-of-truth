@@ -20,6 +20,12 @@ switch_task:
 	pushf
 	mov eax, cr3
 	push eax
+
+	mov		eax,	cr0
+	and		eax,	~0x80000000
+	mov		cr0,	eax
+
+
 	mov eax, [esp+44]
 	mov ebx, [4+eax]
 	mov ecx, [8+eax]
@@ -82,8 +88,12 @@ switch_task:
 
 	# cr3 (page directory)
 	push eax
-	mov eax, [44+eax]
+	mov eax, [40+eax]
 	mov cr3, eax
+
+	mov		eax,	cr0
+	or		eax,	0x80000000
+	mov		cr0,	eax
 
 	mov eax, [esp]
 
