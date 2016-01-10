@@ -42,13 +42,13 @@ uint32_t create_new_page_dir(page_frame_t *cur_page_dir, void *link_loc,
     __asm__ volatile ("cli");
     disable_paging();
 
-    page_frame_t *page_table = alloc_frame();
+    page_frame_t *page_table = (page_frame_t*)alloc_frame();
     memset(page_table, 0, PAGE_SIZE);
 
     page_table[PAGE_TABLE_SIZE-1] = GETADDRESS(page_table) | PAGE_PRESENT;
     map_kernel_pages(page_table);
-    map_page(page_table, link_loc, link_loc, permissions);
-    map_page(page_table, stack_loc, stack_loc, permissions);
+    map_page(page_table, (page_frame_t)link_loc, link_loc, permissions);
+    map_page(page_table, (page_frame_t)stack_loc, stack_loc, permissions);
 
     klog("Loading new page table to make sure it is well formed\n");
     enable_paging(page_table);
@@ -57,7 +57,7 @@ uint32_t create_new_page_dir(page_frame_t *cur_page_dir, void *link_loc,
     enable_paging(cur_page_dir);
     __asm__ volatile ("sti");
 
-    return page_table;
+    return (uint32_t)page_table;
 }
 
 void *just_give_me_a_page(uint32_t *page_dir, uint16_t permissions) {
@@ -66,12 +66,12 @@ void *just_give_me_a_page(uint32_t *page_dir, uint16_t permissions) {
     // Walk the page directory in search of an available address
     for (size_t i = 0; i < PAGE_TABLE_SIZE-2; ++i) {
         if (page_dir[i] & PAGE_PRESENT) {
-            uint32_t *page_entry = GETADDRESS(page_dir[i]);
+            uint32_t *page_entry = (uint32_t*)GETADDRESS(page_dir[i]);
             for (size_t j = 0; j < PAGE_TABLE_SIZE-1; ++j) {
                 if (!(page_entry[j] & PAGE_PRESENT)) {
                     page_entry[j] = phys_addr | PAGE_PRESENT;
                     flush_tlb();
-                    return (i << 22) | (j << 12);
+                    return (void*)((i << 22) | (j << 12));
                 }
             }
         }
@@ -81,25 +81,25 @@ void *just_give_me_a_page(uint32_t *page_dir, uint16_t permissions) {
     // Allocate a new page table and return its first address
     for (size_t i = 0; i < PAGE_TABLE_SIZE-2; ++i) {
         if (!(page_dir[i] & PAGE_PRESENT)) {
-            uint32_t *page_table = alloc_frame();
+            uint32_t *page_table = (uint32_t*)alloc_frame();
             page_dir[i] = (uint32_t)page_table | PAGE_PRESENT;
             page_table[1] = phys_addr | permissions | PAGE_PRESENT;
             flush_tlb();
-            return (1 << 22) | (0);
+            return (void*)((1 << 22) | (0));
         }
     }
 
     // The page table is full. Fail by returning a special unaligned address
-    return EPHYSMEMFULL;
+    return (void*)EPHYSMEMFULL;
 }
 
 
 void map_kernel_pages(uint32_t *page_dir) {
     // Map all those important bits
     for (page_frame_t i = KERNEL_START; i < KERNEL_END; i += PAGE_SIZE) {
-        map_page(page_dir, i, i, 0);
+        map_page(page_dir, i, (void*)i, 0);
     }
-    map_page(page_dir, KHEAP_PHYS_ROOT, KHEAP_PHYS_ROOT, 0);
+    map_page(page_dir, KHEAP_PHYS_ROOT, (void*)KHEAP_PHYS_ROOT, 0);
 
     // FIXME: Move to video memory driver
     map_page(page_dir, VIDEO_MEMORY_BEGIN, (void*)VIDEO_MEMORY_BEGIN, 0);
@@ -160,10 +160,9 @@ int unmap_page(page_frame_t *page_dir, void *virtual_address,
 uint32_t *get_page_entry(page_frame_t *page_dir, void *virtual_address) {
     uint32_t *page_entry;
     uint32_t dir_index = HIGHINDEX(virtual_address);
-    uint32_t entry_index = LOWINDEX(virtual_address);
 
     if ((page_dir[dir_index] & 1) == 0) {
-        return ~0; // return all fs, an invalid value
+        return (uint32_t*)~0; // return all fs, an invalid value
     }
 
     page_entry = (uint32_t*)GETADDRESS(page_dir[dir_index]);
@@ -175,12 +174,12 @@ void free_table(uint32_t *page_dir) {
     // points to the directory itself, and the second to last one points to
     // kernel space
     for (size_t i = 0; i < PAGE_TABLE_SIZE-2; ++i) {
-        uint32_t *page_entry = GETADDRESS(page_dir[i]);
+        uint32_t *page_entry = (uint32_t*)GETADDRESS(page_dir[i]);
         for (size_t j = 0; j < PAGE_TABLE_SIZE; ++j) {
             if ((page_entry[j] & PAGE_PRESENT) == 1) {
                 free_frame(page_entry[j]);
             }
         }
     }
-    free_frame(page_dir);
+    free_frame((page_frame_t)page_dir);
 }
