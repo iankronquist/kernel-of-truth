@@ -8,10 +8,9 @@ void klog(char *message) {
     write_serial_string(COM1, message);
 }
 
-static void klog_ptr(void *p) {
+static void klog_u32(uint32_t n) {
     unsigned char buf[8] = {0};
     int c;
-    uintptr_t n = (uintptr_t)p;
     for (c = 7; c >= 0; --c) {
         buf[c] = n % 16;
         n /= 16;
@@ -40,7 +39,7 @@ void klogf(char* string, ...) {
                     write_serial(COM1, '%');
                     break;
                 case 'p':
-                    klog_ptr(va_arg(args, uint32_t));
+                    klog_u32(va_arg(args, uint32_t));
                     break;
             }
             continue;
