@@ -1,30 +1,30 @@
-.intel_syntax noprefix
+section .text
 
-.global idt_load
+global idt_load
 idt_load:
 	mov eax, [esp+4]
 	lidt [eax]
 	sti
 	ret
 
-.global common_handler
+global common_handler
 
-.macro interrupt number
-	.global isr\number
-	isr\number:
+%macro interrupt 1
+	global isr%1
+	isr%1:
 		cli
-		push \number
+		push %1
 		jmp common_handler
-.endm
+%endmacro
 
-.macro no_error_code_interrupt number
-	.global isr\number
-	isr\number:
+%macro no_error_code_interrupt 1
+	global isr%1
+	isr%1:
 		cli
 		push 0
-		push \number
+		push %1
 		jmp common_handler
-.endm
+%endmacro
 
 
 common_handler:
@@ -38,6 +38,7 @@ common_handler:
 	mov fs, ax
 	mov gs, ax
 
+	extern common_interrupt_handler
 	call common_interrupt_handler
 
 	pop eax
