@@ -11,7 +11,6 @@ void proc_init() {
     struct process *kernel_proc = kmalloc(sizeof(struct process));
     kernel_proc->next = kernel_proc;
     kernel_proc->regs.cr3 = get_page_dir();
-    klogf("kernel page dir: %p\n", kernel_proc->regs.cr3);
     running_proc = kernel_proc;
 }
 
@@ -27,7 +26,6 @@ struct process *create_proc(void(*entrypoint)()) {
     proc->regs.cr3 = create_new_page_dir(get_page_dir(), link_loc, stack_page,
             PAGE_USER_MODE | PAGE_WRITABLE);
 
-    klogf("worker page dir: %p\n", proc->regs.cr3);
     proc->regs.esp = stack_addr;
     proc->id = get_next_pid();
     proc->next = 0;
@@ -41,10 +39,13 @@ void schedule_proc(struct process *proc) {
 
 void preempt() {
     struct process *last = running_proc;
-    // If the next proc is the same as the current one then exit
     running_proc = running_proc->next;
-    klogf("next cr3 %p\n", running_proc->regs.cr3);
-    klogf("next esp %p\n", running_proc->regs.esp);
-    klogf("next ebp %p\n", running_proc->regs.ebp);
+    // switch_task does not behave properly when the last task and current
+    // tasks are the same, especially if the state of the current task's
+    // registers are not properly initialized.
+    // If the next proc is the same as the current one then return.
+    if (running_proc == last) {
+        return;
+    }
     switch_task(&last->regs, &running_proc->regs);
 }
