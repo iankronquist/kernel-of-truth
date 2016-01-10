@@ -36,7 +36,7 @@ void kernel_main()
     kputs(testing);
     klog(testing);
     kfree(testing);
-    uint32_t *page_dir = kernel_page_table_install();
+    (void)kernel_page_table_install();
 
     proc_init();
     struct process *worker_proc = create_proc(worker);
