@@ -8,18 +8,10 @@ addons:
             - libgmp-dev
             - libmpfr-dev
             - python-virtualenv
-            - nasm
             - libclang1-3.4
 cache:
     directories:
         - compiler/
-
-compiler:
-    - compiler/i686-elf/bin/i686-elf-gcc
-    - clang
-
-env:
-    - CC='clang -m32'
 
 before_script:
     - virtualenv ~/venv
