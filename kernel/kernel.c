@@ -4,6 +4,7 @@
 #include <arch/x86/idt.h>
 #include <arch/x86/io.h>
 #include <arch/x86/paging.h>
+#include <arch/x86/process.h>
 #include <drivers/terminal.h>
 #include <drivers/keyboard.h>
 #include <drivers/timer.h>
@@ -15,6 +16,7 @@
 void worker() {
     while(1) {
         kputs("worker");
+        preempt();
     }
 }
 
@@ -35,9 +37,10 @@ void kernel_main()
     kputs(testing);
     klog(testing);
     kfree(testing);
-    uint32_t *page_dir = kernel_page_table_install();
-    init_scheduler(page_dir);
-    start_proc(worker);
+    //uint32_t *page_dir = kernel_page_table_install();
+    disable_paging();
+    proc_init();
+    create_proc(worker);
 
     //char *foo = 0x324981389124;
     //memcpy(testing, foo, 16);
@@ -53,6 +56,8 @@ void kernel_main()
 
 
     while (1) {
+        kputs("kernel");
+        preempt();
     }
 }
 
