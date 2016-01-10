@@ -15,7 +15,7 @@
 
 void worker() {
     while(1) {
-        kputs("worker");
+        klog("worker\n");
         preempt();
     }
 }
@@ -37,26 +37,15 @@ void kernel_main()
     kputs(testing);
     klog(testing);
     kfree(testing);
-    //uint32_t *page_dir = kernel_page_table_install();
+    uint32_t *page_dir = kernel_page_table_install();
 
-    //char *foo = 0x324981389124;
-    //memcpy(testing, foo, 16);
-
-    /*
-    // Causes a division by 0 exception
-    unsigned int a, b;
-    a = 10;
-    kprintf("Dividing %u/%u\n", a, b);
-    b = 0;
-    a /= b;
-    */
     proc_init();
     struct process *worker_proc = create_proc(worker);
     schedule_proc(worker_proc);
 
 
     while (1) {
-        kputs("kernel");
+        klog("kernel\n");
         preempt();
     }
 }
