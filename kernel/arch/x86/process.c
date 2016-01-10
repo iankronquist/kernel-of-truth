@@ -2,44 +2,45 @@
 
 uint32_t get_next_pid() {
     static uint32_t proc_count = 0;
-    proc_count++;
-    return proc_count;
+    return proc_count++;
+}
+
+struct process *running_proc;
+struct process kernel_proc;
+struct process worker_proc;
+
+void wworker() {
+    while(1) {
+        kputs("worker");
+        preempt();
+    }
 }
 
 void proc_init() {
-    Cur_Proc = kmalloc(sizeof(struct process));
-    memset(Cur_Proc, 0, sizeof(struct process));
-    Cur_Proc->next = Cur_Proc;
-    Cur_Proc->id = get_next_pid();
+    __asm__ volatile("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(kernel_proc.regs.cr3)::"%eax");
+    __asm__ volatile("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(kernel_proc.regs.eflags)::"%eax");
+    create_proc(&worker_proc, wworker, kernel_proc.regs.eflags,
+            (uint32_t*)kernel_proc.regs.cr3);
+    kernel_proc.next = &worker_proc;
+    worker_proc.next = &kernel_proc;
+    running_proc = &kernel_proc;
 }
 
-struct cpu_state *create_proc(void(*entrypoint)()) {
-    struct process *new_proc = kmalloc(sizeof(struct process));
-    new_proc->id = get_next_pid();
+void create_proc(struct process *proc, void(*entrypoint)(), uint32_t flags, uint32_t *page_dir) {
+    memset(&proc->regs, 0, sizeof(struct registers));
+    proc->regs.eflags = flags;
+    proc->regs.eip = (uint32_t)entrypoint;
+    proc->regs.cr3 = (uint32_t)page_dir;
 
-    // Declare some regions of memory we will use for the new process
-    // These are all virtual addresses on a new page table so we won't have to
-    // worry about collisions too much.
-    uint32_t link_loc = 0x20000;
-    uint32_t stack_page = link_loc - PAGE_SIZE;
-    uint32_t stack_start = link_loc - 1;
-
-
-    // Set up pointers to memory we're going to use.
-
-    // The stack pointer should point to the top of the registers we set up on
-    // top of the stack.
-    new_proc->esp = stack_start + 40;
-    new_proc->eip = (uint32_t)entrypoint;
-    set_up_stack(new_proc->esp, new_proc->eip);
-
-    // Insert the new process into the circularly linked list.
-    new_proc->next = Cur_Proc->next->next;
-    Cur_Proc->next = new_proc;
-    return new_proc;
+    uint32_t *link_loc = 0x20000;
+    map_page(kernel_pages, link_loc, link_loc, 0);
+    proc->regs.esp = (uint32_t)link_loc;
+    proc->id = get_next_pid();
+    proc->next = 0;
 }
 
 void preempt() {
-    Cur_Proc = Cur_Proc->next;
-    enter_proc(Cur_Proc->esp);
+    struct process *last = running_proc;
+    running_proc = running_proc->next;
+    switch_task(&last->regs, &running_proc->regs);
 }

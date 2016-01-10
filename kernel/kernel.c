@@ -38,9 +38,6 @@ void kernel_main()
     klog(testing);
     kfree(testing);
     //uint32_t *page_dir = kernel_page_table_install();
-    disable_paging();
-    proc_init();
-    create_proc(worker);
 
     //char *foo = 0x324981389124;
     //memcpy(testing, foo, 16);
@@ -53,6 +50,7 @@ void kernel_main()
     b = 0;
     a /= b;
     */
+    proc_init();
 
 
     while (1) {

@@ -7,20 +7,23 @@
 
 #include <libk/kmem.h>
 
+struct registers {
+    uint32_t eax, ebx, ecx, edx, esi, edi, esp, ebp, eip, eflags, cr3;
+};
+
 struct process {
     uint32_t id;
-    uint32_t esp, ebp, eip, cr3, cs;
+    struct registers regs;
     struct process *next;
 };
 
 struct process *Cur_Proc;
 
-void proc_init(void);
-struct cpu_state *create_proc(void(*entrypoint)());
-void preempt(void);
+void proc_init();
+void create_proc(struct process *, void(*entrypoint)(), uint32_t, uint32_t*);
+void preempt();
 
-extern void enter_proc(uint32_t esp);
-extern void set_up_stack(uint32_t new_stack, uint32_t new_eip);
+extern void switch_task(struct registers *old, struct registers *new);
 
 uint32_t get_next_pid();
 

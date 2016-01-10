@@ -1,77 +1,49 @@
-.intel_syntax noprefix
-
-# extern void enter_proc(uint32_t esp)
-.global enter_proc
-enter_proc:
-	push ebp
-	mov ebp, esp
-
-	# Extra space for eip
-	push eax
-	# 1 * 4 = 4
-	pushf
-	# 7 * 4 = 28
-	pushad
-	
-	# Save esp
-	# 1 * 4 = 4
-	mov eax, esp
-	push eax
-	# Pushed a total of 28 + 4 + 4 + 4 = 40 bytes
-
-	# Put the return value to resume at the space allocated at the beginning
-	mov eax, [ebp+4]
-	mov [esp+40], eax
-
-	# Now for the grand switch!
-	mov esp, [ebp+8]
-	popad
-	popf
-	ret
-
-# extern void set_up_stack(uint32_t new_stack, uint32_t new_eip)
-.global set_up_stack
-set_up_stack:
-	push ebp
-	mov ebp, esp
-
-	# eax holds new esp
-	mov eax, [ebp+8]
-
-	# ebx holds new eip
-	mov ebx, [ebp+12]
-
-	# Give the new process the flags of the current process
-	# ecx holds the flags
-	pushf
-	pop ecx
-
-	# eip
-	mov [eax+0], ebx
-
-	# flags
-	mov [eax+4], ecx
-
-	# EDI, ESI, EBP, EBX, EDX, ECX, and EAX.
-	# edi
-	mov dword ptr [eax+8], 0
-	# esi
-	mov dword ptr [eax+12], 0
-	# ebp
-	mov dword ptr [eax+16], eax
-	# ebx
-	mov dword ptr [eax+20], 0
-	# edx
-	mov  dword ptr [eax+24], 0
-	# ecx
-	mov dword ptr [eax+28], 0
-	# eax
-	mov dword ptr [eax+32], 0
-
-	# esp
-	mov [eax+36], eax
-
-
-	mov esp, ebp
-	pop ebp
-	ret
+.section .text
+.global switch_task
+switch_task:
+    pusha
+    pushf
+    mov %cr3, %eax #Push CR3
+    push %eax
+    mov 44(%esp), %eax #The first argument, where to save
+    mov %ebx, 4(%eax)
+    mov %ecx, 8(%eax)
+    mov %edx, 12(%eax)
+    mov %esi, 16(%eax)
+    mov %edi, 20(%eax)
+    mov 36(%esp), %ebx #EAX
+    mov 40(%esp), %ecx #IP
+    mov 20(%esp), %edx #ESP
+    add $4, %edx #Remove the return value #)
+    mov 16(%esp), %esi #EBP
+    mov 4(%esp), %edi #EFLAGS
+    mov %ebx, (%eax)
+    mov %edx, 24(%eax)
+    mov %esi, 28(%eax)
+    mov %ecx, 32(%eax)
+    mov %edi, 36(%eax)
+    pop %ebx #CR3
+    mov %ebx, 40(%eax)
+    push %ebx #Goodbye again #)
+    mov 48(%esp), %eax #Now it is the new object
+    mov 4(%eax), %ebx #EBX
+    mov 8(%eax), %ecx #ECX
+    mov 12(%eax), %edx #EDX
+    mov 16(%eax), %esi #ESI
+    mov 20(%eax), %edi #EDI
+    mov 28(%eax), %ebp #EBP
+    push %eax
+    mov 36(%eax), %eax #EFLAGS
+    push %eax
+    popf
+    pop %eax
+    mov 24(%eax), %esp #ESP
+    push %eax
+    mov 44(%eax), %eax #CR3
+    mov %eax, %cr3
+    pop %eax
+    push %eax
+    mov 32(%eax), %eax #EIP
+    xchg (%esp), %eax #We do not have any more registers to use as tmp storage
+    mov (%eax), %eax #EAX
+    ret #This ends all!
