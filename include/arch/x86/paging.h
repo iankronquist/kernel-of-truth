@@ -7,6 +7,7 @@
 
 #include <libk/kassert.h>
 #include <libk/kabort.h>
+#include <libk/klog.h>
 #include <libk/kmem.h>
 #include <libk/physical_allocator.h>
 
@@ -43,7 +44,8 @@ page_frame_t *kernel_pages;
 uint32_t *kernel_page_table_install();
 
 extern void enable_paging(uint32_t *page_dir);
-extern void disable_paging();
+extern void disable_paging(void);
+extern void flush_tlb(void);
 
 int unmap_page(page_frame_t *page_dir, void *virtual_address,
         bool should_free_frame);

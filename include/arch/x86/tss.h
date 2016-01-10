@@ -1,6 +1,8 @@
 #ifndef TSS_H
 #define TSS_H
 
+#include <stdint.h>
+
 // See figure 7-2, 32-Bit Task-State-Segment
 // Volume 3-A
 struct tss {
