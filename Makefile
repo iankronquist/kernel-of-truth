@@ -5,7 +5,7 @@ GRUB_MKRESCUE=grub2-mkrescue
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=compiler/$(ARCH)/bin/$(ARCH)-as
 ASFLAGS=-g
-CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
+CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
 QEMU_FLAGS= -m 1G -serial file:build/qemu-serial.log
 VB=virtualbox
@@ -31,14 +31,18 @@ libk: build serial
 	${CC} -c kernel/libk/klog.c -o build/klog.o  ${CFLAGS}
 	${CC} -c kernel/libk/physical_allocator.c -o build/physical_allocator.o  ${CFLAGS}
 
+processes: libk
+	${AS} kernel/arch/x86/process.s -o build/process.o ${ASFLAGS}
+	${CC} -c kernel/arch/x86/process.c -o build/processc.o ${CFLAGS}
+
 libk-tests:
-	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c kernel/libk/kmem.c  -o build/tests/kmem ${TEST_CFLAGS}
+	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c  -o build/tests/kmem ${TEST_CFLAGS}
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c -o build/tests/physical_allocator ${TEST_CFLAGS}
 
 io: build
 	${AS} -c kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
 
-kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io
+kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io processes
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
 
 link-x86: build
@@ -79,7 +83,7 @@ start:
 	qemu-system-i386 -kernel build/truthos.bin ${QEMU_FLAGS}
 
 start-log:
-	qemu-system-i386 -kernel build/truthos.bin -d in_asm,cpu_reset,exec,int,ioport,guest_errors,pcall -no-reboot ${QEMU_FLAGS} &> qemu.log
+	qemu-system-i386 -kernel build/truthos.bin -d in_asm,cpu_reset,exec,int,guest_errors,pcall -no-reboot ${QEMU_FLAGS} &> qemu.log
 
 start-debug:
 	qemu-system-i386 -S -s -kernel build/truthos.bin ${QEMU_FLAGS} -curses
@@ -98,7 +102,7 @@ clean-all: clean
 	rm -f *.gcda
 
 docs:
-	cldoc generate -I ./include -DARCH_X86 -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/libk/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
+	cldoc generate -I ./include -DARCH_X86 -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/libk/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
 
 run: all start
 	rm -rf build

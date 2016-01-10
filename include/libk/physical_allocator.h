@@ -1,8 +1,10 @@
 #ifndef PHYSICAL_ALLOCATOR_H
 #define PHYSICAL_ALLOCATOR_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+
 #include <libk/kabort.h>
 #include <libk/kassert.h>
 #include <libk/kputs.h>
@@ -30,5 +32,7 @@ void free_frame(page_frame_t frame);
 page_frame_t alloc_frame();
 
 void use_frame(page_frame_t frame);
+
+bool is_free_frame(page_frame_t frame);
 
 #endif

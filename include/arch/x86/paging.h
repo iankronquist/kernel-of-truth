@@ -7,6 +7,7 @@
 
 #include <libk/kassert.h>
 #include <libk/kabort.h>
+#include <libk/klog.h>
 #include <libk/kmem.h>
 #include <libk/physical_allocator.h>
 
@@ -25,13 +26,41 @@
 #define HIGHINDEX(x) ((uintptr_t)x >> 22)
 #define LOWINDEX(x) ((uintptr_t)x >> 12)
 #define GETADDRESS(x) ((uintptr_t)x & ~ 0xfff)
+#define GETFLAGS(x) ((uintptr_t)x & 0xfff)
 #define PAGE_TABLE_SIZE 1024
 
 #define PAGE_PRESENT 1
+#define PAGE_WRITABLE 2
+#define PAGE_USER_MODE 4
+#define PAGE_WRITE_THROUGH 8
+#define PAGE_CACHE_DISABLE 16
+#define PAGE_ACCESSED 32
+#define PAGE_DIRTY 64
 
-void kernel_page_table_install();
+#define EPHYSMEMFULL (~0)
+
+page_frame_t *kernel_pages;
+
+uint32_t *kernel_page_table_install();
 
 extern void enable_paging(uint32_t *page_dir);
-int map_page(page_frame_t physical_page, void *virtual_address,
-        uint16_t permissions);
+extern void disable_paging(void);
+extern void flush_tlb(void);
+
+int unmap_page(page_frame_t *page_dir, void *virtual_address,
+        bool should_free_frame);
+
+int map_page(uint32_t *page_dir, page_frame_t physical_page,
+    void *virtual_address, uint16_t permissions);
+
+void *just_give_me_a_page(uint32_t *page_dir, uint16_t permissions);
+
+void map_kernel_pages(uint32_t *page_dir);
+
+uint32_t *get_page_entry(page_frame_t *page_dir, void *virtual_address);
+
+void free_table(uint32_t *page_dir);
+
+uint32_t create_new_page_dir(page_frame_t *cur_page_dir, void *link_loc,
+        void *stack_loc, uint16_t permissions);
 #endif

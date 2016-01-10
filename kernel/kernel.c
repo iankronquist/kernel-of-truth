@@ -4,6 +4,7 @@
 #include <arch/x86/idt.h>
 #include <arch/x86/io.h>
 #include <arch/x86/paging.h>
+#include <arch/x86/process.h>
 #include <drivers/terminal.h>
 #include <drivers/keyboard.h>
 #include <drivers/timer.h>
@@ -11,6 +12,12 @@
 #include <libk/kmem.h>
 #include <libk/kputs.h>
 #include <libk/klog.h>
+
+void worker() {
+    while(1) {
+        klog("worker\n");
+    }
+}
 
 void kernel_main()
 {
@@ -29,21 +36,15 @@ void kernel_main()
     kputs(testing);
     klog(testing);
     kfree(testing);
-    kernel_page_table_install();
+    (void)kernel_page_table_install();
 
-    //char *foo = 0x324981389124;
-    //memcpy(testing, foo, 16);
-
-    /*
-    // Causes a division by 0 exception
-    unsigned int a, b;
-    a = 10;
-    kprintf("Dividing %u/%u\n", a, b);
-    b = 0;
-    a /= b;
-    */
+    proc_init();
+    struct process *worker_proc = create_proc(worker);
+    schedule_proc(worker_proc);
 
 
     while (1) {
+        klog("kernel\n");
     }
 }
+

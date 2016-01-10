@@ -3,6 +3,7 @@
 
 #include <tests/tests.h>
 #include <libk/kmem.h>
+#include "../kmem.c"
 
 // Useful for debugging
 void kprint_heap() {
@@ -16,7 +17,22 @@ void kprint_heap() {
     }
 }
 
-int main() {
+
+void test_kmalloc_regression() {
+    size_t playground_size = PAGE_SIZE * 5;
+    char *playground = malloc(PAGE_SIZE * 5);
+    dependencies_suck = (uintptr_t)playground;
+    memset(playground, 0, playground_size);
+
+    puts("Initializing heap");
+    kheap_install((void*)playground, playground_size);
+
+    void *a = kmalloc(16);
+    void *b = kmalloc(16);
+    EXPECT_NEQ(a, b);
+}
+
+void test_kmalloc_and_kfree() {
     size_t playground_size = PAGE_SIZE * 5;
     char *playground = malloc(PAGE_SIZE * 5);
     dependencies_suck = (uintptr_t)playground;
@@ -149,6 +165,16 @@ int main() {
     EXPECT_EQ(root->is_free, true);
     EXPECT_EQ(root->size, PAGE_SIZE * 5);
 
+    // Allocating no bytes returns NULL.
+    void *nada = kmalloc(0);
+    EXPECT_EQ(nada, 0);
+
+
     free(playground);
+}
+
+int main() {
+    test_kmalloc_regression();
+    test_kmalloc_and_kfree();
     return RETURN_VALUE;
 }
