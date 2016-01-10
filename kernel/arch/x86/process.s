@@ -1,49 +1,85 @@
+.intel_syntax noprefix
+
 .section .text
+
 .global switch_task
 switch_task:
-    pusha
-    pushf
-    mov %cr3, %eax #Push CR3
-    push %eax
-    mov 44(%esp), %eax #The first argument, where to save
-    mov %ebx, 4(%eax)
-    mov %ecx, 8(%eax)
-    mov %edx, 12(%eax)
-    mov %esi, 16(%eax)
-    mov %edi, 20(%eax)
-    mov 36(%esp), %ebx #EAX
-    mov 40(%esp), %ecx #IP
-    mov 20(%esp), %edx #ESP
-    add $4, %edx #Remove the return value #)
-    mov 16(%esp), %esi #EBP
-    mov 4(%esp), %edi #EFLAGS
-    mov %ebx, (%eax)
-    mov %edx, 24(%eax)
-    mov %esi, 28(%eax)
-    mov %ecx, 32(%eax)
-    mov %edi, 36(%eax)
-    pop %ebx #CR3
-    mov %ebx, 40(%eax)
-    push %ebx #Goodbye again #)
-    mov 48(%esp), %eax #Now it is the new object
-    mov 4(%eax), %ebx #EBX
-    mov 8(%eax), %ecx #ECX
-    mov 12(%eax), %edx #EDX
-    mov 16(%eax), %esi #ESI
-    mov 20(%eax), %edi #EDI
-    mov 28(%eax), %ebp #EBP
-    push %eax
-    mov 36(%eax), %eax #EFLAGS
-    push %eax
-    popf
-    pop %eax
-    mov 24(%eax), %esp #ESP
-    push %eax
-    mov 44(%eax), %eax #CR3
-    mov %eax, %cr3
-    pop %eax
-    push %eax
-    mov 32(%eax), %eax #EIP
-    xchg (%esp), %eax #We do not have any more registers to use as tmp storage
-    mov (%eax), %eax #EAX
-    ret #This ends all!
+	pusha
+	pushf
+	mov eax, cr3
+	push eax
+	mov eax, [esp+44]
+	mov ebx, [4+eax]
+	mov ecx, [8+eax]
+	mov edx, [12+eax]
+	mov esi, [16+eax]
+	mov edi, [20+eax]
+
+	# eax
+	mov ebx, [36+esp]
+	# eip
+	mov ecx, [40+esp]
+	# esp
+	mov edx, [20+esp]
+	# Remove return value
+	add edx, 4
+
+	# ebp
+	mov esi, [16+esp]
+	# Flags
+	mov edi, [4+esp]
+
+	mov [eax], ebx
+	mov [24+eax], edx
+	mov [28+eax], esi
+	mov [32+eax], ecx
+	mov [36+eax], edi
+
+	# cr3
+	pop ebx
+	mov [40+eax], ebx
+
+	push ebx
+
+	# Set up the new struct
+	mov eax, [48+esp]
+	# ebx
+	mov ebx, [4+eax]
+	# ecx
+	mov ecx, [8+eax]
+	# edx
+	mov edx, [12+eax]
+	# esi
+	mov esi, [16+eax]
+	# edi
+	mov edi, [20+eax]
+	# ebp
+	mov ebp, [28+eax]
+
+	push eax
+
+	# flags
+	mov eax, [36+eax]
+	push eax
+
+	popf
+	pop eax
+
+	# esp
+	mov esp, [24+eax]
+
+	# cr3 (page directory)
+	push eax
+	mov eax, [44+eax]
+	mov cr3, eax
+
+	pop eax
+	push eax
+
+	# eip
+	mov eax, [32+eax]
+	# There are no more registers to use as temporary storage
+	xchg eax, [esp]
+	# eax
+	mov eax, [eax]
+	ret
