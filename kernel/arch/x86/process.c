@@ -12,6 +12,11 @@ void proc_init() {
     kernel_proc->next = kernel_proc;
     kernel_proc->regs.cr3 = get_page_dir();
     running_proc = kernel_proc;
+
+    // FIXME make this have an architecture independent api
+    idt_set_gate(32, (uint32_t)_process_handler, 0x08, 0x8e);
+    uint8_t current_mask = read_port(0x21);
+    write_port(0x21 , current_mask & TIMER_INTERRUPT_MASK);
 }
 
 struct process *create_proc(void(*entrypoint)()) {
@@ -48,4 +53,11 @@ void preempt() {
         return;
     }
     switch_task(&last->regs, &running_proc->regs);
+}
+
+
+void process_handler() {
+    // End interrupt
+    write_port(0x20, 0x20);
+    preempt();
 }

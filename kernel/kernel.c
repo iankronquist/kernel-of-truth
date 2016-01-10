@@ -16,7 +16,6 @@
 void worker() {
     while(1) {
         klog("worker\n");
-        preempt();
     }
 }
 
@@ -46,7 +45,6 @@ void kernel_main()
 
     while (1) {
         klog("kernel\n");
-        preempt();
     }
 }
 

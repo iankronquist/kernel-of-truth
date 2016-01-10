@@ -4,6 +4,8 @@
 #include <stdint.h>
 
 #include <arch/x86/paging.h>
+#include <arch/x86/idt.h>
+#include <drivers/timer.h>
 
 #include <libk/kmem.h>
 
@@ -24,8 +26,9 @@ struct process *create_proc(void(*entrypoint)());
 void preempt();
 void schedule_proc(struct process *proc);
 
-extern uint32_t get_flags();
-extern uint32_t get_page_dir();
+extern uint32_t get_flags(void);
+extern uint32_t get_page_dir(void);
+extern void _process_handler(void);
 extern void switch_task(struct registers *old, struct registers *new);
 
 uint32_t get_next_pid();
