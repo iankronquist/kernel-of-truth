@@ -20,15 +20,15 @@ void proc_init() {
 }
 
 struct process *create_proc(void(*entrypoint)()) {
-    uint32_t *link_loc = (uint32_t*)0x20000;
-    uint32_t *stack_page = (uint32_t*)NEXT_PAGE(link_loc);
-    uint32_t stack_addr = (uint32_t)(stack_page + PAGE_SIZE-1);
+    uint32_t *link_loc = 0x20000;
+    uint32_t stack_page = (uint32_t)NEXT_PAGE(link_loc);
+    uint32_t stack_addr = stack_page + PAGE_SIZE-1;
     struct process *proc = kmalloc(sizeof(struct process));
     memset(&proc->regs, 0, sizeof(struct registers));
     proc->regs.eflags = get_flags();
     proc->regs.eip = (uint32_t)entrypoint;
 
-    proc->regs.cr3 = create_new_page_dir((uint32_t*)get_page_dir(), link_loc, stack_page,
+    proc->regs.cr3 = create_new_page_dir(get_page_dir(), link_loc, stack_page,
             PAGE_USER_MODE | PAGE_WRITABLE);
 
     proc->regs.esp = stack_addr;
