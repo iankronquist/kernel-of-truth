@@ -36,6 +36,8 @@
 #define PAGE_ACCESSED 32
 #define PAGE_DIRTY 64
 
+#define EPHYSMEMFULL (~0)
+
 page_frame_t *kernel_pages;
 
 uint32_t *kernel_page_table_install();
@@ -43,13 +45,20 @@ uint32_t *kernel_page_table_install();
 extern void enable_paging(uint32_t *page_dir);
 extern void disable_paging();
 
+int unmap_page(page_frame_t *page_dir, void *virtual_address,
+        bool should_free_frame);
+
 int map_page(uint32_t *page_dir, page_frame_t physical_page,
     void *virtual_address, uint16_t permissions);
-uint32_t create_new_page_dir(page_frame_t *cur_page_dir,
-    page_frame_t kernel_page, void *initial_location);
-void *just_give_me_a_page(uint32_t *page_dir, page_frame_t phys_addr,
-        uint16_t permissions);
+
+void *just_give_me_a_page(uint32_t *page_dir, uint16_t permissions);
+
 void map_kernel_pages(uint32_t *page_dir);
+
 uint32_t *get_page_entry(page_frame_t *page_dir, void *virtual_address);
+
 void free_table(uint32_t *page_dir);
+
+uint32_t create_new_page_dir(page_frame_t *cur_page_dir, void *link_loc,
+        void *stack_loc, uint16_t permissions);
 #endif
