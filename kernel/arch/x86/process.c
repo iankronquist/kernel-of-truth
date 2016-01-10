@@ -13,19 +13,6 @@ void proc_init() {
     running_proc = kernel_proc;
 }
 
-// FIXME: Split these into their own assembly file
-uint32_t get_flags() {
-    uint32_t flags;
-    __asm__ volatile("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(flags)::"%eax");
-    return flags;
-}
-
-uint32_t get_page_dir() {
-    uint32_t cr3;
-    __asm__ volatile("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(cr3)::"%eax");
-    return cr3;
-}
-
 struct process *create_proc(void(*entrypoint)()) {
     uint32_t *link_loc = 0x20000;
     uint32_t stack_page = (uint32_t)link_loc + PAGE_SIZE;

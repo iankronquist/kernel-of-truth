@@ -2,6 +2,18 @@
 
 .section .text
 
+.global get_flags
+get_flags:
+	pushf
+	pop eax
+	ret
+
+
+.global get_page_dir
+get_page_dir:
+	mov eax, cr3
+	ret
+
 .global switch_task
 switch_task:
 	pusha
@@ -73,8 +85,7 @@ switch_task:
 	mov eax, [44+eax]
 	mov cr3, eax
 
-	pop eax
-	push eax
+	mov eax, [esp]
 
 	# eip
 	mov eax, [32+eax]

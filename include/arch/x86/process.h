@@ -24,6 +24,8 @@ struct process *create_proc(void(*entrypoint)());
 void preempt();
 void schedule_proc(struct process *proc);
 
+extern uint32_t get_flags();
+extern uint32_t get_page_dir();
 extern void switch_task(struct registers *old, struct registers *new);
 
 uint32_t get_next_pid();
