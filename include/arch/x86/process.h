@@ -20,8 +20,9 @@ struct process {
 struct process *Cur_Proc;
 
 void proc_init();
-void create_proc(struct process *, void(*entrypoint)(), uint32_t, uint32_t*);
+struct process *create_proc(void(*entrypoint)());
 void preempt();
+void schedule_proc(struct process *proc);
 
 extern void switch_task(struct registers *old, struct registers *new);
 

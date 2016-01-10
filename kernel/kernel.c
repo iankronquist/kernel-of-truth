@@ -51,6 +51,8 @@ void kernel_main()
     a /= b;
     */
     proc_init();
+    struct process *worker_proc = create_proc(worker);
+    schedule_proc(worker_proc);
 
 
     while (1) {
