@@ -52,6 +52,7 @@ void preempt() {
     if (running_proc == last) {
         return;
     }
+    enable_paging((void*)running_proc->regs.cr3);
     switch_task(&last->regs, &running_proc->regs);
 }
 
