@@ -19,6 +19,12 @@ void worker() {
     }
 }
 
+void user_worker() {
+    while(1) {
+        klog("user worker\n");
+    }
+}
+
 void kernel_main()
 {
     terminal_initialize();
@@ -41,6 +47,8 @@ void kernel_main()
     proc_init();
     struct process *worker_proc = create_proc(worker);
     schedule_proc(worker_proc);
+
+    jump_to_usermode(user_worker);
 
 
     while (1) {
