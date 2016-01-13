@@ -3,6 +3,11 @@
 
 #include <stdint.h>
 
+#include <string.h>
+
+
+#include <arch/x86/tss.h>
+
 extern void gdt_flush();
 
 /* the __attribute__((packed))
@@ -25,7 +30,7 @@ struct gdt_ptr {
     uint32_t base;
 } __attribute__((packed));
 
-struct gdt_entry gdt[3];
+struct gdt_entry gdt[6];
 struct gdt_ptr gdtp;
 
 /* A function in start.am. Used to properly 

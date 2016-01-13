@@ -21,3 +21,9 @@ flush2:
 	mov gs, ax
 	mov ss, ax
 	ret
+
+global tss_flush
+tss_flush:
+   mov ax, 0x28
+   ltr ax
+   ret
