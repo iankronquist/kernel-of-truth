@@ -43,6 +43,7 @@ struct tss_descriptor {
 };
 
 void set_up_tss();
+void set_tss_stack(uint32_t stack);
 extern void tss_flush(void);
 
 #endif
