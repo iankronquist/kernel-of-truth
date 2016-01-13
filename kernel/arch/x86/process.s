@@ -36,6 +36,21 @@ switch_task:
 	sti
 	ret
 
+global jump_to_usermode
+jump_to_usermode:
+	mov ax, 0x23
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov eax, esp
+	push 0x23
+	push eax
+	pushf
+	push 0x1b
+	extern user_worker
+	push user_worker
+	iret
 
 
 global _process_handler
