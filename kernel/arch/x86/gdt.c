@@ -63,10 +63,14 @@ void gdt_install()
 
 void set_up_tss() {
     memset(&Tss, 0, sizeof(struct tss));
-    Tss.esp0 = 0;
+    Tss.esp0 = 0xbadc0de;
     Tss.ss0 = 0x10;
     uint32_t base = (uint32_t)&Tss;
     uint32_t limit = base + sizeof(struct tss);
     // Stupid TSS entry I don't actually use
     gdt_set_gate(5, base, limit, 0xe9, 0x00);
+}
+
+void set_tss_stack(uint32_t stack) {
+    Tss.esp0 = stack;
 }
