@@ -3,8 +3,8 @@ TEST_CC=clang
 GCOV=gcov
 GRUB_MKRESCUE=grub2-mkrescue
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
-AS=compiler/$(ARCH)/bin/$(ARCH)-as
-ASFLAGS=-g
+AS=nasm
+ASFLAGS=-felf32
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
 QEMU_FLAGS= -m 1G -serial file:build/qemu-serial.log
@@ -40,23 +40,23 @@ libk-tests:
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c -o build/tests/physical_allocator ${TEST_CFLAGS}
 
 io: build
-	${AS} -c kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
+	${AS} kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
 
 kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io processes
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
 
 link-x86: build
-	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/*.o -lgcc
+	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/*.o
 
 terminal: build
 	${CC} -c kernel/drivers/terminal.c -o build/terminal.o ${CFLAGS}
 
-timer: build
-	${AS} -c kernel/drivers/timer.s -o build/timers.o ${ASFLAGS}
+timer:
+	${AS} kernel/drivers/timer.s -o build/timers.o ${ASFLAGS}
 	${CC} -c kernel/drivers/timer.c -o build/timerc.o ${CFLAGS}
 
 paging-x86: build
-	${AS} -c kernel/arch/x86/paging.s -o build/pagings.o ${ASFLAGS}
+	${AS} kernel/arch/x86/paging.s -o build/pagings.o ${ASFLAGS}
 	${CC} -c kernel/arch/x86/paging.c -o build/pagingc.o ${CFLAGS}
 
 
@@ -64,8 +64,8 @@ gdt-x86: build
 	${CC} -c kernel/arch/x86/gdt.c -o build/gdtc.o ${CFLAGS}
 	${AS} kernel/arch/x86/gdt.s -o build/gdts.o ${ASFLAGS}
 
-idt-x86: build keyboard
-	${CC} -c kernel/arch/x86/idt.c build/keyboard.o -o build/idtc.o ${CFLAGS}
+idt-x86: build
+	${CC} -c kernel/arch/x86/idt.c -o build/idtc.o ${CFLAGS}
 	${AS} kernel/arch/x86/idt.s -o build/idts.o ${ASFLAGS}
 
 
@@ -74,7 +74,7 @@ serial: build
 
 keyboard: build
 	${CC} -c kernel/drivers/keyboard.c -o build/keyboard.o ${CFLAGS}
-	${AS} -c kernel/drivers/keyboard.s -o build/keyboards.o ${ASFLAGS}
+	${AS} kernel/drivers/keyboard.s -o build/keyboards.o ${ASFLAGS}
 
 tlibc: build
 	${CC} -c tlibc/string/string.c -o build/tlibc.o ${CFLAGS}

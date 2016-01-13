@@ -1,20 +1,18 @@
-.intel_syntax noprefix
+section .text
 
-.section .text
-
-.global get_flags
+global get_flags
 get_flags:
 	pushf
 	pop eax
 	ret
 
 
-.global get_page_dir
+global get_page_dir
 get_page_dir:
 	mov eax, cr3
 	ret
 
-.global switch_task
+global switch_task
 switch_task:
 	pusha
 	pushf
@@ -33,18 +31,18 @@ switch_task:
 	mov esi, [16+eax]
 	mov edi, [20+eax]
 
-	# eax
+	; eax
 	mov ebx, [36+esp]
-	# eip
+	; eip
 	mov ecx, [40+esp]
-	# esp
+	; esp
 	mov edx, [20+esp]
-	# Remove return value
+	; Remove return value
 	add edx, 4
 
-	# ebp
+	; ebp
 	mov esi, [16+esp]
-	# Flags
+	; Flags
 	mov edi, [4+esp]
 
 	mov [eax], ebx
@@ -53,40 +51,40 @@ switch_task:
 	mov [32+eax], ecx
 	mov [36+eax], edi
 
-	# cr3
+	; cr3
 	pop ebx
 	mov [40+eax], ebx
 
 	push ebx
 
-	# Set up the new struct
+	; Set up the new struct
 	mov eax, [48+esp]
-	# ebx
+	; ebx
 	mov ebx, [4+eax]
-	# ecx
+	; ecx
 	mov ecx, [8+eax]
-	# edx
+	; edx
 	mov edx, [12+eax]
-	# esi
+	; esi
 	mov esi, [16+eax]
-	# edi
+	; edi
 	mov edi, [20+eax]
-	# ebp
+	; ebp
 	mov ebp, [28+eax]
 
 	push eax
 
-	# flags
+	; flags
 	mov eax, [36+eax]
 	push eax
 
 	popf
 	pop eax
 
-	# esp
+	; esp
 	mov esp, [24+eax]
 
-	# cr3 (page directory)
+	; cr3 (page directory)
 	push eax
 	mov eax, [40+eax]
 	mov cr3, eax
@@ -97,17 +95,17 @@ switch_task:
 
 	mov eax, [esp]
 
-	# eip
+	; eip
 	mov eax, [32+eax]
-	# There are no more registers to use as temporary storage
+	; There are no more registers to use as temporary storage
 	xchg eax, [esp]
-	# eax
+	; eax
 	mov eax, [eax]
 	ret
 
 
 
-.global _process_handler
+global _process_handler
 _process_handler:
 	push 0
 	push 0x20
@@ -121,6 +119,7 @@ _process_handler:
 	mov fs, ax
 	mov gs, ax
 
+	extern process_handler
 	call process_handler
 
 	pop eax

@@ -1,6 +1,7 @@
-.intel_syntax noprefix
+section .text
+extern keyboard_irq_handler
 
-.global keyboard_handler
+global keyboard_handler
 keyboard_handler:
 	pusha
 	mov ax, ds

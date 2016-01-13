@@ -1,6 +1,4 @@
-.intel_syntax noprefix
-
-.global timer_handler
+global timer_handler
 timer_handler:
 	pusha
 	mov		ax,		ds
@@ -12,7 +10,7 @@ timer_handler:
 	mov		fs,		ax
 	mov		gs,		ax
 
-
+	extern timer_irq_handler
 	call	timer_irq_handler
 
 	pop		eax
