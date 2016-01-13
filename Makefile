@@ -4,7 +4,7 @@ GCOV=gcov
 GRUB_MKRESCUE=grub2-mkrescue
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=nasm
-ASFLAGS=-felf32
+ASFLAGS=-felf32 -F dwarf -g
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
 QEMU_FLAGS= -m 1G -serial file:build/qemu-serial.log
