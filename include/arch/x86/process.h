@@ -30,6 +30,7 @@ extern uint32_t get_flags(void);
 extern uint32_t get_page_dir(void);
 extern void _process_handler(void);
 extern void switch_task(struct registers *old, struct registers *new);
+extern void jump_to_usermode(void(*func)(void));
 
 uint32_t get_next_pid();
 
