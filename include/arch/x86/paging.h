@@ -12,6 +12,7 @@
 #include <libk/physical_allocator.h>
 
 #include <arch/x86/memlayout.h>
+#include <arch/x86/tss.h>
 
 #define PAGE_TABLE_SIZE 1024
 

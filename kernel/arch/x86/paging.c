@@ -97,12 +97,16 @@ void *just_give_me_a_page(uint32_t *page_dir, uint16_t permissions) {
 void map_kernel_pages(uint32_t *page_dir) {
     // Map all those important bits
     for (page_frame_t i = KERNEL_START; i < KERNEL_END; i += PAGE_SIZE) {
-        map_page(page_dir, i, (void*)i, 0);
+        // DANGER! FIXME TODO WARNING ACHTUNG DIKKAT!
+        // The kernel is now editable and executable from ring 3! Enjoy!
+        map_page(page_dir, i, (void*)i, PAGE_USER_MODE | PAGE_WRITABLE);
     }
-    map_page(page_dir, KHEAP_PHYS_ROOT, (void*)KHEAP_PHYS_ROOT, 0);
+    map_page(page_dir, KHEAP_PHYS_ROOT, (void*)KHEAP_PHYS_ROOT, PAGE_USER_MODE | PAGE_WRITABLE);
+    map_page(page_dir, NEXT_PAGE(KHEAP_PHYS_ROOT), (void*)NEXT_PAGE(KHEAP_PHYS_ROOT), PAGE_USER_MODE | PAGE_WRITABLE);
+    set_tss_stack(NEXT_PAGE(KHEAP_PHYS_ROOT));
 
     // FIXME: Move to video memory driver
-    map_page(page_dir, VIDEO_MEMORY_BEGIN, (void*)VIDEO_MEMORY_BEGIN, 0);
+    map_page(page_dir, VIDEO_MEMORY_BEGIN, (void*)VIDEO_MEMORY_BEGIN, PAGE_USER_MODE | PAGE_WRITABLE);
 }
 
 // TODO: refactor to use get_page
