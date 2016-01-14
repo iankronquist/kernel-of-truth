@@ -23,9 +23,7 @@ void worker() {
 
 void user_worker() {
     while(1) {
-        sys_klog("before");
         klog("user worker\n");
-        sys_klog("after");
     }
 }
 
