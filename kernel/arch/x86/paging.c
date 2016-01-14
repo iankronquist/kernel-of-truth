@@ -50,9 +50,9 @@ uint32_t create_new_page_dir(page_frame_t *cur_page_dir, void *link_loc,
     map_page(page_table, (uint32_t)link_loc, link_loc, permissions);
     map_page(page_table, (uint32_t)stack_loc, stack_loc, permissions);
 
-    klog("Loading new page table to make sure it is well formed\n");
+    sys_klog("Loading new page table to make sure it is well formed\n");
     enable_paging(page_table);
-    klog("Yep, it's valid. Reverting to old page table.\n");
+    sys_klog("Yep, it's valid. Reverting to old page table.\n");
 
     enable_paging(cur_page_dir);
     __asm__ volatile ("sti");

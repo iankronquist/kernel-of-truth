@@ -4,7 +4,8 @@ void initialize_klog() {
     initialize_serial_port(COM1);
     write_serial_string(COM1, "Logger initialized!\n");
 }
-void klog(char *message) {
+
+void sys_klog(char *message) {
     write_serial_string(COM1, message);
 }
 
@@ -28,7 +29,7 @@ static void klog_u32(uint32_t n) {
 }
 
 // A subset of printf
-void klogf(char* string, ...) {
+void sys_klogf(char* string, ...) {
     va_list args;
     va_start(args, string);
     for (size_t i = 0; string[i] != '\0'; ++i) {
