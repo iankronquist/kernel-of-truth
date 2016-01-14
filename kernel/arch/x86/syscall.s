@@ -4,15 +4,17 @@ extern sys_klog
 
 global _syscall_handler
 _syscall_handler:
+	pushf
+	pushad
+	mov ax, ds
+	push eax
+	mov ax, 0x10
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
 
-	;mov ax, ds
-	;push eax
-	;mov ax, 0x10
-	;mov ds, ax
-	;mov es, ax
-	;mov fs, ax
-	;mov gs, ax
-
+	mov eax, [esp+32]
 	.call_klog:
 		cmp dword [eax], 0xdeadbeef
 		jne .switch_end
@@ -22,14 +24,15 @@ _syscall_handler:
 		add    esp, 0x10
 	
 	.switch_end:
-	;pop eax
+	pop eax
 
-	;mov ds, ax
-	;mov es, ax
-	;mov fs, ax
-	;mov gs, ax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
 
-	sti
+	popad
+	popf
 	iret
 
 global klog
