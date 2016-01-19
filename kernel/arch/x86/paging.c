@@ -174,6 +174,7 @@ uint32_t *get_page_entry(page_frame_t *page_dir, void *virtual_address) {
 }
 
 void free_table(uint32_t *page_dir) {
+    disable_paging();
     // The last two entries of the page directory are reserved. The last one
     // points to the directory itself, and the second to last one points to
     // kernel space
@@ -186,4 +187,5 @@ void free_table(uint32_t *page_dir) {
         }
     }
     free_frame((page_frame_t)page_dir);
+    just_enable_paging();
 }
