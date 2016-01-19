@@ -16,15 +16,19 @@
 #include <libk/klog.h>
 
 void worker() {
-    while(1) {
-        sys_klog("worker\n");
+    for (int i = 0; i < 100; ++i) {
+        klog("worker\n");
     }
+    spawn(worker);
+    exit();
 }
 
 void user_worker() {
-    while(1) {
+    for (int i = 0; i < 100; ++i) {
         klog("user worker\n");
     }
+    spawn(worker);
+    exit();
 }
 
 void kernel_main()
@@ -36,23 +40,18 @@ void kernel_main()
     install_syscall();
     keyboard_install();
     kheap_install((struct kheap_metadata*)KHEAP_PHYS_ROOT, PAGE_SIZE);
-    // Periodically prints 'tick!' on the screen. This will be useful later for
-    // multi-tasking.
-    //timer_install();
+    (void)kernel_page_table_install();
     char *hi = "Hello kernel!\n";
     void *testing = kmalloc(16);
     memcpy(testing, hi, 16);
-    kputs(testing);
+    sys_kputs(testing);
     sys_klog(testing);
     kfree(testing);
-    (void)kernel_page_table_install();
 
     proc_init();
-    struct process *worker_proc = create_proc(worker);
-    schedule_proc(worker_proc);
-
-    jump_to_usermode(user_worker);
-
+    spawn(worker);
+    spawn(user_worker);
+    exit();
 
     while (1) {
         sys_klog("kernel\n");
