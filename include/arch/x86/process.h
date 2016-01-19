@@ -17,6 +17,7 @@ struct process {
     uint32_t id;
     struct registers regs;
     struct process *next;
+    struct process *prev;
 };
 
 struct process *Cur_Proc;
@@ -33,5 +34,9 @@ extern void switch_task(struct registers *old, struct registers *new);
 extern void jump_to_usermode(void(*func)(void));
 
 uint32_t get_next_pid();
+
+void sys_exit();
+void sys_exec();
+void sys_spawn(void (*entrypoint)(void));
 
 #endif

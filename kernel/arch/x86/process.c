@@ -9,7 +9,9 @@ struct process *running_proc;
 
 void proc_init() {
     struct process *kernel_proc = kmalloc(sizeof(struct process));
+    kernel_proc->id = get_next_pid();
     kernel_proc->next = kernel_proc;
+    kernel_proc->prev = kernel_proc;
     kernel_proc->regs.cr3 = get_page_dir();
     running_proc = kernel_proc;
 
@@ -33,7 +35,8 @@ struct process *create_proc(void(*entrypoint)()) {
 
     proc->regs.esp = stack_addr;
     proc->id = get_next_pid();
-    proc->next = 0;
+    proc->next = NULL;
+    proc->prev = NULL;
     return proc;
 }
 
@@ -60,4 +63,58 @@ void process_handler() {
     // End interrupt
     write_port(0x20, 0x20);
     preempt();
+}
+
+void sys_exit() {
+    // If there is only one process running and it is trying to exit shut down
+    // I guess?
+    if (running_proc == running_proc->next) {
+        sys_klog("Last process exited. Shutting down.");
+        kabort();
+    }
+    // Deschedule current process.
+    running_proc->prev->next = running_proc->next;
+    running_proc->next->prev = running_proc->prev;
+
+    // Switch to next process and clean up current one.
+    struct process *last = running_proc;
+    running_proc = running_proc->next;
+    kfree(last);
+
+    // We could write a version of switch task which doesn't save the current
+    // machine state, but I'm lazy. Just give it a dummy variable on the stack
+    // to put the machine state in instead.
+    struct registers dummy;
+    switch_task(&dummy, &running_proc->regs);
+
+    // NOT REACHED
+    kassert(0);
+}
+
+void sys_spawn(void (*entrypoint)(void)) {
+    struct process *proc = create_proc(entrypoint);
+    sys_klogf("Spawning proc %p\n", proc->id);
+    schedule_proc(proc);
+}
+
+void sys_exec(void (*entrypoint)(void)) {
+    sys_klog("1");
+    sys_klogf("execing in proc %p\n", running_proc->id);
+    uint32_t *link_loc = (uint32_t*)0x20000;
+    sys_klog("2");
+
+    // Reset stack to beginning
+    running_proc->regs.esp &= ~0xfff;
+    running_proc->regs.ebp &= ~0xfff;
+    sys_klog("3");
+
+    //free_table((uint32_t*)running_proc->regs.cr3);
+    running_proc->regs.cr3 = create_new_page_dir((page_frame_t*)get_page_dir(),
+            link_loc, (uint32_t*)running_proc->regs.esp,
+            PAGE_USER_MODE | PAGE_WRITABLE);
+    sys_klog("4");
+
+    running_proc->regs.eip = (uint32_t)entrypoint;
+    sys_klog("5");
+    jump_to_usermode(entrypoint);
 }
