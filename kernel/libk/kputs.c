@@ -1,6 +1,6 @@
 #include <libk/kputs.h>
 
-void kputs(char* string) {
+void sys_kputs(char* string) {
     terminal_writestring(string);
     terminal_putchar('\n');
 }
@@ -60,7 +60,7 @@ static void kprint_int(int i) {
 
 
 // A subset of printf
-void kprintf(char* string, ...) {
+void sys_kprintf(char* string, ...) {
     va_list args;
     va_start(args, string);
     for (size_t i = 0; string[i] != '\0'; ++i) {
