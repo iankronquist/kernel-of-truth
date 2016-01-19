@@ -69,7 +69,7 @@ void *just_give_me_a_page(uint32_t *page_dir, uint16_t permissions) {
             uint32_t *page_entry = (uint32_t*)GETADDRESS(page_dir[i]);
             for (size_t j = 0; j < PAGE_TABLE_SIZE-1; ++j) {
                 if (!(page_entry[j] & PAGE_PRESENT)) {
-                    page_entry[j] = phys_addr | PAGE_PRESENT;
+                    page_entry[j] = phys_addr | permissions | PAGE_PRESENT;
                     flush_tlb();
                     return (void*)((i << 22) | (j << 12));
                 }
@@ -82,7 +82,7 @@ void *just_give_me_a_page(uint32_t *page_dir, uint16_t permissions) {
     for (size_t i = 0; i < PAGE_TABLE_SIZE-2; ++i) {
         if (!(page_dir[i] & PAGE_PRESENT)) {
             uint32_t *page_table = (uint32_t*)alloc_frame();
-            page_dir[i] = (uint32_t)page_table | PAGE_PRESENT;
+            page_dir[i] = (uint32_t)page_table | permissions | PAGE_PRESENT;
             page_table[1] = phys_addr | permissions | PAGE_PRESENT;
             flush_tlb();
             return (void*)((1 << 22) | (0));
