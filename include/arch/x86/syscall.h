@@ -10,7 +10,7 @@ extern void klog(char *message);
 extern void kputs(char* string);
 extern void spawn(void (*entrypoint)(void));
 extern void exec(void (*entrypoint)(void));
-extern void exit();
+extern void exit(void);
 
 void install_syscall();
 void bad_syscall(uint32_t bad_syscall_num);
