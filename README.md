@@ -12,16 +12,15 @@ implementing the fundamentals of a system.
 
 Tutorials & Resources
 ---------------------
+In OS development, nothing compares to the manufacturer's manuals, especially
+the [Intel x86 manuals][0]. However, a variety of other resources have proven
+useful.
 The following tutorials have proven useful in developing this kernel:
-* The OSDev wiki [Bare Bones Tutorial][0]
-* The OSDev wiki [Meaty Skeleton Tutorial][1]
-* The [OSDever tutorial][2]
+* The OSDev wiki [Bare Bones Tutorial][1]
+* The OSDev wiki [Meaty Skeleton Tutorial][2]
+* The [OSDever tutorial][3]
 
 The following resources may also prove useful:
-* Info on implementing `malloc` and `free`:
-	http://www.inf.udec.cl/~leo/Malloc_tutorial.pdf
-	https://codereview.stackexchange.com/questions/19635/malloc-free-implementation
-	http://wiki.osdev.org/Memory_Allocation
 * Info on OS Development on the Pi:
 	https://www.cl.cam.ac.uk/projects/raspberrypi/tutorials/os/index.html
 	http://elinux.org/RPi_Easy_SD_Card_Setup
@@ -37,8 +36,8 @@ kernels including:
 
 If you prefer reading textbooks, Tanenbaum's *Operating Systems Design and
 Implementation* is quite useful. Copies can be found floating around the
-internet. The [FreeBSD developer's handbook][4] can also offer useful insights.
-The [Little OS Book][5] is approachable, but hardly thorough.
+internet. The [FreeBSD developer's handbook][5] can also offer useful insights.
+The [Little OS Book][6] is approachable, but hardly thorough.
 
 Getting Started
 ---------------
@@ -67,10 +66,10 @@ $ gdb
 (gdb) continue
 ```
 
-
-[0]:http://wiki.osdev.org/C%2B%2B_Bare_Bones
-[1]:http://wiki.osdev.org/User:Sortie/Meaty_Skeleton
-[2]:http://www.osdever.net/bkerndev/Docs/gettingstarted.htm
-[3]:https://github.com/raspberrypi/tools
-[4]:https://www.freebsd.org/doc/en/books/developers-handbook/
-[5]:http://littleosbook.github.io/book.pdf
+[0]:http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html
+[1]:http://wiki.osdev.org/C%2B%2B_Bare_Bones
+[2]:http://wiki.osdev.org/User:Sortie/Meaty_Skeleton
+[3]:http://www.osdever.net/bkerndev/Docs/gettingstarted.htm
+[4]:https://github.com/raspberrypi/tools
+[5]:https://www.freebsd.org/doc/en/books/developers-handbook/
+[6]:http://littleosbook.github.io/book.pdf
