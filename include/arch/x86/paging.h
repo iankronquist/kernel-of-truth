@@ -39,28 +39,30 @@
 
 #define EPHYSMEMFULL (~0)
 
-page_frame_t *kernel_pages;
+#define CUR_PAGE_DIRECTORY_ADDR ((uint32_t*)(~0<<12))
+#define PAGING_DIR_PHYS_ADDR 0xffc00000
 
-uint32_t *kernel_page_table_install();
-
-extern void enable_paging(uint32_t *page_dir);
+extern void enable_paging(page_frame_t page_dir);
 extern void disable_paging(void);
+extern void just_enable_paging(void);
+extern page_frame_t get_page_dir(void);
 extern void flush_tlb(void);
 
-int unmap_page(page_frame_t *page_dir, void *virtual_address,
-        bool should_free_frame);
+page_frame_t kernel_page_table_install();
 
-int map_page(uint32_t *page_dir, page_frame_t physical_page,
-    void *virtual_address, uint16_t permissions);
+page_frame_t create_new_page_dir(void *link_loc, void *stack_loc,
+        uint16_t permissions);
 
-void *just_give_me_a_page(uint32_t *page_dir, uint16_t permissions);
+void *find_free_addr(uint32_t *page_dir, page_frame_t phys_addr,
+        uint16_t permissions);
 
 void map_kernel_pages(uint32_t *page_dir);
 
-uint32_t *get_page_entry(page_frame_t *page_dir, void *virtual_address);
+int map_page(uint32_t *page_dir, page_frame_t physical_page,
+        void *virtual_address, uint16_t permissions);
+
+int unmap_page(uint32_t *page_entries, void *virtual_address,
+        bool should_free_frame);
 
 void free_table(uint32_t *page_dir);
-
-uint32_t create_new_page_dir(page_frame_t *cur_page_dir, void *link_loc,
-        void *stack_loc, uint16_t permissions);
 #endif
