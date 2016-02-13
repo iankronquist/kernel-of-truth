@@ -22,8 +22,8 @@ struct tss {
 };
 
 
-#define TASK_BUSY 0x1011B
-#define TASK_NOT_BUSY 0x1001B
+#define TASK_BUSY 11
+#define TASK_NOT_BUSY 9
 
 #define TASK_PRESENT (1 << 15)
 
@@ -42,6 +42,8 @@ struct tss_descriptor {
     uint64_t base_high:8;
 };
 
-struct tss* make_tss();
+void set_up_tss();
+void set_tss_stack(uint32_t stack);
+extern void tss_flush(void);
 
 #endif

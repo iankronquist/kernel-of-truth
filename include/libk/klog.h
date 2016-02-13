@@ -8,7 +8,7 @@
 #include <drivers/serial_port.h>
 
 void initialize_klog();
-void klog(char *message);
-void klogf(char* string, ...);
+void sys_klog(char *message);
+void sys_klogf(char* string, ...);
 
 #endif

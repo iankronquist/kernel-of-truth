@@ -4,7 +4,7 @@ GCOV=gcov
 GRUB_MKRESCUE=grub2-mkrescue
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=nasm
-ASFLAGS=-felf32
+ASFLAGS=-felf32 -F dwarf -g
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
 QEMU_FLAGS= -m 1G -serial file:build/qemu-serial.log
@@ -42,7 +42,7 @@ libk-tests:
 io: build
 	${AS} kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
 
-kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io processes
+kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io processes syscall-x86
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
 
 link-x86: build
@@ -68,6 +68,9 @@ idt-x86: build
 	${CC} -c kernel/arch/x86/idt.c -o build/idtc.o ${CFLAGS}
 	${AS} kernel/arch/x86/idt.s -o build/idts.o ${ASFLAGS}
 
+syscall-x86: build
+	${CC} -c kernel/arch/x86/syscall.c -o build/syscall.o ${CFLAGS}
+	${AS} kernel/arch/x86/syscall.s -o build/syscalls.o ${ASFLAGS}
 
 serial: build
 	${CC} -c kernel/drivers/serial_port.c -o build/serial_port.o ${CFLAGS}

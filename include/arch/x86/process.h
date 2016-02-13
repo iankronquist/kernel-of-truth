@@ -15,8 +15,10 @@ struct registers {
 
 struct process {
     uint32_t id;
+    uint32_t* kernel_stack;
     struct registers regs;
     struct process *next;
+    struct process *prev;
 };
 
 struct process *Cur_Proc;
@@ -30,7 +32,12 @@ extern uint32_t get_flags(void);
 extern uint32_t get_page_dir(void);
 extern void _process_handler(void);
 extern void switch_task(struct registers *old, struct registers *new);
+extern void jump_to_usermode(uint32_t user_stack, void(*func)(void));
 
 uint32_t get_next_pid();
+
+void sys_exit();
+void sys_exec();
+void sys_spawn(void (*entrypoint)(void));
 
 #endif

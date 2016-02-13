@@ -12,6 +12,7 @@
 #include <libk/physical_allocator.h>
 
 #include <arch/x86/memlayout.h>
+#include <arch/x86/tss.h>
 
 #define PAGE_TABLE_SIZE 1024
 
@@ -63,4 +64,5 @@ void free_table(uint32_t *page_dir);
 
 uint32_t create_new_page_dir(page_frame_t *cur_page_dir, void *link_loc,
         void *stack_loc, uint16_t permissions);
+extern uint32_t just_enable_paging(void);
 #endif

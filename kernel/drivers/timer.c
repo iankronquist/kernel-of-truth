@@ -15,7 +15,7 @@ void set_timer_phase(uint8_t hertz) {
 }
 
 void timer_irq_handler() {
-    kputs("tick!");
+    sys_kputs("tick!");
     // End interrupt
     write_port(0x20, 0x20);
 }

@@ -50,9 +50,9 @@ uint32_t create_new_page_dir(page_frame_t *cur_page_dir, void *link_loc,
     map_page(page_table, (uint32_t)link_loc, link_loc, permissions);
     map_page(page_table, (uint32_t)stack_loc, stack_loc, permissions);
 
-    klog("Loading new page table to make sure it is well formed\n");
+    sys_klog("Loading new page table to make sure it is well formed\n");
     enable_paging(page_table);
-    klog("Yep, it's valid. Reverting to old page table.\n");
+    sys_klog("Yep, it's valid. Reverting to old page table.\n");
 
     enable_paging(cur_page_dir);
     __asm__ volatile ("sti");
@@ -69,7 +69,7 @@ void *just_give_me_a_page(uint32_t *page_dir, uint16_t permissions) {
             uint32_t *page_entry = (uint32_t*)GETADDRESS(page_dir[i]);
             for (size_t j = 0; j < PAGE_TABLE_SIZE-1; ++j) {
                 if (!(page_entry[j] & PAGE_PRESENT)) {
-                    page_entry[j] = phys_addr | PAGE_PRESENT;
+                    page_entry[j] = phys_addr | permissions | PAGE_PRESENT;
                     flush_tlb();
                     return (void*)((i << 22) | (j << 12));
                 }
@@ -82,7 +82,7 @@ void *just_give_me_a_page(uint32_t *page_dir, uint16_t permissions) {
     for (size_t i = 0; i < PAGE_TABLE_SIZE-2; ++i) {
         if (!(page_dir[i] & PAGE_PRESENT)) {
             uint32_t *page_table = (uint32_t*)alloc_frame();
-            page_dir[i] = (uint32_t)page_table | PAGE_PRESENT;
+            page_dir[i] = (uint32_t)page_table | permissions | PAGE_PRESENT;
             page_table[1] = phys_addr | permissions | PAGE_PRESENT;
             flush_tlb();
             return (void*)((1 << 22) | (0));
@@ -97,12 +97,16 @@ void *just_give_me_a_page(uint32_t *page_dir, uint16_t permissions) {
 void map_kernel_pages(uint32_t *page_dir) {
     // Map all those important bits
     for (page_frame_t i = KERNEL_START; i < KERNEL_END; i += PAGE_SIZE) {
-        map_page(page_dir, i, (void*)i, 0);
+        // DANGER! FIXME TODO WARNING ACHTUNG DIKKAT!
+        // The kernel is now editable and executable from ring 3! Enjoy!
+        map_page(page_dir, i, (void*)i, PAGE_USER_MODE | PAGE_WRITABLE);
     }
-    map_page(page_dir, KHEAP_PHYS_ROOT, (void*)KHEAP_PHYS_ROOT, 0);
+    map_page(page_dir, KHEAP_PHYS_ROOT, (void*)KHEAP_PHYS_ROOT, PAGE_USER_MODE | PAGE_WRITABLE);
+    map_page(page_dir, NEXT_PAGE(KHEAP_PHYS_ROOT), (void*)NEXT_PAGE(KHEAP_PHYS_ROOT), PAGE_USER_MODE | PAGE_WRITABLE);
+    set_tss_stack(NEXT_PAGE(KHEAP_PHYS_ROOT));
 
     // FIXME: Move to video memory driver
-    map_page(page_dir, VIDEO_MEMORY_BEGIN, (void*)VIDEO_MEMORY_BEGIN, 0);
+    map_page(page_dir, VIDEO_MEMORY_BEGIN, (void*)VIDEO_MEMORY_BEGIN, PAGE_USER_MODE | PAGE_WRITABLE);
 }
 
 // TODO: refactor to use get_page
@@ -170,6 +174,7 @@ uint32_t *get_page_entry(page_frame_t *page_dir, void *virtual_address) {
 }
 
 void free_table(uint32_t *page_dir) {
+    disable_paging();
     // The last two entries of the page directory are reserved. The last one
     // points to the directory itself, and the second to last one points to
     // kernel space
@@ -182,4 +187,5 @@ void free_table(uint32_t *page_dir) {
         }
     }
     free_frame((page_frame_t)page_dir);
+    just_enable_paging();
 }

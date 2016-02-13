@@ -25,7 +25,7 @@ static void rebuild_frame_cache() {
             }
         }
     }
-    kputs("Cannot allocate any more pages.");
+    sys_kputs("Cannot allocate any more pages.");
     kabort();
     return;
 }

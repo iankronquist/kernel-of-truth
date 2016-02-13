@@ -3,11 +3,11 @@
 #include <assert.h>
 
 
-void kputs(char* string) {
+void sys_kputs(char* string) {
     puts(string);
 }
 
-void kprintf(char* string, ...) {
+void sys_kprintf(char* string, ...) {
     va_list a;
     va_start(a, string);
     vfprintf(stdout, string, a);

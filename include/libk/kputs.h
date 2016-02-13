@@ -6,7 +6,7 @@
 #include "drivers/terminal.h"
 #endif
 
-void kputs(char* string);
-void kprintf(char* string, ...);
+void sys_kputs(char* string);
+void sys_kprintf(char* string, ...);
 
 #endif
