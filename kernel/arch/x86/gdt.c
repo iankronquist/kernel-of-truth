@@ -1,9 +1,5 @@
 #include <arch/x86/gdt.h>
 
-typedef unsigned short ushort;
-typedef unsigned char uchar;
-typedef unsigned int uint;
-
 void gdt_set_gate(uint32_t num, uint64_t base, uint64_t limit,
                   uint8_t access, uint8_t granularity)
 {
