@@ -28,8 +28,8 @@ struct process *create_proc(void(*entrypoint)()) {
     proc->regs.eflags = get_flags();
     proc->regs.eip = (uint32_t)entrypoint;
 
-    proc->regs.cr3 = create_new_page_dir((page_frame_t*)get_page_dir(),
-            link_loc, stack_page, PAGE_USER_MODE | PAGE_WRITABLE);
+    proc->regs.cr3 = create_page_dir(link_loc,
+            stack_page, PAGE_USER_MODE | PAGE_WRITABLE);
 
     proc->regs.esp = stack_addr;
     proc->id = get_next_pid();

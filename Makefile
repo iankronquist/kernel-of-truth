@@ -1,7 +1,7 @@
 ARCH=i686-elf
 TEST_CC=clang
 GCOV=gcov
-GRUB_MKRESCUE=grub2-mkrescue
+GRUB_MKRESCUE=grub-mkrescue
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=nasm
 ASFLAGS=-felf32
