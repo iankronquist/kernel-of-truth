@@ -35,6 +35,16 @@ bool is_free_frame(page_frame_t frame) {
     return page_frame_map[BYTE_INDEX(frame)] & BIT_INDEX(frame);
 }
 
+void use_range(page_frame_t begin, page_frame_t end) {
+    kassert(begin < end);
+    page_frame_map[BYTE_INDEX(begin)] = (BIT_INDEX(begin)-1) |
+        BIT_INDEX(begin);
+    page_frame_map[BYTE_INDEX(end)] = ~(BIT_INDEX(end)-1);
+    for (size_t i = BYTE_INDEX(begin)+1; i < BYTE_INDEX(end)-1; ++i) {
+        page_frame_map[i] = ~0;
+    }
+}
+
 void use_frame(page_frame_t frame) {
     frame >>= 12;
     page_frame_map[BYTE_INDEX(frame)] |= BIT_INDEX(frame);

@@ -7,6 +7,9 @@
 #define MB 1024*1024
 #define GB 1024*1024*1024
 
+#define ACPI_BEGIN 0xA0000 
+#define ACPI_END   0xFFFFF
+
 #define PHYS_MEMORY_SIZE 1*GB
 #define PAGE_SIZE 4096
 
