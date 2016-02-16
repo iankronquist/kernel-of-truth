@@ -6,11 +6,13 @@ page_frame_t kernel_page_table_install() {
     // accident.
     // After they are marked as present they can safely be mapped with
     // map_page.
+    use_frame(0);
 
-    // Mark all the pages the kernel sits on as in use
-    for (page_frame_t i = KERNEL_START; i < KERNEL_END; i += PAGE_SIZE) {
-        use_frame(i);
-    }
+    // Mark all the pages the kernel sits on as used
+    use_range(KERNEL_START, KERNEL_END);
+    // Mark the pages which ACPI sits on as used
+    use_range(ACPI_BEGIN, ACPI_END);
+
     // Mark the kernel heap as in use
     use_frame(KHEAP_PHYS_ROOT);
     // Mark video memory as in use
