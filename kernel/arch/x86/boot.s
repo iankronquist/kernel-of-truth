@@ -19,6 +19,11 @@ stack_top:
 section .text
 global _start
 _start:
+	; Enter protected mode
+	mov eax, cr0
+	or al, 1
+	mov cr0, eax
+
 	mov esp, stack_top
 
 	extern kernel_main
