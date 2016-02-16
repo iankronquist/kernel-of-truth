@@ -31,7 +31,7 @@ page_frame_t kernel_page_table_install() {
     return page_dir;
 }
 
-page_frame_t create_new_page_dir(void *link_loc, void *stack_loc,
+page_frame_t create_page_dir(void *link_loc, void *stack_loc,
         uint16_t permissions) {
 
     page_frame_t page_table = alloc_frame();
@@ -44,15 +44,15 @@ page_frame_t create_new_page_dir(void *link_loc, void *stack_loc,
 
     page_entries[PAGE_TABLE_SIZE-1] = GETADDRESS(page_table) | PAGE_PRESENT;
 
-    klog("Loading new page table to make sure it is well formed\n");
-    enable_paging(page_table);
-    inner_map_kernel_pages((uint32_t*)page_table);
+    inner_map_kernel_pages(page_entries);
 
     page_frame_t link_page = alloc_frame();
     page_frame_t stack_page = alloc_frame();
-    map_page(page_entries, link_page, link_loc, permissions);
-    map_page(page_entries, stack_page, stack_loc, permissions);
+    inner_map_page(page_entries, link_page, link_loc, permissions);
+    inner_map_page(page_entries, stack_page, stack_loc, permissions);
 
+    klog("Loading new page table to make sure it is well formed\n");
+    enable_paging(page_table);
     klog("Yep, it's valid. Reverting to old page table.\n");
     enable_paging(orig_page_table);
 

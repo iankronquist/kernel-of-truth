@@ -50,7 +50,7 @@ extern void flush_tlb(void);
 
 page_frame_t kernel_page_table_install();
 
-page_frame_t create_new_page_dir(void *link_loc, void *stack_loc,
+page_frame_t create_page_dir(void *link_loc, void *stack_loc,
         uint16_t permissions);
 
 void *find_free_addr(uint32_t *page_dir, page_frame_t phys_addr,
@@ -65,4 +65,7 @@ int unmap_page(uint32_t *page_entries, void *virtual_address,
         bool should_free_frame);
 
 void free_table(uint32_t *page_dir);
+void inner_map_kernel_pages(uint32_t *page_dir);
+int inner_map_page(uint32_t *page_dir, page_frame_t physical_page,
+        void *virtual_address, uint16_t permissions);
 #endif
