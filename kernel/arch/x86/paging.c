@@ -180,6 +180,7 @@ int inner_map_page(uint32_t *page_dir, page_frame_t physical_page,
 int unmap_page(uint32_t *page_entries, void *virtual_address,
         bool should_free_frame) {
 
+    klog("one fish");
     uint32_t *page_entry;
     uint32_t dir_index = HIGHINDEX(virtual_address);
     uint32_t entry_index = LOWINDEX(virtual_address);
@@ -188,7 +189,7 @@ int unmap_page(uint32_t *page_entries, void *virtual_address,
     if ((page_entries[dir_index] & 1) == 0) {
         return -1;
     }
-
+    disable_paging();
     page_entry = (uint32_t*)GETADDRESS(page_entries[dir_index]);
     // Clear present bit
     page_entry[entry_index] &= ~PAGE_PRESENT;
@@ -197,6 +198,7 @@ int unmap_page(uint32_t *page_entries, void *virtual_address,
         page_frame_t physical_page = GETADDRESS(page_entry[entry_index]);
         free_frame(physical_page);
     }
+    just_enable_paging();
 
     return 0;
 }
