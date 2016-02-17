@@ -187,7 +187,6 @@ int inner_map_page(uint32_t *page_dir, page_frame_t physical_page,
 int inner_unmap_page(uint32_t *page_entries, void *virtual_address,
         bool should_free_frame) {
 
-    klog("one fish");
     uint32_t *page_entry;
     uint32_t dir_index = HIGHINDEX(virtual_address);
     uint32_t entry_index = LOWINDEX(virtual_address);
