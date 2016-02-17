@@ -61,7 +61,7 @@ void map_kernel_pages(uint32_t *page_dir);
 int map_page(uint32_t *page_dir, page_frame_t physical_page,
         void *virtual_address, uint16_t permissions);
 
-int unmap_page(uint32_t *page_entries, void *virtual_address,
+int inner_unmap_page(uint32_t *page_entries, void *virtual_address,
         bool should_free_frame);
 
 void free_table(uint32_t *page_dir);

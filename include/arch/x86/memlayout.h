@@ -7,8 +7,10 @@
 #define MB 1024*1024
 #define GB 1024*1024*1024
 
-#define ACPI_BEGIN 0xA0000 
-#define ACPI_END   0xFFFFF
+#define ACPI_BEGIN 0xa0000
+#define ACPI_END   0xfffff
+
+#define FRACTAL_MAP 0xffc00000
 
 #define PHYS_MEMORY_SIZE 1*GB
 #define PAGE_SIZE 4096
