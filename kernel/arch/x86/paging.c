@@ -69,7 +69,6 @@ void *find_free_addr(uint32_t *page_entries, page_frame_t phys_addr,
     for (size_t i = 0; i < PAGE_TABLE_SIZE-1; ++i) {
         if (page_entries[i] & PAGE_PRESENT) {
             uint32_t *page_entry = (uint32_t*)(PAGING_DIR_PHYS_ADDR+i);
-            //uint32_t *page_entry = (uint32_t*)GETADDRESS(page_entries[i]);
             for (size_t j = 0; j < PAGE_TABLE_SIZE-1; ++j) {
                 if (!(page_entry[j] & PAGE_PRESENT)) {
                     page_entry[j] = phys_addr | PAGE_PRESENT;
@@ -189,7 +188,6 @@ int inner_unmap_page(uint32_t *page_entries, void *virtual_address,
     if ((page_entries[dir_index] & 1) == 0) {
         return -1;
     }
-    //disable_paging();
     page_entry = (uint32_t*)(FRACTAL_MAP + PAGE_SIZE * dir_index);
     // Clear present bit
     page_entry[entry_index] &= ~PAGE_PRESENT;
@@ -198,7 +196,6 @@ int inner_unmap_page(uint32_t *page_entries, void *virtual_address,
         page_frame_t physical_page = GETADDRESS(page_entry[entry_index]);
         free_frame(physical_page);
     }
-    //just_enable_paging();
 
     return 0;
 }
