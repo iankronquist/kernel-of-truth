@@ -36,29 +36,37 @@ page_frame_t kernel_page_table_install() {
 page_frame_t create_page_dir(void *link_loc, void *stack_loc,
         uint16_t permissions) {
 
+    // Allocate a physical address for the new page table
     page_frame_t page_table = alloc_frame();
-    page_frame_t orig_page_table = get_page_dir();
 
+    // Map the new page table into the current page table.
     uint32_t *page_entries = find_free_addr(CUR_PAGE_DIRECTORY_ADDR,
             page_table, 0);
 
+    // Zero page table to make sure present bits are clear
     memset(page_entries, 0, PAGE_SIZE);
 
+    // Set up fractal mapping
     page_entries[PAGE_TABLE_SIZE-1] = GETADDRESS(page_table) | PAGE_PRESENT;
 
+    // Install kernel pages into the table
     inner_map_kernel_pages(page_entries);
 
+    // Allocate a kernel stack and the location where the code will live
     page_frame_t link_page = alloc_frame();
     page_frame_t stack_page = alloc_frame();
     inner_map_page(page_entries, link_page, link_loc, permissions);
     inner_map_page(page_entries, stack_page, stack_loc, permissions);
 
+    // Runtime test
+    page_frame_t orig_page_table = get_page_dir();
     klog("Loading new page table to make sure it is well formed\n");
     enable_paging(page_table);
     klog("Yep, it's valid. Reverting to old page table.\n");
     enable_paging(orig_page_table);
 
-    inner_unmap_page(page_entries, page_entries, false);
+    // Unmap the new page table from the current page table
+    inner_unmap_page(CUR_PAGE_DIRECTORY_ADDR, page_entries, false);
 
     return page_table;
 }
