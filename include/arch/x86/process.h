@@ -19,18 +19,16 @@ struct process {
     struct process *next;
 };
 
-struct process *Cur_Proc;
-
 void proc_init();
 struct process *create_proc(void(*entrypoint)());
 void preempt();
 void schedule_proc(struct process *proc);
+uint32_t get_next_pid();
 
 extern uint32_t get_flags(void);
 extern uint32_t get_page_dir(void);
 extern void _process_handler(void);
 extern void switch_task(struct registers *old, struct registers *new);
 
-uint32_t get_next_pid();
 
 #endif
