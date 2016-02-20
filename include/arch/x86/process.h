@@ -16,6 +16,9 @@ struct registers {
 struct process {
     uint32_t id;
     struct registers regs;
+    uint32_t user_esp;
+    uint32_t kernel_esp;
+    uint32_t cr3;
     struct process *next;
 };
 
@@ -28,7 +31,7 @@ uint32_t get_next_pid();
 extern uint32_t get_flags(void);
 extern uint32_t get_page_dir(void);
 extern void _process_handler(void);
-extern void switch_task(struct registers *old, struct registers *new);
+extern void switch_task(uint32_t esp, uint32_t cr3, uint32_t *kernel_esp);
 
 
 #endif
