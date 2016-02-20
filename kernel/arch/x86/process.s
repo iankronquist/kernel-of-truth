@@ -65,7 +65,7 @@ switch_user_mode_task:
 	push eax
 	pushf
 	push 0x1b
-	call esi
+	push esi
 	iret
 
 
@@ -82,7 +82,8 @@ jump_to_usermode:
 	pushf
 	push 0x1b
 	mov eax, [esp+20]
-	call eax
+	push eax
+	sti
 	iret
 
 
