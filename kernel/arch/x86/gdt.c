@@ -4,8 +4,6 @@
 struct tss Tss;
 struct tss_descriptor Tss_descriptor;
 
-void set_up_tss2();
-//static void write_tss( int32_t num, uint16_t ss0, uint32_t esp0);
 void gdt_set_gate(uint32_t num, uint64_t base, uint64_t limit,
                   uint8_t access, uint8_t granularity)
 {
