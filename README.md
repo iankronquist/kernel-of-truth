@@ -39,6 +39,12 @@ internet. The [FreeBSD developer's handbook][5] can also offer interesting
 insights from more of a userland perspective.
 The [Little OS Book][6] is approachable, but hardly thorough.
 
+Bug Reports & Contributing
+--------------------------
+Advice, ideas, bug reports and pull requests are all welcome! Please take a
+look at the [issue tracker][issues] on GitHub. Please submit PRs via GitHub,
+although I will also take patches via email.
+
 Getting Started
 ---------------
 First build an x86 GCC and binutils. If you're not familiar with how to do this
@@ -72,3 +78,4 @@ $ gdb
 [3]:http://www.osdever.net/bkerndev/Docs/gettingstarted.htm
 [5]:https://www.freebsd.org/doc/en/books/developers-handbook/
 [6]:http://littleosbook.github.io/book.pdf
+[issues]:https://github.com/iankronquist/kernel-of-truth/issues
