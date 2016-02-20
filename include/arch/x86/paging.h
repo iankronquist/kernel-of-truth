@@ -51,8 +51,7 @@ extern void flush_tlb(void);
 page_frame_t kernel_page_table_install();
 
 page_frame_t create_page_dir(void *link_loc, void *stack_loc,
-        uint16_t permissions);
-
+        void(*entrypoint)(), uint16_t permissions);
 void *find_free_addr(uint32_t *page_dir, page_frame_t phys_addr,
         uint16_t permissions);
 

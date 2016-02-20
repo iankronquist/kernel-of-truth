@@ -10,7 +10,8 @@ struct process *running_proc;
 void proc_init() {
     struct process *kernel_proc = kmalloc(sizeof(struct process));
     kernel_proc->next = kernel_proc;
-    kernel_proc->regs.cr3 = get_page_dir();
+    kernel_proc->cr3 = get_page_dir();
+    klogf("init physical paging address %p\n", kernel_proc->cr3);
     running_proc = kernel_proc;
 
     // FIXME make this have an architecture independent api
@@ -22,16 +23,13 @@ void proc_init() {
 struct process *create_proc(void(*entrypoint)()) {
     uint32_t *link_loc = (uint32_t*)0x20000;
     uint32_t *stack_page = (uint32_t*)NEXT_PAGE(link_loc);
-    uint32_t stack_addr = (uint32_t)stack_page + PAGE_SIZE-1;
+    uint32_t stack_addr = (uint32_t)stack_page + (PAGE_SIZE-1-44+5);
     struct process *proc = kmalloc(sizeof(struct process));
-    memset(&proc->regs, 0, sizeof(struct registers));
-    proc->regs.eflags = get_flags();
-    proc->regs.eip = (uint32_t)entrypoint;
 
-    proc->regs.cr3 = create_page_dir(link_loc,
-            stack_page, PAGE_USER_MODE | PAGE_WRITABLE);
+    proc->cr3 = create_page_dir(link_loc,
+            stack_page, entrypoint, PAGE_USER_MODE | PAGE_WRITABLE);
 
-    proc->regs.esp = stack_addr;
+    proc->kernel_esp = stack_addr;
     proc->id = get_next_pid();
     proc->next = 0;
     return proc;
@@ -43,6 +41,7 @@ void schedule_proc(struct process *proc) {
 }
 
 void preempt() {
+    klog("preempt\n");
     struct process *last = running_proc;
     running_proc = running_proc->next;
     // switch_task does not behave properly when the last task and current
@@ -52,7 +51,10 @@ void preempt() {
     if (running_proc == last) {
         return;
     }
-    switch_task(&last->regs, &running_proc->regs);
+    klogf("\nEnabling paging %p\n", running_proc->cr3);
+    //enable_paging(running_proc->cr3);
+    klogf("\nSetting stack to %p\n", running_proc->kernel_esp);
+    switch_task(running_proc->kernel_esp, running_proc->cr3, &last->kernel_esp);
 }
 
 
