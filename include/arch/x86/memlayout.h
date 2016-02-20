@@ -19,8 +19,8 @@
 
 // These two variables are defined by the linker. They are located where you
 // would expect based on the names.
-extern uint32_t kernel_start;
-extern uint32_t kernel_end;
+extern const uint32_t kernel_start;
+extern const uint32_t kernel_end;
 
 #define KERNEL_END ((uint32_t)&kernel_end)
 #define KERNEL_START ((uint32_t)&kernel_start)
