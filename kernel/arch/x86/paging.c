@@ -62,10 +62,10 @@ page_frame_t create_page_dir(void *link_loc, void *stack_loc,
     page_frame_t orig_page_table = get_page_dir();
     klog("Loading new page table to make sure it is well formed\n");
     enable_paging(page_table);
-    klogf("%p %p\n", &((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-44], PAGE_SIZE);
     memset(&((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-44], 0, 44);
     ((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-1] = (uint32_t)entrypoint;
     ((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-5] = (uint32_t)(stack_loc+PAGE_TABLE_SIZE-1);
+    ((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-44] = RING_0_DATA_SELECTOR;
     klog("Yep, it's valid. Reverting to old page table.\n");
     enable_paging(orig_page_table);
 

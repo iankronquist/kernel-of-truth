@@ -19,12 +19,18 @@ global switch_task
 switch_task:
 	pusha
 	pushf
-	mov esi, [esp+44]
-	mov eax, [esp+48]
+	mov ax, ds
+	push eax
+	mov esi, [esp+48]
+	mov eax, [esp+52]
 	mov [eax], esp
-	mov esp, [esp+40]
+	mov esp, [esp+44]
 	mov cr3, esi
-	; FIXME store & restore segment selectors
+	pop eax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
 	popf
 	popa
 	sti

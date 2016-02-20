@@ -3,16 +3,18 @@
 
 #include <stdint.h>
 
-#define KB 1024
-#define MB 1024*1024
-#define GB 1024*1024*1024
+#define KB (1024)
+#define MB (1024*1024)
+#define GB (1024*1024*1024)
 
 #define ACPI_BEGIN 0xa0000
 #define ACPI_END   0xfffff
 
 #define FRACTAL_MAP 0xffc00000
 
-#define PHYS_MEMORY_SIZE 1*GB
+#define RING_0_DATA_SELECTOR 0x10
+
+#define PHYS_MEMORY_SIZE (1 * GB)
 #define PAGE_SIZE 4096
 
 // These two variables are defined by the linker. They are located where you

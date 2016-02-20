@@ -23,7 +23,7 @@ void proc_init() {
 struct process *create_proc(void(*entrypoint)()) {
     uint32_t *link_loc = (uint32_t*)0x20000;
     uint32_t *stack_page = (uint32_t*)NEXT_PAGE(link_loc);
-    uint32_t stack_addr = (uint32_t)stack_page + (PAGE_SIZE-1-44+5);
+    uint32_t stack_addr = (uint32_t)stack_page + (PAGE_SIZE-1-48+5);
     struct process *proc = kmalloc(sizeof(struct process));
 
     proc->cr3 = create_page_dir(link_loc,
