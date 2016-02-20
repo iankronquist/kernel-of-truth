@@ -28,6 +28,8 @@ extern uint32_t get_page_dir(void);
 extern void _process_handler(void);
 extern void switch_task(uint32_t esp, uint32_t cr3, uint32_t *kernel_esp);
 extern void jump_to_usermode(void(*func)(void));
+extern void switch_user_mode_task(uint32_t esp, uint32_t cr3,
+        uint32_t *kernel_esp);
 
 
 #endif
