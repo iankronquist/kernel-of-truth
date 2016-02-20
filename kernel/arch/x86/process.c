@@ -25,9 +25,6 @@ struct process *create_proc(void(*entrypoint)()) {
     uint32_t *stack_page = (uint32_t*)NEXT_PAGE(link_loc);
     uint32_t stack_addr = (uint32_t)stack_page + (PAGE_SIZE-1-44+5);
     struct process *proc = kmalloc(sizeof(struct process));
-    memset(&proc->regs, 0, sizeof(struct registers));
-    proc->regs.eflags = get_flags();
-    proc->regs.eip = (uint32_t)entrypoint;
 
     proc->cr3 = create_page_dir(link_loc,
             stack_page, entrypoint, PAGE_USER_MODE | PAGE_WRITABLE);
@@ -45,7 +42,6 @@ void schedule_proc(struct process *proc) {
 
 void preempt() {
     klog("preempt\n");
-    kputs("preempt");
     struct process *last = running_proc;
     running_proc = running_proc->next;
     // switch_task does not behave properly when the last task and current

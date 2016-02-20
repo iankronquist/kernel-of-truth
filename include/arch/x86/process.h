@@ -9,13 +9,8 @@
 
 #include <libk/kmem.h>
 
-struct registers {
-    uint32_t eax, ebx, ecx, edx, esi, edi, esp, ebp, eip, eflags, cr3;
-};
-
 struct process {
     uint32_t id;
-    struct registers regs;
     uint32_t user_esp;
     uint32_t kernel_esp;
     uint32_t cr3;
