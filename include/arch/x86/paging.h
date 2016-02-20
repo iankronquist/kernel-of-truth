@@ -12,6 +12,7 @@
 #include <libk/physical_allocator.h>
 
 #include <arch/x86/memlayout.h>
+#include <arch/x86/tss.h>
 
 #define PAGE_TABLE_SIZE 1024
 
@@ -25,7 +26,7 @@
 
 #define HIGHINDEX(x) ((uintptr_t)x >> 22)
 #define LOWINDEX(x) ((uintptr_t)x >> 12)
-#define GETADDRESS(x) ((uintptr_t)x & ~ 0xfff)
+#define GETADDRESS(x) ((uintptr_t)x & ~0xfff)
 #define GETFLAGS(x) ((uintptr_t)x & 0xfff)
 #define PAGE_TABLE_SIZE 1024
 
@@ -39,7 +40,7 @@
 
 #define EPHYSMEMFULL (~0)
 
-#define CUR_PAGE_DIRECTORY_ADDR ((uint32_t*)(~0<<12))
+#define CUR_PAGE_DIRECTORY_ADDR ((uint32_t*)((~0)<<12))
 #define PAGING_DIR_PHYS_ADDR 0xffc00000
 
 extern void enable_paging(page_frame_t page_dir);
@@ -51,7 +52,7 @@ extern void flush_tlb(void);
 page_frame_t kernel_page_table_install();
 
 page_frame_t create_page_dir(void *link_loc, void *stack_loc,
-        void(*entrypoint)(), uint16_t permissions);
+        void *user_stack_loc, void(*entrypoint)(), uint16_t permissions);
 void *find_free_addr(uint32_t *page_dir, page_frame_t phys_addr,
         uint16_t permissions);
 

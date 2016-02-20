@@ -34,7 +34,7 @@ page_frame_t kernel_page_table_install() {
 }
 
 page_frame_t create_page_dir(void *link_loc, void *stack_loc,
-        void(*entrypoint)(), uint16_t permissions) {
+        void *user_stack_loc, void(*entrypoint)(), uint16_t permissions) {
 
     // Allocate a physical address for the new page table
     page_frame_t page_table = alloc_frame();
@@ -55,8 +55,10 @@ page_frame_t create_page_dir(void *link_loc, void *stack_loc,
     // Allocate a kernel stack and the location where the code will live
     page_frame_t link_page = alloc_frame();
     page_frame_t stack_page = alloc_frame();
+    page_frame_t user_stack_page = alloc_frame();
     inner_map_page(page_entries, link_page, link_loc, permissions);
     inner_map_page(page_entries, stack_page, stack_loc, permissions);
+    inner_map_page(page_entries, user_stack_page, user_stack_loc, permissions);
 
     // Runtime test
     page_frame_t orig_page_table = get_page_dir();
