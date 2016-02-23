@@ -48,7 +48,7 @@ although I will also take patches via email.
 Getting Started
 ---------------
 First build an x86 GCC and binutils. If you're not familiar with how to do this
-you should consult the [Bare Bones Tutorial][0].
+you should consult the [Bare Bones Tutorial][1].
 Then install qemu with your favorite package manager. We'll need
 `qemu-system-i386` to run the kernel. Once you have all this installed building
 and running this little kernel is quite easy:
