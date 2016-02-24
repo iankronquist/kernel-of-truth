@@ -33,7 +33,7 @@ void kernel_main()
     char *hi = "Hello kernel!\n";
     void *testing = kmalloc(16);
     memcpy(testing, hi, 16);
-    kputs(testing);
+    sys_kputs(testing);
     klog(testing);
     kfree(testing);
     (void)kernel_page_table_install();
