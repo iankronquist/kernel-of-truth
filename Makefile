@@ -2,7 +2,7 @@ ARCH=i686-elf
 TEST_CC=clang
 GCOV=gcov
 GRUB_MKRESCUE=grub-mkrescue
-CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
+CC=env $(ARCH)-gcc
 AS=nasm
 ASFLAGS=-felf32 -F dwarf -g
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include -D ARCH_X86

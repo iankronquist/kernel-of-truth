@@ -10,7 +10,7 @@ Vagrant.configure("2") do |c|
   c.vm.provision "shell", inline: <<-SHELL
     echo 'export GCC_COLORS="error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01"' >> /home/vagrant/.bashrc
     sudo apt-get update
-    sudo apt-get install -y xorriso gdb nasm llvm grub-common qemu
+    sudo apt-get install -y xorriso gdb nasm llvm grub-common qemu g++ libisl-dev libcloog-isl-dev 
   SHELL
 
 end
