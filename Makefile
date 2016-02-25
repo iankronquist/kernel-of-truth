@@ -100,7 +100,7 @@ clean-all: clean
 	rm -f *.gcno
 	rm -f *.gcov
 	rm -f *.gcda
-
+	rm -f *.cov
 docs:
 	cldoc generate -I ./include -DARCH_X86 -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/libk/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
 
