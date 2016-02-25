@@ -1,6 +1,6 @@
 ARCH=i686-elf
 TEST_CC=clang
-GCOV=gcov
+COV= llvm-cov
 GRUB_MKRESCUE=grub-mkrescue
 CC=env $(ARCH)-gcc
 AS=nasm
@@ -17,9 +17,9 @@ tests: build libk-tests
 
 run-tests: tests
 	./build/tests/kmem
-	${GCOV} kmem.gcno
+	${COV} -gcno kmem.gcno -gcda kmem.gcda -o kmem.cov
 	./build/tests/physical_allocator
-	${GCOV} physical_allocator.gcno
+	${COV} -gcno physical_allocator.gcno -gcda physical_allocator.gcda -o physical_allocator.cov
 
 bootloader-x86: build
 	${AS} kernel/arch/x86/boot.s -o build/boot.o ${ASFLAGS}
