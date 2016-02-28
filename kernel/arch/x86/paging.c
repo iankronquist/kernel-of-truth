@@ -1,4 +1,12 @@
 #include <arch/x86/paging.h>
+#include <test.h>
+
+static void loader_stub(void *dest, void *src) {
+    // Ignore src
+    src++;
+    memcpy(dest, a, sizeof(a));
+    //memcpy(dest, src, 100);
+}
 
 page_frame_t kernel_page_table_install() {
     // Certain very important things already exist in physical memory. They
@@ -34,7 +42,7 @@ page_frame_t kernel_page_table_install() {
 }
 
 page_frame_t create_page_dir(void *link_loc, void *stack_loc,
-        void(*entrypoint)(), uint16_t permissions) {
+        void *user_stack_loc, void(*entrypoint)(), uint16_t permissions) {
 
     // Allocate a physical address for the new page table
     page_frame_t page_table = alloc_frame();
@@ -55,17 +63,28 @@ page_frame_t create_page_dir(void *link_loc, void *stack_loc,
     // Allocate a kernel stack and the location where the code will live
     page_frame_t link_page = alloc_frame();
     page_frame_t stack_page = alloc_frame();
+    page_frame_t user_stack_page = alloc_frame();
     inner_map_page(page_entries, link_page, link_loc, permissions);
     inner_map_page(page_entries, stack_page, stack_loc, permissions);
+    inner_map_page(page_entries, user_stack_page, user_stack_loc, permissions);
 
     // Runtime test
     page_frame_t orig_page_table = get_page_dir();
     klog("Loading new page table to make sure it is well formed\n");
     enable_paging(page_table);
-    klogf("%p %p\n", &((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-44], PAGE_SIZE);
+    // Set up the stack for the initial restore
+    // Zero the registers
     memset(&((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-44], 0, 44);
-    ((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-1] = (uint32_t)entrypoint;
+    // Set the eip to the link location
+    ((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-1] = (uint32_t)link_loc;
+    // Set the esp to the top of the stack
     ((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-5] = (uint32_t)(stack_loc+PAGE_TABLE_SIZE-1);
+    // Set the data segment selector to ring 0.
+    // FIXME: I don't use this right when I call switch_users_mode_task.
+    ((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-44] = RING_0_DATA_SELECTOR;
+
+    // This is where I would call the loader, but I don't have one yet.
+    loader_stub(link_loc, entrypoint);
     klog("Yep, it's valid. Reverting to old page table.\n");
     enable_paging(orig_page_table);
 
@@ -153,6 +172,7 @@ int map_page(uint32_t *page_dir, page_frame_t physical_page,
         page_dir[dir_index] = GETADDRESS(page_frame) | permissions |
             PAGE_PRESENT;
     } else {
+        page_dir[dir_index] |= permissions;
         page_entry = (uint32_t*)GETADDRESS(page_dir[dir_index]);
     }
     page_entry[entry_index] = GETADDRESS(virtual_address) | permissions |
@@ -179,6 +199,7 @@ int inner_map_page(uint32_t *page_dir, page_frame_t physical_page,
         page_dir[dir_index] = GETADDRESS(page_frame) | permissions |
             PAGE_PRESENT;
     } else {
+        page_dir[dir_index] |= permissions;
         page_entry = (uint32_t*)GETADDRESS(page_dir[dir_index]);
         page_entry = find_free_addr(cur_page_dir, GETADDRESS(page_dir[dir_index]), 0);
     }

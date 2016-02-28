@@ -2,10 +2,12 @@ ARCH=i686-elf
 TEST_CC=clang
 GCOV=gcov
 GRUB_MKRESCUE=grub-mkrescue
-CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
+CC=compiler-linux-gcc/$(ARCH)/bin/$(ARCH)-gcc
 AS=nasm
+LD=./compiler-linux-gcc/$(ARCH)/bin/$(ARCH)-ld
 ASFLAGS=-felf32 -F dwarf -g
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
+LDFLAGS=-O0 -nostdlib
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
 QEMU_FLAGS= -m 1G -serial file:build/qemu-serial.log
 VB=virtualbox
@@ -14,6 +16,10 @@ VBM=VBoxManage
 all: bootloader-x86 kernel link-x86
 
 tests: build libk-tests
+
+experiment:
+	${CC} -c test.c -o test.o ${CFLAGS}
+
 
 run-tests: tests
 	./build/tests/kmem
@@ -31,6 +37,10 @@ libk: build serial
 	${CC} -c kernel/libk/klog.c -o build/klog.o  ${CFLAGS}
 	${CC} -c kernel/libk/physical_allocator.c -o build/physical_allocator.o  ${CFLAGS}
 
+syscall: build
+	${AS} kernel/libk/syscalls.s -o build/syscallss.o ${ASFLAGS}
+	${CC} -c kernel/libk/syscalls.c -o build/syscallsc.o ${CFLAGS}
+
 processes: libk
 	${AS} kernel/arch/x86/process.s -o build/process.o ${ASFLAGS}
 	${CC} -c kernel/arch/x86/process.c -o build/processc.o ${CFLAGS}
@@ -42,11 +52,11 @@ libk-tests:
 io: build
 	${AS} kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
 
-kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io processes
+kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io processes syscall
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
 
 link-x86: build
-	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/*.o
+	${LD} -T kernel/arch/x86/linker.ld -o build/truthos.bin  build/*.o ${LDFLAGS}
 
 terminal: build
 	${CC} -c kernel/drivers/terminal.c -o build/terminal.o ${CFLAGS}

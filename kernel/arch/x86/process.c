@@ -11,6 +11,7 @@ void proc_init() {
     struct process *kernel_proc = kmalloc(sizeof(struct process));
     kernel_proc->next = kernel_proc;
     kernel_proc->cr3 = get_page_dir();
+    kernel_proc->id = get_next_pid();
     klogf("init physical paging address %p\n", kernel_proc->cr3);
     running_proc = kernel_proc;
 
@@ -23,13 +24,17 @@ void proc_init() {
 struct process *create_proc(void(*entrypoint)()) {
     uint32_t *link_loc = (uint32_t*)0x20000;
     uint32_t *stack_page = (uint32_t*)NEXT_PAGE(link_loc);
-    uint32_t stack_addr = (uint32_t)stack_page + (PAGE_SIZE-1-44+5);
+    uint32_t stack_addr = (uint32_t)stack_page + (PAGE_SIZE-1-48+5);
+    uint32_t *user_stack_page = (uint32_t*)NEXT_PAGE(stack_page);
+    uint32_t user_stack_addr = (uint32_t)user_stack_page + PAGE_SIZE-1;
     struct process *proc = kmalloc(sizeof(struct process));
 
     proc->cr3 = create_page_dir(link_loc,
-            stack_page, entrypoint, PAGE_USER_MODE | PAGE_WRITABLE);
+            stack_page, user_stack_page, entrypoint,
+            PAGE_USER_MODE | PAGE_WRITABLE);
 
     proc->kernel_esp = stack_addr;
+    proc->user_esp = user_stack_addr;
     proc->id = get_next_pid();
     proc->next = 0;
     return proc;
@@ -51,10 +56,8 @@ void preempt() {
     if (running_proc == last) {
         return;
     }
-    klogf("\nEnabling paging %p\n", running_proc->cr3);
-    //enable_paging(running_proc->cr3);
-    klogf("\nSetting stack to %p\n", running_proc->kernel_esp);
-    switch_task(running_proc->kernel_esp, running_proc->cr3, &last->kernel_esp);
+    set_tss_stack(running_proc->user_esp);
+    switch_user_mode_task(running_proc->kernel_esp, running_proc->cr3, &last->kernel_esp);
 }
 
 
