@@ -11,6 +11,7 @@ void proc_init() {
     struct process *kernel_proc = kmalloc(sizeof(struct process));
     kernel_proc->next = kernel_proc;
     kernel_proc->cr3 = get_page_dir();
+    kernel_proc->id = get_next_pid();
     klogf("init physical paging address %p\n", kernel_proc->cr3);
     running_proc = kernel_proc;
 
