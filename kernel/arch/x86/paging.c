@@ -155,6 +155,7 @@ int map_page(uint32_t *page_dir, page_frame_t physical_page,
         page_dir[dir_index] = GETADDRESS(page_frame) | permissions |
             PAGE_PRESENT;
     } else {
+        page_dir[dir_index] |= permissions;
         page_entry = (uint32_t*)GETADDRESS(page_dir[dir_index]);
     }
     page_entry[entry_index] = GETADDRESS(virtual_address) | permissions |
@@ -181,6 +182,7 @@ int inner_map_page(uint32_t *page_dir, page_frame_t physical_page,
         page_dir[dir_index] = GETADDRESS(page_frame) | permissions |
             PAGE_PRESENT;
     } else {
+        page_dir[dir_index] |= permissions;
         page_entry = (uint32_t*)GETADDRESS(page_dir[dir_index]);
         page_entry = find_free_addr(cur_page_dir, GETADDRESS(page_dir[dir_index]), 0);
     }
