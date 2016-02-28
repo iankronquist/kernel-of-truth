@@ -12,10 +12,11 @@
 #include <libk/kmem.h>
 #include <libk/kputs.h>
 #include <libk/klog.h>
+#include <libk/syscalls.h>
 
 void worker() {
     while(1) {
-        klog("worker\n");
+        kputs("worker\n");
     }
 }
 
@@ -37,6 +38,7 @@ void kernel_main()
     klog(testing);
     kfree(testing);
     (void)kernel_page_table_install();
+    syscalls_install();
 
     proc_init();
     struct process *worker_proc = create_proc(worker);
