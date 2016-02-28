@@ -17,6 +17,10 @@ all: bootloader-x86 kernel link-x86
 
 tests: build libk-tests
 
+experiment:
+	${CC} -c test.c -o test.o ${CFLAGS}
+
+
 run-tests: tests
 	./build/tests/kmem
 	${GCOV} kmem.gcno
