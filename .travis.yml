@@ -26,3 +26,5 @@ script:
     - make
     - make run-tests
     - make docs
+    - clang-format -style=WebKit -i tlibc/include/*.h tlibc/stdio/*.c tlibc/string/*.c tlibc/tests/*.c kernel/*.c kernel/arch/x86/*.c kernel/libk/*.c include/libk/*.h include/drivers/*.h include/tests/*.h include/arch/x86/*.h
+    - git diff --exit-code
