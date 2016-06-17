@@ -1,6 +1,6 @@
 #include <libk/physical_allocator.h>
 
-
+static spinlock_t big_lock = SPINLOCK_INIT;
 static size_t page_frame_map_size;
 static uint8_t *page_frame_map;
 static page_frame_t frame_cache[PAGE_FRAME_CACHE_SIZE];
@@ -16,6 +16,7 @@ void physical_allocator_init(size_t phys_memory_size) {
 
 // Linear search of page frame bitmap
 static void rebuild_frame_cache() {
+    acquire_spinlock(&big_lock);
     frame_count = 0;
     // The first page is reserved for mapping other pages
     for (size_t i = 0; i < page_frame_map_size; ++i) {
@@ -34,6 +35,7 @@ static void rebuild_frame_cache() {
     }
     kputs("Cannot allocate any more pages.");
     kabort();
+    release_spinlock(&big_lock);
     return;
 }
 
@@ -43,6 +45,7 @@ bool is_free_frame(page_frame_t frame) {
 }
 
 void use_range(page_frame_t begin, page_frame_t end) {
+    acquire_spinlock(&big_lock);
     kassert(begin < end);
     page_frame_map[BYTE_INDEX(begin)] = (BIT_INDEX(begin)-1) |
         BIT_INDEX(begin);
@@ -50,22 +53,28 @@ void use_range(page_frame_t begin, page_frame_t end) {
     for (size_t i = BYTE_INDEX(begin)+1; i < BYTE_INDEX(end)-1; ++i) {
         page_frame_map[i] = ~0;
     }
+    release_spinlock(&big_lock);
 }
 
 void use_frame(page_frame_t frame) {
+    acquire_spinlock(&big_lock);
     frame >>= 12;
     page_frame_map[BYTE_INDEX(frame)] |= BIT_INDEX(frame);
     // Invalidate frame_cache because the frame we just marked as used may be
     // in it.
     frame_count = PAGE_FRAME_CACHE_SIZE;
+    release_spinlock(&big_lock);
 }
 
 void free_frame(page_frame_t frame) {
+    acquire_spinlock(&big_lock);
     frame >>= 12;
     page_frame_map[BYTE_INDEX(frame)] &= ~BIT_INDEX(frame);
+    release_spinlock(&big_lock);
 }
 
 page_frame_t alloc_frame() {
+    acquire_spinlock(&big_lock);
     page_frame_t new_frame;
 
     if (frame_count == PAGE_FRAME_CACHE_SIZE) {
@@ -76,5 +85,6 @@ page_frame_t alloc_frame() {
     page_frame_map[BYTE_INDEX(new_frame>>12)] |= BIT_INDEX(new_frame>>12);
     frame_count++;
     kassert(new_frame % PAGE_SIZE == 0);
+    release_spinlock(&big_lock);
     return new_frame;
 }
