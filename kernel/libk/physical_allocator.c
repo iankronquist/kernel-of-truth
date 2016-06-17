@@ -1,17 +1,24 @@
 #include <libk/physical_allocator.h>
 
 
-static uint8_t page_frame_map[PAGE_FRAME_MAP_SIZE];
+static size_t page_frame_map_size;
+static uint8_t *page_frame_map;
 static page_frame_t frame_cache[PAGE_FRAME_CACHE_SIZE];
 
 // Force allocation of frames on first call of alloc_frame
 static uint8_t frame_count = PAGE_FRAME_CACHE_SIZE;
 
+// Build the page frame bitmap.
+void physical_allocator_init(size_t phys_memory_size) {
+    page_frame_map_size = PAGE_FRAME_MAP_SIZE(phys_memory_size);
+    page_frame_map = kmalloc(page_frame_map_size);
+}
+
 // Linear search of page frame bitmap
 static void rebuild_frame_cache() {
     frame_count = 0;
     // The first page is reserved for mapping other pages
-    for (size_t i = 0; i < PAGE_FRAME_MAP_SIZE; ++i) {
+    for (size_t i = 0; i < page_frame_map_size; ++i) {
         if (i != 0xff) {
             for (size_t j = 0; j < 8; ++j) {
                 if (!((page_frame_map[i] >> j) & 1)) {

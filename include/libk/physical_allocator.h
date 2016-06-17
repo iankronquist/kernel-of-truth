@@ -5,8 +5,11 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <contrib/multiboot.h>
+
 #include <libk/kabort.h>
 #include <libk/kassert.h>
+#include <libk/kmem.h>
 #include <libk/kputs.h>
 
 #ifdef ARCH_X86
@@ -17,12 +20,13 @@
 #include "tests/memlayout.h"
 #endif
 
-typedef uint32_t page_frame_t;
 
 #define BIT_INDEX(x) (1 << ((x) % 8))
 #define BYTE_INDEX(x) ((x)/8)
 #define PAGE_FRAME_CACHE_SIZE 32
-#define PAGE_FRAME_MAP_SIZE (PHYS_MEMORY_SIZE/8/PAGE_SIZE)
+#define PAGE_FRAME_MAP_SIZE(x) (x/8/PAGE_SIZE)
+
+void physical_allocator_init(size_t phys_memory_size);
 
 // Linear search of page frame bitmap
 page_frame_t alloc_frame_helper();

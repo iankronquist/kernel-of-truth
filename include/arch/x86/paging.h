@@ -11,6 +11,8 @@
 #include <libk/kmem.h>
 #include <libk/physical_allocator.h>
 
+#include <contrib/multiboot.h>
+
 #include <arch/x86/memlayout.h>
 
 #define PAGE_TABLE_SIZE 1024
@@ -48,7 +50,7 @@ extern void just_enable_paging(void);
 extern page_frame_t get_page_dir(void);
 extern void flush_tlb(void);
 
-page_frame_t kernel_page_table_install();
+page_frame_t kernel_page_table_install(struct multiboot_info*);
 
 page_frame_t create_page_dir(void *link_loc, void *stack_loc,
         void(*entrypoint)(), uint16_t permissions);
