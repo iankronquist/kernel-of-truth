@@ -8,17 +8,18 @@ void klog(char *message) {
     write_serial_string(COM1, message);
 }
 
-static void klog_u32(uint32_t n) {
-    unsigned char buf[8] = {0};
-    int c;
-    for (c = 7; c >= 0; --c) {
+static void klog_uint(uint64_t n, uint32_t length) {
+    unsigned char buf[length];
+    unsigned int c;
+    // We explicitly abuse integer overflow!
+    for (c = length-1; c < length; --c) {
         buf[c] = n % 16;
         n /= 16;
     }
     write_serial(COM1, '0');
     write_serial(COM1, 'x');
     ++c;
-    for (; c < 8; ++c) {
+    for (; c < length; ++c) {
         if (buf[c] >= 10) {
             write_serial(COM1, buf[c] + 'a' - 10);
         } else {
@@ -38,8 +39,21 @@ void klogf(char* string, ...) {
                 case '%':
                     write_serial(COM1, '%');
                     break;
+                case 'u':
+                    klog_uint(va_arg(args, uint32_t), 8);
+                    break;
+                case 'd':
+                case 'i':
                 case 'p':
-                    klog_u32(va_arg(args, uint32_t));
+                case 'x':
+                    if (i+1 == 'u') {
+                        klog_uint(va_arg(args, uint32_t), 8);
+                    }
+                    break;
+                case 'l':
+                    if (i+1 == 'u') {
+                        klog_uint(va_arg(args, uint32_t), 16);
+                    }
                     break;
             }
             continue;
