@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 TARGET=i686-elf
 PREFIX=$(pwd)/compiler/$TARGET
