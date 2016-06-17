@@ -2,7 +2,7 @@
 
 TARGET=i686-elf
 PREFIX=$(pwd)/compiler/$TARGET
-PATH=$PATH:$PREFIX/bin
+PATH=$PREFIX/bin:$PATH
 CFLAGS=" -g -O2"
 # if we're on a mac, try our damndest to use real GCC not clang
 if [ "$(uname)" == "Darwin" ]; then

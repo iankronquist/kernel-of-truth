@@ -1,8 +1,8 @@
 ARCH=i686-elf
 TEST_CC=clang
-GCOV=gcov
+COV= llvm-cov
 GRUB_MKRESCUE=grub-mkrescue
-CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
+CC=env $(ARCH)-gcc
 AS=nasm
 ASFLAGS=-felf32 -F dwarf -g
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
@@ -17,9 +17,9 @@ tests: build libk-tests
 
 run-tests: tests
 	./build/tests/kmem
-	${GCOV} kmem.gcno
+	${COV} -gcno kmem.gcno -gcda kmem.gcda -o kmem.cov
 	./build/tests/physical_allocator
-	${GCOV} physical_allocator.gcno
+	${COV} -gcno physical_allocator.gcno -gcda physical_allocator.gcda -o physical_allocator.cov
 
 bootloader-x86: build
 	${AS} kernel/arch/x86/boot.s -o build/boot.o ${ASFLAGS}
@@ -100,7 +100,7 @@ clean-all: clean
 	rm -f *.gcno
 	rm -f *.gcov
 	rm -f *.gcda
-
+	rm -f *.cov
 docs:
 	cldoc generate -I ./include -DARCH_X86 -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/libk/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
 

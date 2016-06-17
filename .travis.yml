@@ -10,6 +10,7 @@ addons:
             - python-virtualenv
             - libclang1-3.4
             - nasm
+            - clang
 cache:
     directories:
         - compiler/
@@ -23,6 +24,7 @@ script:
     - if [[ ! -e compiler/i686-elf/bin/i686-elf-gcc ]]; then
         bash ./scripts/build_cross_compiler.sh;
       fi
+    - export PATH=$PATH:/home/travis/build/awensaunders/kernel-of-truth/compiler/i686-elf/bin
     - make
     - make run-tests
     - make docs
