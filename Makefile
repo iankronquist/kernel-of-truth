@@ -95,6 +95,7 @@ build:
 
 clean:
 	rm -rf build
+	rm *.gc*
 
 clean-all: clean
 	rm -f qemu.log
