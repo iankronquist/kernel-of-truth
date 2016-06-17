@@ -2,6 +2,18 @@
 #include <stdarg.h>
 #include <assert.h>
 
+#include <libk/lock.h>
+
+// I should really include a more robust implementation of the spinlock
+void acquire_spinlock(spinlock_t *s) {
+    *s = 1;
+}
+
+int release_spinlock(spinlock_t *s) {
+    int orig = *s;
+    *s = 0;
+    return orig;
+}
 
 void kputs(char* string) {
     puts(string);

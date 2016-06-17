@@ -11,6 +11,7 @@
 #include <libk/kassert.h>
 #include <libk/kmem.h>
 #include <libk/kputs.h>
+#include <libk/lock.h>
 
 #ifdef ARCH_X86
 #include <arch/x86/memlayout.h>

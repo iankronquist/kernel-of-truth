@@ -1,6 +1,6 @@
 ARCH=i686-elf
 TEST_CC=clang
-GCOV=gcov
+GCOV=llvm-cov
 GRUB_MKRESCUE=grub-mkrescue
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=nasm
@@ -17,9 +17,7 @@ tests: build libk-tests
 
 run-tests: tests
 	./build/tests/kmem
-	${GCOV} kmem.gcno
 	./build/tests/physical_allocator
-	${GCOV} physical_allocator.gcno
 
 bootloader-x86: build
 	${AS} kernel/arch/x86/boot.s -o build/boot.o ${ASFLAGS}
@@ -35,15 +33,18 @@ processes: libk
 	${AS} kernel/arch/x86/process.s -o build/process.o ${ASFLAGS}
 	${CC} -c kernel/arch/x86/process.c -o build/processc.o ${CFLAGS}
 
-libk-tests:
+libk-tests: lock-x86
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c  -o build/tests/kmem ${TEST_CFLAGS}
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c -o build/tests/physical_allocator ${TEST_CFLAGS}
 
 io: build
 	${AS} kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
 
-kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io processes
+kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io processes lock-x86
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
+
+lock-x86: build
+	${AS} kernel/arch/x86/lock.s -o build/lock.o ${ASFLAGS}
 
 link-x86: build
 	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/*.o
