@@ -42,8 +42,11 @@ libk-tests:
 io: build
 	${AS} kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
 
-kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io processes
+kernel: libk terminal gdt-x86 idt-x86 tlibc build keyboard timer paging-x86 io processes lock-x86
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
+
+lock-x86: build
+	${AS} kernel/arch/x86/lock.s -o build/lock.o ${ASFLAGS}
 
 link-x86: build
 	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/*.o
