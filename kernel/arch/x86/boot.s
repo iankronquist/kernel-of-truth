@@ -25,7 +25,7 @@ _start:
 	mov cr0, eax
 
 	mov esp, stack_top
-
+	push ebx ; Multiboot header pointer
 	extern kernel_main
 	call kernel_main
 

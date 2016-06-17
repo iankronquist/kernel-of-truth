@@ -2,7 +2,11 @@
 #include <inttypes.h>
 
 #include "../../libk/physical_allocator.c"
+#include "./kmem_stubs.c"
 #include <tests/tests.h>
+
+#define GB (1024*1024*1024)
+#define TEST_MAP_SIZE PAGE_FRAME_MAP_SIZE(1*GB)
 
 
 void reset_bitmap();
@@ -66,13 +70,13 @@ void test_use_frame() {
 }
 
 void reset_bitmap() {
-    memset(page_frame_map, 0, PAGE_FRAME_MAP_SIZE);
+    memset(page_frame_map, 0, TEST_MAP_SIZE);
     memset(frame_cache, 0, PAGE_FRAME_CACHE_SIZE);
     frame_count = PAGE_FRAME_CACHE_SIZE;
 }
 
 void print_map() {
-    for (size_t i = 0; i < PAGE_FRAME_MAP_SIZE; ++i) {
+    for (size_t i = 0; i < TEST_MAP_SIZE; ++i) {
         printf("%h" PRIu8, page_frame_map[i]);
     }
     printf("\n");
@@ -120,6 +124,7 @@ void test_alloc_frame() {
 }
 
 int main() {
+    physical_allocator_init(1*GB);
     test_alloc_frame();
     test_free_frame();
     test_use_frame();
