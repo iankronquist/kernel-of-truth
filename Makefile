@@ -1,6 +1,6 @@
 ARCH=i686-elf
 TEST_CC=clang
-GCOV=gcov
+GCOV=llvm-cov
 GRUB_MKRESCUE=grub-mkrescue
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=nasm
@@ -17,9 +17,7 @@ tests: build libk-tests
 
 run-tests: tests
 	./build/tests/kmem
-	${GCOV} kmem.gcno
 	./build/tests/physical_allocator
-	${GCOV} physical_allocator.gcno
 
 bootloader-x86: build
 	${AS} kernel/arch/x86/boot.s -o build/boot.o ${ASFLAGS}
@@ -35,7 +33,7 @@ processes: libk
 	${AS} kernel/arch/x86/process.s -o build/process.o ${ASFLAGS}
 	${CC} -c kernel/arch/x86/process.c -o build/processc.o ${CFLAGS}
 
-libk-tests:
+libk-tests: lock-x86
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c  -o build/tests/kmem ${TEST_CFLAGS}
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c -o build/tests/physical_allocator ${TEST_CFLAGS}
 
