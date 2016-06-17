@@ -41,7 +41,7 @@
 
 #define EPHYSMEMFULL (~0)
 
-#define CUR_PAGE_DIRECTORY_ADDR ((uint32_t*)(~0<<12))
+#define CUR_PAGE_DIRECTORY_ADDR ((uint32_t*)(0xfffff000))
 #define PAGING_DIR_PHYS_ADDR 0xffc00000
 
 extern void enable_paging(page_frame_t page_dir);
