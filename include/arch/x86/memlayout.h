@@ -7,13 +7,11 @@
 #define MB 1024*1024
 #define GB 1024*1024*1024
 
-#define ACPI_BEGIN 0xa0000
-#define ACPI_END   0xfffff
-
 #define FRACTAL_MAP 0xffc00000
 
-#define PHYS_MEMORY_SIZE 1*GB
 #define PAGE_SIZE 4096
+
+typedef uint32_t page_frame_t;
 
 // These two variables are defined by the linker. They are located where you
 // would expect based on the names.
@@ -39,5 +37,8 @@ extern uint32_t kernel_end;
 // Video memory related
 #define VIDEO_MEMORY_BEGIN 0xB8000
 #define VIDEO_MEMORY_SIZE (80 * 24)
+#define VGA_BEGIN 0xa0000
+#define VGA_END   0xbffff
+
 
 #endif
