@@ -26,7 +26,7 @@ if [[ ! -d compiler/src ]]; then
 	wget http://ftp.gnu.org/gnu/binutils/binutils-2.24.tar.gz 
 	wget ftp://ftp.gnu.org/gnu/gcc/gcc-4.9.1/gcc-4.9.1.tar.gz
 	wget https://gmplib.org/download/gmp/gmp-6.0.0a.tar.xz
-	wget http://www.mpfr.org/mpfr-current/mpfr-3.1.2.tar.xz
+	wget http://www.mpfr.org/mpfr-3.1.2/mpfr-3.1.2.tar.xz
 	wget ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.2.tar.gz
 	if [ "$(uname)" == "Darwin" ]; then
 		wget http://www.bastoul.net/cloog/pages/download/count.php3?url=./cloog-parma-0.16.1.tar.gz
