@@ -47,7 +47,6 @@ void kernel_main(struct multiboot_info *mb) {
     idt_install();
     terminal_initialize();
     initialize_klog();
-    klogf("mb %p\n", mb);
     kheap_install((struct kheap_metadata*)KHEAP_PHYS_ROOT, PAGE_SIZE);
     physical_allocator_init(mb->mem_upper + mb->mem_lower);
     keyboard_install();
