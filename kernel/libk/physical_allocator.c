@@ -1,8 +1,15 @@
 #include <libk/physical_allocator.h>
 
+// A lock to prevent multiple process from modifying the page frame map at
+// once.
 static spinlock_t big_lock = SPINLOCK_INIT;
+// The size of the page frame map.
 static size_t page_frame_map_size;
+// A heap allocated bitmap representing physical memory. Each bit represents a
+// page in memory. It can be 0, for free, or 1, for in use.
 static uint8_t *page_frame_map;
+// Iterating over the bitmap in search of free pages is slow -- keep a cache of
+// them around to amortize the linear time search cost.
 static page_frame_t frame_cache[PAGE_FRAME_CACHE_SIZE];
 
 // Force allocation of frames on first call of alloc_frame
@@ -39,11 +46,18 @@ static void rebuild_frame_cache() {
     return;
 }
 
+/* Check if a physical address @frame is free.
+ * @return true if it's free, false otherwise
+ */
 bool is_free_frame(page_frame_t frame) {
     frame >>= 12;
     return page_frame_map[BYTE_INDEX(frame)] & BIT_INDEX(frame);
 }
 
+/* Mark a range of physical addresses as in use.
+ * Starts including the @begin page, and goes up to but does not include the
+ * @end page.
+ */
 void use_range(page_frame_t begin, page_frame_t end) {
     acquire_spinlock(&big_lock);
     kassert(begin < end);
@@ -56,6 +70,7 @@ void use_range(page_frame_t begin, page_frame_t end) {
     release_spinlock(&big_lock);
 }
 
+/* Mark a single page @frame as used. */
 void use_frame(page_frame_t frame) {
     acquire_spinlock(&big_lock);
     frame >>= 12;
@@ -66,6 +81,7 @@ void use_frame(page_frame_t frame) {
     release_spinlock(&big_lock);
 }
 
+/* Free a physical page @frame */
 void free_frame(page_frame_t frame) {
     acquire_spinlock(&big_lock);
     frame >>= 12;
@@ -73,6 +89,9 @@ void free_frame(page_frame_t frame) {
     release_spinlock(&big_lock);
 }
 
+/* Allocate some page frame.
+ * @return a new page frame marked as used.
+ */
 page_frame_t alloc_frame() {
     acquire_spinlock(&big_lock);
     page_frame_t new_frame;

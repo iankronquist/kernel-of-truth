@@ -15,20 +15,38 @@
 #include <libk/kputs.h>
 #include <libk/klog.h>
 
-void worker() {
+/* This little function exists to demonstrate the multi-processing
+ * functionality. It spins and logs its progress. It takes no arguments and
+ * does not return.
+*/
+void worker(void) {
     while(1) {
         klog("worker\n");
     }
 }
 
-
-
+/* This is the entry point to the bulk of the kernel.
+ * @mb is a pointer to a <multiboot_info> structure which has important
+ * information about the layout of memory which is passed along from the
+ * bootloader.
+ * First, the kernel sets up the <gdt> or Global Descriptor Table which
+ * describes the layout of memory.
+ * Next, it installs the <idt> or interrupt descriptor table, which declares
+ * which interrupts are available, and whether they can be accessed from user
+ * mode.
+ * After the basic CPU state has been initialized, logging and the VGA terminal
+ * are initialized, and the kernel heap is installed. Next, the physical memory
+ * allocator and the keyboard drivers are initialized. Note that the kernel
+ * heap must be initialized before the physical memory allocator since certain
+ * parts of the allocator live on the heap. Finally the init process page table
+ * is created, and multi-processing is initialized.
+ * @return this function should never return.
+*/
 void kernel_main(struct multiboot_info *mb) {
     gdt_install();
     idt_install();
     terminal_initialize();
     initialize_klog();
-    klogf("mb %p\n", mb);
     kheap_install((struct kheap_metadata*)KHEAP_PHYS_ROOT, PAGE_SIZE);
     physical_allocator_init(mb->mem_upper + mb->mem_lower);
     keyboard_install();
@@ -43,7 +61,6 @@ void kernel_main(struct multiboot_info *mb) {
     proc_init();
     struct process *worker_proc = create_proc(worker);
     schedule_proc(worker_proc);
-
 
     while (1) {
         klog("kernel\n");

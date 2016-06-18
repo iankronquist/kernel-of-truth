@@ -1,11 +1,10 @@
 section .text
-extern gdtp
 
 global gdt_flush
 gdt_flush:
 	; Load the GDT with our gdtp which is a structure which contains a pointer
 	; to the gdt
-	lgdt [gdtp]
+	lgdt [esp+4]
 	jmp reload_code_segment
 	ret
 

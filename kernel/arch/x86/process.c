@@ -1,5 +1,7 @@
 #include <arch/x86/process.h>
 
+void process_handler();
+
 uint32_t get_next_pid() {
     static uint32_t proc_count = 0;
     return proc_count++;
@@ -14,8 +16,7 @@ void proc_init() {
     klogf("init physical paging address %p\n", kernel_proc->cr3);
     running_proc = kernel_proc;
 
-    // FIXME make this have an architecture independent api
-    idt_set_gate(32, (uint32_t)_process_handler, 0x08, 0x8e);
+    install_interrupt(32, process_handler);
     uint8_t current_mask = read_port(0x21);
     write_port(0x21 , current_mask & TIMER_INTERRUPT_MASK);
 }

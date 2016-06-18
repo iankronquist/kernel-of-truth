@@ -2,7 +2,7 @@
 
 // This table was shamelessly stolen from:
 // http://www.osdever.net/bkerndev/Docs/keyboard.htm
-unsigned char keyboard_map[256] = {
+static unsigned char keyboard_map[256] = {
     0,  27, '1', '2', '3', '4', '5', '6', '7', '8',    /* 9 */
     '9', '0', '-', '=', '\b',    /* Backspace */
     '\t',            /* Tab */
@@ -41,7 +41,7 @@ unsigned char keyboard_map[256] = {
     0,    /* All other keys are undefined */
 };
 
-unsigned char keyboard_shift_map[256] = {
+static unsigned char keyboard_shift_map[256] = {
     0,  27, '!', '@', '#', '$', '%', '^', '&', '*',    /* 9 */
     '(', ')', '_', '+', '\b',    /* Backspace */
     '\t',            /* Tab */
@@ -80,14 +80,8 @@ unsigned char keyboard_shift_map[256] = {
     0,    /* All other keys are undefined */
 };
 
-
-void keyboard_install() {
-    uint8_t current_mask = read_port(0x21);
-    write_port(0x21 , current_mask & KB_INTERRUPT_MASK);
-}
-
-
-void keyboard_irq_handler() {
+void keyboard_irq_handler(struct regs *r) {
+    (void)r;
     static bool shift_held = false;
     uint8_t status;
     uint8_t key_code;
@@ -121,4 +115,10 @@ void keyboard_irq_handler() {
             terminal_putchar(c);
     }
 
+}
+
+void keyboard_install(void) {
+    uint8_t current_mask = read_port(0x21);
+    write_port(0x21 , current_mask & KB_INTERRUPT_MASK);
+    install_interrupt(33, keyboard_irq_handler);
 }

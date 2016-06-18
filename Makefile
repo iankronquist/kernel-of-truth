@@ -69,7 +69,7 @@ build/paging.o: kernel/arch/x86/paging.c kernel/arch/x86/paging.s
 	${AS} kernel/arch/x86/paging.s -o ${TMP}/pagings.o ${ASFLAGS}
 	${LD} -r ${TMP}/pagings.o ${TMP}/pagingc.o -o build/paging.o ${LDFLAGS}
 
-build/idt.o: kernel/arch/x86/idt.c kernel/arch/x86/idt.s
+build/idt.o: kernel/arch/x86/idt.c kernel/arch/x86/idt.s include/arch/x86/idt.h
 	${CC} -c kernel/arch/x86/idt.c -o ${TMP}/idtc.o ${CFLAGS}
 	${AS} kernel/arch/x86/idt.s -o ${TMP}/idts.o ${ASFLAGS}
 	${LD} -r ${TMP}/idts.o ${TMP}/idtc.o -o build/idt.o ${LDFLAGS}
@@ -79,7 +79,7 @@ build/gdt.o: kernel/arch/x86/gdt.c kernel/arch/x86/gdt.s
 	${AS} kernel/arch/x86/gdt.s -o ${TMP}/gdts.o ${ASFLAGS}
 	${LD} -r ${TMP}/gdts.o ${TMP}/gdtc.o -o build/gdt.o ${LDFLAGS}
 
-build/serial.o:
+build/serial.o: kernel/drivers/serial_port.c include/drivers/serial_port.h
 	${CC} -c kernel/drivers/serial_port.c -o build/serial.o ${CFLAGS}
 
 build/keyboard.o: kernel/drivers/keyboard.c kernel/drivers/keyboard.s
