@@ -33,7 +33,7 @@ static struct idt_entry {
     uint8_t always0;
     uint8_t flags; // Set using the table.
     uint16_t base_hi;
-} __attribute((packed)) idt[IDT_SIZE] = {0};
+} __attribute((packed)) idt[IDT_SIZE] = {{0}};
 
 /*
  * Similar to the <gdt_ptr>, this is a special pointer to the <idt>.
