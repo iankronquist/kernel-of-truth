@@ -1,4 +1,5 @@
 #include <arch/x86/idt.h>
+#include <libk/lock.h>
 
 // Definitions of locations of the PIC ports.
 // The Programmable Interrupt Controller, or PIC, has two parts, the master and
@@ -43,8 +44,11 @@ static struct idt_ptr {
 } __attribute((packed)) idtp;
 
 
-// This is not static so it is visible to idt.s
-isr_t idt_dispatch_table[IDT_SIZE] = {0};
+// Protects the <idt_dispatch_table>.
+static spinlock_t idt_dispatch_table_lock = SPINLOCK_INIT;
+
+// The jump table of functions which are called when an interrupt is triggered.
+static isr_t idt_dispatch_table[IDT_SIZE] = {0};
 
 /* A wrapper around lidt.
  * Load the provided <idt_ptr> onto the CPU.
@@ -101,10 +105,12 @@ static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel,
 }
 
 int install_interrupt(uint8_t num, isr_t function) {
+    acquire_spinlock(&idt_dispatch_table_lock);
     if (idt_dispatch_table[num] != NULL) {
         return -1;
     }
     idt_dispatch_table[num] = function;
+    release_spinlock(&idt_dispatch_table_lock);
     return 0;
 }
 
