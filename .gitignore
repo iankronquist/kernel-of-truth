@@ -4,6 +4,8 @@ build
 compiler
 qemu.log
 
+tags
+
 *.gcda
 *.gcno
 *.gcov

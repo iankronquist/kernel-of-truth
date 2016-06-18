@@ -50,7 +50,7 @@ build/io.o: kernel/arch/x86/io.s
 build/kernel.o: build/libk.o build/terminal.o build/gdt.o build/idt.o build/tlibc.o build/keyboard.o build/timer.o build/paging.o build/io.o build/processes.o kernel/kernel.c build/lock.o
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
 
-build/truthos.bin: build build/kernel.o build/boot.o
+build/truthos.bin: build build/kernel.o build/boot.o kernel/arch/x86/linker.ld
 	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/*.o
 
 build/lock.o:
