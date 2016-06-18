@@ -6,27 +6,8 @@ idt_load:
 	sti
 	ret
 
-global common_handler
-
-%macro interrupt 1
-	global isr%1
-	isr%1:
-		cli
-		push %1
-		jmp common_handler
-%endmacro
-
-%macro no_error_code_interrupt 1
-	global isr%1
-	isr%1:
-		cli
-		push 0
-		push %1
-		jmp common_handler
-%endmacro
-
-
-common_handler:
+global _service_interrupt
+_service_interrupt:
 	pusha
 	mov ax, ds
 	push eax
@@ -52,6 +33,22 @@ common_handler:
 	sti
 	iret
 
+%macro interrupt 1
+	global isr%1
+	isr%1:
+		cli
+		push %1
+		jmp _service_interrupt
+%endmacro
+
+%macro no_error_code_interrupt 1
+	global isr%1
+	isr%1:
+		cli
+		push 0
+		push %1
+		jmp _service_interrupt
+%endmacro
 
 no_error_code_interrupt 0
 no_error_code_interrupt 1
@@ -86,3 +83,5 @@ no_error_code_interrupt 29
 interrupt 30
 no_error_code_interrupt 31
 no_error_code_interrupt 32
+no_error_code_interrupt 33
+no_error_code_interrupt 34

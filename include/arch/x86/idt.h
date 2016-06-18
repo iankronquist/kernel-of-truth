@@ -1,15 +1,18 @@
 #ifndef IDT_H
 #define IDT_H
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
-#include <libk/kputs.h>
 #include <libk/kabort.h>
+#include <libk/kassert.h>
+#include <libk/kputs.h>
+#include <libk/klog.h>
 
-#include <drivers/timer.h>
+#include <arch/x86/io.h>
+
+#define IDT_SIZE 256
 
 /* The state of the CPU when an interrupt is triggered.
 */
@@ -20,6 +23,8 @@ struct regs {
     uint32_t eip, cs, eflags, useresp, ss; /* pushed by the processor automatically */
 };
 
+typedef void (*isr_t)(struct regs*);
+
 /* Install an interrupt handler.
  * The handler will have the interrupt number @num, and when triggered it will
  * execute @function. If @privileged is set to false, the interrupt will be
@@ -27,7 +32,7 @@ struct regs {
  * raised by ring 0 code. @return 0 if the interrupt is successfully installed
  * and -1 if that interrupt number has already been registered.
  */
-int install_interrupt(uint8_t num, void (*function)(void), bool privileged);
+int install_interrupt(uint8_t num, isr_t function);
 
 /* Initialize the <idt> and the 8259 Programmable Interrupt Controller.
  * There are actually two PICs, a master and a slave. Each is controlled via a

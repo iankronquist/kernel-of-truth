@@ -1,5 +1,4 @@
 #include <arch/x86/idt.h>
-#include <drivers/keyboard.h>
 
 // Definitions of locations of the PIC ports.
 // The Programmable Interrupt Controller, or PIC, has two parts, the master and
@@ -33,7 +32,7 @@ static struct idt_entry {
     uint8_t always0;
     uint8_t flags; // Set using the table.
     uint16_t base_hi;
-} __attribute((packed)) idt[256];
+} __attribute((packed)) idt[IDT_SIZE] = {0};
 
 /*
  * Similar to the <gdt_ptr>, this is a special pointer to the <idt>.
@@ -44,44 +43,51 @@ static struct idt_ptr {
 } __attribute((packed)) idtp;
 
 
+// This is not static so it is visible to idt.s
+isr_t idt_dispatch_table[IDT_SIZE] = {0};
+
 /* A wrapper around lidt.
  * Load the provided <idt_ptr> onto the CPU.
  */
 extern void idt_load(struct idt_ptr);
 
-extern void isr0();
-extern void isr1();
-extern void isr2();
-extern void isr3();
-extern void isr4();
-extern void isr5();
-extern void isr6();
-extern void isr7();
-extern void isr8();
-extern void isr9();
-extern void isr10();
-extern void isr11();
-extern void isr12();
-extern void isr13();
-extern void isr14();
-extern void isr15();
-extern void isr16();
-extern void isr17();
-extern void isr18();
-extern void isr19();
-extern void isr20();
-extern void isr21();
-extern void isr22();
-extern void isr23();
-extern void isr24();
-extern void isr25();
-extern void isr26();
-extern void isr27();
-extern void isr28();
-extern void isr29();
-extern void isr30();
-extern void isr31();
-extern void isr32();
+extern void _service_interrupt(void);
+
+extern void isr0(void);
+extern void isr1(void);
+extern void isr2(void);
+extern void isr3(void);
+extern void isr4(void);
+extern void isr5(void);
+extern void isr6(void);
+extern void isr7(void);
+extern void isr8(void);
+extern void isr9(void);
+extern void isr10(void);
+extern void isr11(void);
+extern void isr12(void);
+extern void isr13(void);
+extern void isr14(void);
+extern void isr15(void);
+extern void isr16(void);
+extern void isr17(void);
+extern void isr18(void);
+extern void isr19(void);
+extern void isr20(void);
+extern void isr21(void);
+extern void isr22(void);
+extern void isr23(void);
+extern void isr24(void);
+extern void isr25(void);
+extern void isr26(void);
+extern void isr27(void);
+extern void isr28(void);
+extern void isr29(void);
+extern void isr30(void);
+extern void isr31(void);
+extern void isr32(void);
+extern void isr33(void);
+extern void isr34(void);
 
 /* Set an entry in the <idt>.
  */
@@ -94,12 +100,11 @@ static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel,
     idt[num].flags = flags;
 }
 
-int install_interrupt(uint8_t num, void (*function)(void), bool privileged) {
-    if (idt[num].flags & IDT_GATE_PRESENT) {
+int install_interrupt(uint8_t num, isr_t function) {
+    if (idt_dispatch_table[num] != NULL) {
         return -1;
     }
-    uint32_t flags = privileged ? 0x8e : 0xee;
-    idt_set_gate(num, (uint32_t)function, 0x08, flags);
+    idt_dispatch_table[num] = function;
     return 0;
 }
 
@@ -109,7 +114,7 @@ void idt_install(void) {
     idtp.limit = (sizeof(struct idt_entry) * 256) - 1;
     idtp.base = (uint32_t) & idt;
 
-    memset(&idt, 0, sizeof(struct idt_entry) * 256);
+    //memset(&idt, 0, sizeof(struct idt_entry) * 256);
 
     idt_set_gate(0, (uint32_t)isr0, 0x08, 0x8e);
     idt_set_gate(1, (uint32_t)isr1, 0x08, 0x8e);
@@ -143,6 +148,8 @@ void idt_install(void) {
     idt_set_gate(29, (uint32_t)isr29, 0x08, 0x8e);
     idt_set_gate(30, (uint32_t)isr30, 0x08, 0x8e);
     idt_set_gate(31, (uint32_t)isr31, 0x08, 0x8e);
+    idt_set_gate(32, (uint32_t)isr32, 0x08, 0x8e);
+    idt_set_gate(33, (uint32_t)isr33, 0x08, 0x8e);
 
     // ICW1 - begin initialization
     write_port(PIC_MASTER_CONTROL, 0x11);
@@ -167,10 +174,21 @@ void idt_install(void) {
     idt_load(idtp);
 }
 
-/* Print out the state of the CPU and kernel panic */
+/* Dispatch event handler or, if none exists, log information and kernel panic.
+ */
 void common_interrupt_handler(struct regs r) {
-    kprintf("Interrupt Triggered!\nRegisters:");
-    kprintf("ds: %u edi: %u esi: %u ebp: %u esp: %u ebx: %u edx: %u ecx: %u eax: %u int_no: %u err_code: %u eip: %u cs: %u eflags: %u useresp: %u ss: %u", r);
-
-    kabort();
+    kassert(r.int_no < 256);
+    if (idt_dispatch_table[r.int_no] != NULL) {
+        idt_dispatch_table[r.int_no](&r);
+    } else {
+        kprintf("Unhandled Interrupt Triggered!\nRegisters:");
+        klogf("Unhandled Interrupt Triggered!\nRegisters:");
+        kprintf("ds: %p edi: %p esi: %p ebp: %p esp: %p ebx: %p edx: %p "
+                "ecx: %p eax: %p int_no: %p err_code: %p eip: %p cs: %p "
+                "eflags: %p useresp: %p ss: %p", r);
+        klogf("ds: %p edi: %p esi: %p ebp: %p esp: %p ebx: %p edx: %p ecx: %p "
+              "eax: %p int_no: %p err_code: %p eip: %p cs: %p eflags: %p "
+              "useresp: %p ss: %p", r);
+        kabort();
+    }
 }
