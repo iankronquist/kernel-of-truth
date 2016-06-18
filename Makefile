@@ -105,6 +105,7 @@ coverage: run-tests
 	rm -f *.gcno
 	rm -f *.gcda
 	rm -f *tests.c.gcov
+	rm -f *stubs.c.gcov
 
 build:
 	mkdir build
