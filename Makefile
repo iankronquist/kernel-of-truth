@@ -16,7 +16,7 @@ TMP=/tmp
 
 all: build/truthos.bin
 
-tests: build/tests/kmem build/tests/physical_allocator
+tests: build/tests/kmem_tests build/tests/physical_allocator_tests
 
 run-tests: tests
 	./build/tests/kmem
@@ -38,11 +38,12 @@ build/processes.o: kernel/arch/x86/process.c kernel/arch/x86/process.s
 	${AS} kernel/arch/x86/process.s -o ${TMP}/processess.o ${ASFLAGS}
 	${LD} -r ${TMP}/processess.o ${TMP}/processesc.o -o build/processes.o ${LDFLAGS}
 
-build/tests/kmem: kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c
-	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c  -o build/tests/kmem ${TEST_CFLAGS}
+build/tests/kmem_tests: build kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c
+	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c  -o build/tests/kmem ${TEST_CFLAGS}
 
-build/tests/physical_allocator: kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c
-	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c -o build/tests/physical_allocator ${TEST_CFLAGS}
+build/tests/physical_allocator_tests: build kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c
+	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c -o build/tests/physical_allocator ${TEST_CFLAGS}
+
 
 build/io.o: kernel/arch/x86/io.s
 	${AS} kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
@@ -98,6 +99,13 @@ start-log:
 
 start-debug:
 	qemu-system-i386 -S -s -kernel build/truthos.bin ${QEMU_FLAGS} -curses
+
+coverage: run-tests
+	${GCOV} gcov *.gcno
+	rm -f *.gcno
+	rm -f *.gcda
+	rm -f *tests.c.gcov
+	rm -f *stubs.c.gcov
 
 build:
 	mkdir build
