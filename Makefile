@@ -79,7 +79,7 @@ build/gdt.o: kernel/arch/x86/gdt.c kernel/arch/x86/gdt.s
 	${AS} kernel/arch/x86/gdt.s -o ${TMP}/gdts.o ${ASFLAGS}
 	${LD} -r ${TMP}/gdts.o ${TMP}/gdtc.o -o build/gdt.o ${LDFLAGS}
 
-build/serial.o:
+build/serial.o: kernel/drivers/serial_port.c include/drivers/serial_port.h
 	${CC} -c kernel/drivers/serial_port.c -o build/serial.o ${CFLAGS}
 
 build/keyboard.o: kernel/drivers/keyboard.c kernel/drivers/keyboard.s
