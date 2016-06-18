@@ -69,7 +69,7 @@ build/paging.o: kernel/arch/x86/paging.c kernel/arch/x86/paging.s
 	${AS} kernel/arch/x86/paging.s -o ${TMP}/pagings.o ${ASFLAGS}
 	${LD} -r ${TMP}/pagings.o ${TMP}/pagingc.o -o build/paging.o ${LDFLAGS}
 
-build/idt.o: kernel/arch/x86/idt.c kernel/arch/x86/idt.s
+build/idt.o: kernel/arch/x86/idt.c kernel/arch/x86/idt.s include/arch/x86/idt.h
 	${CC} -c kernel/arch/x86/idt.c -o ${TMP}/idtc.o ${CFLAGS}
 	${AS} kernel/arch/x86/idt.s -o ${TMP}/idts.o ${ASFLAGS}
 	${LD} -r ${TMP}/idts.o ${TMP}/idtc.o -o build/idt.o ${LDFLAGS}
