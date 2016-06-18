@@ -1,35 +1,21 @@
 #ifndef IDT_H
 #define IDT_H
-//Included for the memset function.
-#include <string.h>
+
 #include <stddef.h>
 #include <stdint.h>
-#include <libk/kputs.h>
+#include <string.h>
+
 #include <libk/kabort.h>
+#include <libk/kassert.h>
+#include <libk/kputs.h>
+#include <libk/klog.h>
 
-#include <drivers/timer.h>
+#include <arch/x86/io.h>
 
-//extern void idt_load();
+#define IDT_SIZE 256
 
-#define PIC_MASTER_CONTROL 0x20
-#define PIC_MASTER_MASK 0x21
-#define PIC_SLAVE_CONTROL 0xa0
-#define PIC_SLAVE_MASK 0xa1
-
-// Define an entry in the IDT
-struct idt_entry {
-    uint16_t base_lo;
-    uint16_t sel; // Kernel segment goes here.
-    uint8_t always0;
-    uint8_t flags; //Set using the table.
-    uint16_t base_hi;
-} __attribute((packed));
-
-struct idt_ptr {
-    uint16_t limit;
-    uint32_t base;
-} __attribute((packed));
-
+/* The state of the CPU when an interrupt is triggered.
+*/
 struct regs {
     uint32_t ds; /* pushed the segs last */
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; /* pushed by 'pusha' */
@@ -37,45 +23,25 @@ struct regs {
     uint32_t eip, cs, eflags, useresp, ss; /* pushed by the processor automatically */
 };
 
-extern void idt_load(uint32_t);
-void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags);
+typedef void (*isr_t)(struct regs*);
 
-void idt_install();
+/* Install an interrupt handler.
+ * The handler will have the interrupt number @num, and when triggered it will
+ * execute @function. If @privileged is set to false, the interrupt will be
+ * able to be raised by ring 3 code. If false, it will only be able to be
+ * raised by ring 0 code. @return 0 if the interrupt is successfully installed
+ * and -1 if that interrupt number has already been registered.
+ */
+int install_interrupt(uint8_t num, isr_t function);
 
-extern void isr0();
-extern void isr1();
-extern void isr2();
-extern void isr3();
-extern void isr4();
-extern void isr5();
-extern void isr6();
-extern void isr7();
-extern void isr8();
-extern void isr9();
-extern void isr10();
-extern void isr11();
-extern void isr12();
-extern void isr13();
-extern void isr14();
-extern void isr15();
-extern void isr16();
-extern void isr17();
-extern void isr18();
-extern void isr19();
-extern void isr20();
-extern void isr21();
-extern void isr22();
-extern void isr23();
-extern void isr24();
-extern void isr25();
-extern void isr26();
-extern void isr27();
-extern void isr28();
-extern void isr29();
-extern void isr30();
-extern void isr31();
-extern void isr32();
-
-extern void keyboard_handler();
+/* Initialize the <idt> and the 8259 Programmable Interrupt Controller.
+ * There are actually two PICs, a master and a slave. Each is controlled via a
+ * dedicated I/O port. We remap interrupts so that we can catch CPU exceptions.
+ * Interrupts 0 through 31 are CPU exceptions and currently get sent to the
+ * <common_interrupt_handler>. Interrupt 32 is used by the programmable timer
+ * which dispatches the <timer_handler>. Interrupt 33 is used by the keyboard,
+ * and dispatches the <keyboard_handler>.
+ */
+void idt_install(void);
 
 #endif

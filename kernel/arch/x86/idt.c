@@ -1,11 +1,102 @@
 #include <arch/x86/idt.h>
-#include <drivers/keyboard.h>
+#include <libk/lock.h>
 
-struct idt_entry idt[256];
-struct idt_ptr idtp;
+// Definitions of locations of the PIC ports.
+// The Programmable Interrupt Controller, or PIC, has two parts, the master and
+// the slave.
+#define PIC_MASTER_CONTROL 0x20
+#define PIC_MASTER_MASK 0x21
+#define PIC_SLAVE_CONTROL 0xa0
+#define PIC_SLAVE_MASK 0xa1
 
-void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags)
-{
+#define IDT_GATE_PRESENT (1<<7)
+
+/* The Interrupt Descriptor Table and its entries.
+ * The Interrupt Descriptor Table, or IDT, describes the code called when an
+ * interrupt occurs.
+ * It has a few important fields:
+ * 
+ * @base_lo: The lower half of a pointer to the code which will be called when
+ * the interrupt is triggered.
+ * @base_hi: The higher half of that same pointer.
+ * @sel: The interrupt routine will be called with this <gdt> segment.
+ * @always0: Reserved.
+ * @flags: Contains the present flag, as well as the Descriptor Privilege
+ * Level. The DPL indicates what ring code needs to be running as in order to
+ * issue this interrupt, or in our case whether use mode code can issue this
+ * interrupt.
+ * For more information, read Volume 3 Chapter 6 of the Intel Manual.
+ */
+static struct idt_entry {
+    uint16_t base_lo;
+    uint16_t sel; // Kernel segment goes here.
+    uint8_t always0;
+    uint8_t flags; // Set using the table.
+    uint16_t base_hi;
+} __attribute((packed)) idt[IDT_SIZE] = {{0}};
+
+/*
+ * Similar to the <gdt_ptr>, this is a special pointer to the <idt>.
+ */
+static struct idt_ptr {
+    uint16_t limit;
+    uint32_t base;
+} __attribute((packed)) idtp;
+
+
+// Protects the <idt_dispatch_table>.
+static spinlock_t idt_dispatch_table_lock = SPINLOCK_INIT;
+
+// The jump table of functions which are called when an interrupt is triggered.
+static isr_t idt_dispatch_table[IDT_SIZE] = {0};
+
+/* A wrapper around lidt.
+ * Load the provided <idt_ptr> onto the CPU.
+ */
+extern void idt_load(struct idt_ptr);
+
+extern void _service_interrupt(void);
+
+extern void isr0(void);
+extern void isr1(void);
+extern void isr2(void);
+extern void isr3(void);
+extern void isr4(void);
+extern void isr5(void);
+extern void isr6(void);
+extern void isr7(void);
+extern void isr8(void);
+extern void isr9(void);
+extern void isr10(void);
+extern void isr11(void);
+extern void isr12(void);
+extern void isr13(void);
+extern void isr14(void);
+extern void isr15(void);
+extern void isr16(void);
+extern void isr17(void);
+extern void isr18(void);
+extern void isr19(void);
+extern void isr20(void);
+extern void isr21(void);
+extern void isr22(void);
+extern void isr23(void);
+extern void isr24(void);
+extern void isr25(void);
+extern void isr26(void);
+extern void isr27(void);
+extern void isr28(void);
+extern void isr29(void);
+extern void isr30(void);
+extern void isr31(void);
+extern void isr32(void);
+extern void isr33(void);
+extern void isr34(void);
+
+/* Set an entry in the <idt>.
+ */
+static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel,
+        uint8_t flags) {
     idt[num].base_lo = base & 0xffff;
     idt[num].base_hi = (base >> 16) & 0xffff;
     idt[num].always0 = 0;
@@ -13,13 +104,23 @@ void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags)
     idt[num].flags = flags;
 }
 
-void idt_install()
-{
+int install_interrupt(uint8_t num, isr_t function) {
+    acquire_spinlock(&idt_dispatch_table_lock);
+    if (idt_dispatch_table[num] != NULL) {
+        return -1;
+    }
+    idt_dispatch_table[num] = function;
+    release_spinlock(&idt_dispatch_table_lock);
+    return 0;
+}
+
+
+void idt_install(void) {
     // 256 is the number of entries in the table.
     idtp.limit = (sizeof(struct idt_entry) * 256) - 1;
     idtp.base = (uint32_t) & idt;
 
-    memset(&idt, 0, sizeof(struct idt_entry) * 256);
+    //memset(&idt, 0, sizeof(struct idt_entry) * 256);
 
     idt_set_gate(0, (uint32_t)isr0, 0x08, 0x8e);
     idt_set_gate(1, (uint32_t)isr1, 0x08, 0x8e);
@@ -53,13 +154,9 @@ void idt_install()
     idt_set_gate(29, (uint32_t)isr29, 0x08, 0x8e);
     idt_set_gate(30, (uint32_t)isr30, 0x08, 0x8e);
     idt_set_gate(31, (uint32_t)isr31, 0x08, 0x8e);
+    idt_set_gate(32, (uint32_t)isr32, 0x08, 0x8e);
+    idt_set_gate(33, (uint32_t)isr33, 0x08, 0x8e);
 
-    idt_set_gate(32, (uint32_t)timer_handler, 0x08, 0x8e);
-    idt_set_gate(33, (uint32_t)keyboard_handler, 0x08, 0x8e);
-
-    // There are 4 Interrupt Command Word Registers and I'm not entirely sure
-    // what they do. I can only find a brief mention of them in section
-    // 33.3.2.1 of the IA-32 Manual. More reading is necessary.
     // ICW1 - begin initialization
     write_port(PIC_MASTER_CONTROL, 0x11);
     write_port(PIC_SLAVE_CONTROL, 0x11);
@@ -80,13 +177,24 @@ void idt_install()
     write_port(PIC_MASTER_MASK, 0xff);
     write_port(PIC_SLAVE_MASK, 0xff);
 
-    idt_load((uint32_t) & idtp);
+    idt_load(idtp);
 }
 
-void common_interrupt_handler(struct regs r)
-{
-    kprintf("Interrupt Triggered!\nRegisters:");
-    kprintf("ds: %u edi: %u esi: %u ebp: %u esp: %u ebx: %u edx: %u ecx: %u eax: %u int_no: %u err_code: %u eip: %u cs: %u eflags: %u useresp: %u ss: %u", r);
-
-    kabort();
+/* Dispatch event handler or, if none exists, log information and kernel panic.
+ */
+void common_interrupt_handler(struct regs r) {
+    kassert(r.int_no < 256);
+    if (idt_dispatch_table[r.int_no] != NULL) {
+        idt_dispatch_table[r.int_no](&r);
+    } else {
+        kprintf("Unhandled Interrupt Triggered!\nRegisters:");
+        klogf("Unhandled Interrupt Triggered!\nRegisters:");
+        kprintf("ds: %p edi: %p esi: %p ebp: %p esp: %p ebx: %p edx: %p "
+                "ecx: %p eax: %p int_no: %p err_code: %p eip: %p cs: %p "
+                "eflags: %p useresp: %p ss: %p", r);
+        klogf("ds: %p edi: %p esi: %p ebp: %p esp: %p ebx: %p edx: %p ecx: %p "
+              "eax: %p int_no: %p err_code: %p eip: %p cs: %p eflags: %p "
+              "useresp: %p ss: %p", r);
+        kabort();
+    }
 }
