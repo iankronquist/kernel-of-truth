@@ -38,10 +38,10 @@ build/processes.o: kernel/arch/x86/process.c kernel/arch/x86/process.s
 	${AS} kernel/arch/x86/process.s -o ${TMP}/processess.o ${ASFLAGS}
 	${LD} -r ${TMP}/processess.o ${TMP}/processesc.o -o build/processes.o ${LDFLAGS}
 
-build/tests/kmem_tests: kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c
+build/tests/kmem_tests: build kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c
 	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c  -o build/tests/kmem ${TEST_CFLAGS}
 
-build/tests/physical_allocator_tests: kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c
+build/tests/physical_allocator_tests: build kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c
 	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c -o build/tests/physical_allocator ${TEST_CFLAGS}
 
 
