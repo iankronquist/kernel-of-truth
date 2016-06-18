@@ -34,8 +34,13 @@ processes: libk
 	${CC} -c kernel/arch/x86/process.c -o build/processc.o ${CFLAGS}
 
 libk-tests: lock-x86
-	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c  -o build/tests/kmem ${TEST_CFLAGS}
-	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c -o build/tests/physical_allocator ${TEST_CFLAGS}
+	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c  -o build/tests/kmem ${TEST_CFLAGS}
+	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c -o build/tests/physical_allocator ${TEST_CFLAGS}
+
+coverage: run-tests
+	echo
+	${GCOV} gcov kmem_tests.gcno
+	${GCOV} gcov physical_allocator_tests.gcno
 
 io: build
 	${AS} kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
