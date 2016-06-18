@@ -102,6 +102,9 @@ start-debug:
 
 coverage: run-tests
 	${GCOV} gcov *.gcno
+	rm -f *.gcno
+	rm -f *.gcda
+	rm -f *tests.c.gcov
 
 build:
 	mkdir build
@@ -109,7 +112,6 @@ build:
 
 clean:
 	rm -rf build
-	rm *.gc*
 
 clean-all: clean
 	rm -f qemu.log
