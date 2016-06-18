@@ -44,6 +44,7 @@ build/tests/kmem: kernel/libk/tests/stubs.c kernel/libk/tests/kmem.c
 build/tests/physical_allocator: kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c
 	${TEST_CC} kernel/libk/tests/stubs.c kernel/libk/tests/physical_allocator.c -o build/tests/physical_allocator ${TEST_CFLAGS}
 
+
 build/io.o: kernel/arch/x86/io.s
 	${AS} kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
 
@@ -105,6 +106,7 @@ build:
 
 clean:
 	rm -rf build
+	rm *.gc*
 
 clean-all: clean
 	rm -f qemu.log
