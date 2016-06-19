@@ -1,8 +1,6 @@
 #ifndef TIMER_H
 #define TIMER_H
-#include <stdint.h>
-#include <arch/x86/io.h>
-#include <libk/kputs.h>
+#include <arch/x86/idt.h>
 
 #define TIMER_INTERRUPT_MASK (~1)
 // Comes from hardware clock cycle of 1.19 MHz
@@ -20,8 +18,13 @@
 // http://www.osdever.net/bkerndev/Docs/pit.htm
 #define RW_ONESHOT_SQUARE 0x36
 
-extern void timer_handler();
-void timer_irq_handler();
-void timer_install();
+// Print "tick" on every timer interrupt.
+void timer_irq_handler(struct regs *r);
+
+// Install the <timer_irq_handler>.
+void timer_install(void);
+
+// Set the timer phase in hertz.
+void set_timer_phase(uint8_t hertz);
 
 #endif
