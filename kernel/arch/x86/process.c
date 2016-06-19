@@ -1,5 +1,11 @@
 #include <arch/x86/process.h>
 
+extern uint32_t get_flags(void);
+extern uint32_t get_page_dir(void);
+extern void _process_handler(void);
+extern void switch_task(uint32_t esp, uint32_t cr3, uint32_t *kernel_esp);
+
+
 void process_handler();
 
 uint32_t get_next_pid() {

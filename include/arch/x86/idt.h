@@ -14,8 +14,7 @@
 
 #define IDT_SIZE 256
 
-/* The state of the CPU when an interrupt is triggered.
-*/
+/* The state of the CPU when an interrupt is triggered. */
 struct regs {
     uint32_t ds; /* pushed the segs last */
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; /* pushed by 'pusha' */
@@ -23,6 +22,8 @@ struct regs {
     uint32_t eip, cs, eflags, useresp, ss; /* pushed by the processor automatically */
 };
 
+// Interrupt Service Routine function signature.
+// ISRs with this signature are installed to a dispatch table.
 typedef void (*isr_t)(struct regs*);
 
 /* Install an interrupt handler.

@@ -60,10 +60,8 @@ build/lock.o:
 build/terminal.o: kernel/drivers/terminal.c
 	${CC} -c kernel/drivers/terminal.c -o build/terminal.o ${CFLAGS}
 
-build/timer.o: kernel/drivers/timer.s kernel/drivers/timer.c
-	${AS} kernel/drivers/timer.s -o ${TMP}/timers.o ${ASFLAGS}
-	${CC} -c kernel/drivers/timer.c -o ${TMP}/timerc.o ${CFLAGS}
-	${LD} -r ${TMP}/timers.o ${TMP}/timerc.o -o build/timer.o ${LDFLAGS}
+build/timer.o: kernel/drivers/timer.c
+	${CC} -c kernel/drivers/timer.c -o build/timer.o ${CFLAGS}
 
 build/paging.o: kernel/arch/x86/paging.c kernel/arch/x86/paging.s
 	${CC} -c kernel/arch/x86/paging.c -o ${TMP}/pagingc.o ${CFLAGS}
@@ -83,10 +81,8 @@ build/gdt.o: kernel/arch/x86/gdt.c kernel/arch/x86/gdt.s
 build/serial.o: kernel/drivers/serial_port.c include/drivers/serial_port.h
 	${CC} -c kernel/drivers/serial_port.c -o build/serial.o ${CFLAGS}
 
-build/keyboard.o: kernel/drivers/keyboard.c kernel/drivers/keyboard.s
-	${CC} -c kernel/drivers/keyboard.c -o /tmp/keyboard.o ${CFLAGS}
-	${AS} kernel/drivers/keyboard.s -o ${TMP}/keyboards.o ${ASFLAGS}
-	${LD} -r ${TMP}/keyboards.o ${TMP}/keyboard.o -o build/keyboard.o ${LDFLAGS}
+build/keyboard.o: kernel/drivers/keyboard.c
+	${CC} -c kernel/drivers/keyboard.c -o build/keyboard.o ${CFLAGS}
 
 build/tlibc.o: tlibc/string/string.c
 	${CC} -c tlibc/string/string.c -o build/tlibc.o ${CFLAGS}

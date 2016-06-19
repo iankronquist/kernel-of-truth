@@ -6,7 +6,9 @@
 #include "drivers/terminal.h"
 #endif
 
-void kputs(char* string);
-void kprintf(char* string, ...);
+// Print a string to the VGA terminal.
+void kputs(char *string);
+// Print a printf style formatted string to the VGA terminal.
+void kprintf(char *string, ...);
 
 #endif

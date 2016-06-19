@@ -1,6 +1,7 @@
 #include <libk/kmem.h>
 
-void *heap_end = NULL;
+static struct kheap_metadata *root;
+static void *heap_end = NULL;
 
 void *krealloc(void *ptr, size_t bytes) {
     struct kheap_metadata *ptr_md = ptr - sizeof(struct kheap_metadata);
@@ -86,7 +87,6 @@ void *kmalloc(size_t bytes) {
     return cur + 1;
 }
 
-
 // Extend heap by page sized increments
 int kheap_extend(size_t bytes) {
     size_t new_bytes = (bytes - 1) / (PAGE_SIZE + 1);
@@ -111,8 +111,6 @@ void kfree(void *mem) {
         freeme->next = freeme->next->next;
     }
 }
-
-
 
 // Install the heap
 void kheap_install(struct kheap_metadata *new_root, size_t initial_heap_size) {

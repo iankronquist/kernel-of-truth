@@ -21,22 +21,31 @@
 
 #define KHEAP_BLOCK_SLOP 32
 
-
+// Keep allocations on the kernel heap in a linked list.
+// This information is squirreled away before each allocation on the heap.
 struct kheap_metadata {
     size_t size;
     struct kheap_metadata *next;
     bool is_free;
 };
 
+// Extend heap by page sized increments
+int kheap_extend(size_t bytes);
 
-struct kheap_metadata *root;
-
-struct kheap_metadata *kheap_init();
-
-int kheap_extend();
+// Install the kernel heap
+// Place the heap at the given root, with an initial size.
 void kheap_install(struct kheap_metadata *root, size_t initial_heap_size);
+
+// Similar to malloc.
 void *kmalloc(size_t bytes);
+
+// Similar to realloc.
 void *krealloc(void *ptr, size_t bytes);
+
+// Similar to free.
 void kfree(void *mem);
-void kheap_defragment();
+
+// Defragment the kernel heap.
+void kheap_defragment(void);
+
 #endif

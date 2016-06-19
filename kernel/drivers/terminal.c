@@ -115,7 +115,3 @@ void terminal_scroll()
     terminal_row = VGA_HEIGHT-1;
     terminal_column = 0;
 }
-
-void terminal_writebuffer() {
-	return;
-}
