@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-// See figure 7-2, 32-Bit Task-State-Segment
-// Volume 3-A
+// State of the processor when switching tasks during hardware multitasking.
+// See figure 7-2, 32-Bit Task-State-Segment Volume 3-A
 struct tss {
     uint16_t prev_task;
     uint16_t reserved0;
@@ -27,6 +27,7 @@ struct tss {
 
 #define TASK_PRESENT (1 << 15)
 
+// A segment in the GDT describing the TSS.
 struct tss_descriptor {
     uint64_t segment_limit:16;
     uint64_t base_low:16;
@@ -41,7 +42,5 @@ struct tss_descriptor {
     uint64_t granularity:1;
     uint64_t base_high:8;
 };
-
-struct tss* make_tss();
 
 #endif
