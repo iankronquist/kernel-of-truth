@@ -45,7 +45,6 @@ void *krealloc(void *ptr, size_t bytes) {
         return ptr;
     } else {
         void *new = kmalloc(bytes);
-        memcpy(new, ptr, ptr_md->size);
         ptr_md->is_free = true;
         return new;
     }
