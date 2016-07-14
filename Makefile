@@ -16,7 +16,15 @@ TMP=/tmp
 
 all: build/truthos.bin
 
-tests: build/tests/kmem_tests build/tests/physical_allocator_tests
+tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests
+
+# Check that documentation coverage didn't change.
+# We don't care about enum values.
+docs-tests: docs
+	grep -E 'name="enum"\s+undocumented="0"' build/docs/xml/report.xml
+	grep -E 'name="typedef"\s+undocumented="0"' build/docs/xml/report.xml
+	grep -E 'name="struct"\s+undocumented="0"' build/docs/xml/report.xml
+	grep -E 'name="function"\s+undocumented="0"' build/docs/xml/report.xml
 
 run-tests: tests
 	./build/tests/kmem
@@ -146,4 +154,4 @@ start-virtualbox:
 	echo "Run VM"
 	${VB} --startvm TruthOS --dbg
 
-.PHONY: all clean clean-all start run start-virtualbox iso start-debug start-log tests run-tests
+.PHONY: all clean clean-all start run start-virtualbox iso start-debug start-log tests run-tests docs-tests
