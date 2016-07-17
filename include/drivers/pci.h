@@ -39,33 +39,43 @@
 
 #define PCI_NONE 0xFFFF
 
+// A function registered by the driver. Takes a device number, a vendor ID, a
+// device ID, and a some device specific extra data.
 typedef void (*pci_func_t)(uint32_t device, uint16_t vendor_id,
-        uint16_t device_it, void *extra);
+        uint16_t device_id, void *extra);
 
+// Get the bus ID of a device.
 static inline uint8_t pci_get_bus(uint32_t dev) {
     return (dev >> 16) & 0xff;
 }
 
+// Get the slot ID of a device.
 static inline uint8_t pci_get_slot(uint32_t dev) {
     return (dev >> 8) & 0xff;
 }
 
+// Get the function of a device.
 static inline uint8_t pci_get_func(uint32_t dev) {
     return dev;
 }
 
+// Get the PCI address of field of a device.
 static inline uint32_t pci_get_addr(uint32_t device, int field) {
     return 0x80000000 | (pci_get_bus(device) << 16) |
            (pci_get_slot(device) << 11) | (pci_get_func(device) << 8) |
            (field & 0xfc);
 }
 
+// Take a bus ID, a slot ID, and a function and box them up.
 static inline uint32_t pci_box_device(int bus, int slot, int func) {
     return (bus << 16) | (slot << 8) | func;
 }
 
+// Read a field of a device on the PCI bus.
 uint32_t pci_read_field(uint32_t dev, int field, int size);
+// Write a field of a device on the PCI bus.
 void pci_write_field(uint32_t dev, int field, int size, uint32_t value);
+// Scan the PCI bus for devices.
 void pci_scan(pci_func_t f, int type, void *extra);
 
 #endif
