@@ -68,3 +68,17 @@ size_t strlen(const char* str) {
 	}
 	return ret;
 }
+
+size_t strnlen(const char* str, size_t maxlen) {
+	size_t ret = 0;
+	while(str[ret] != 0 && ret < maxlen) {
+		ret++;
+	}
+	return ret;
+}
+
+size_t strncpy(const char *dst, const char *src, size_t maxlen) {
+	size_t len = strnlen(str, maxlen);
+	memcpy(dst, src, len);
+	return ret;
+}
