@@ -62,8 +62,23 @@ build/io.o: kernel/arch/x86/io.s
 build/kernel.o: build/libk.o build/terminal.o build/gdt.o build/idt.o build/tlibc.o build/keyboard.o build/timer.o build/paging.o build/io.o build/processes.o kernel/kernel.c build/lock.o
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
 
-build/truthos.bin: build build/kernel.o build/boot.o kernel/arch/x86/linker.ld
+build/truthos.bin: build build/kernel.o build/symbols.o build/boot.o kernel/arch/x86/linker.ld
 	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/*.o
+
+build/symbols.o: build/kernel.o
+	rm -f build/symbols.o
+	echo 'section .symbols' > ${TMP}/symbols.s
+	echo 'db "-----KERNEL SYMBOL ADDRESSES FOUND HERE---"' >> ${TMP}/symbols.s
+	echo 'global kernel_symbols_start' >> ${TMP}/symbols.s
+	echo 'kernel_symbols_start:' >> ${TMP}/symbols.s
+	nm build/*.o | grep '^[0123456789abcdef]* T' | awk '{ print "extern",$$3,"\ndd",$$3,"\ndd __symbol_"$$3"" }' >> ${TMP}/symbols.s
+	echo 'global kernel_symbols_end' >> ${TMP}/symbols.s
+	echo 'kernel_symbols_end:' >> ${TMP}/symbols.s
+	echo 'db "-----KERNEL SYMBOL ADDRESSES END HERE---"' >> ${TMP}/symbols.s
+	echo 'db "-----KERNEL SYMBOL NAMES START HERE---"' >> ${TMP}/symbols.s
+	nm build/*.o | grep '^[0123456789abcdef]* T' | awk '{ print "__symbol_"$$3": db \""$$3"\",0" }' >> ${TMP}/symbols.s
+	echo 'db "-----KERNEL SYMBOL NAMES END HERE---"' >> ${TMP}/symbols.s
+	${AS} ${TMP}/symbols.s -o build/symbols.o ${ASFLAGS}
 
 build/lock.o:
 	${AS} kernel/arch/x86/lock.s -o build/lock.o ${ASFLAGS}
