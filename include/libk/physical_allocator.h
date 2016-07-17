@@ -52,4 +52,10 @@ bool is_free_frame(page_frame_t frame);
  */
 void use_range(page_frame_t begin, page_frame_t end);
 
+/* Mark a range of physical addresses as free.
+ * Starts including the begin page, and goes up to but does not include the
+ * end page.
+ */
+void free_range(page_frame_t begin, page_frame_t end);
+
 #endif
