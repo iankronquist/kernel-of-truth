@@ -78,6 +78,18 @@ void free_frame(page_frame_t frame) {
     release_spinlock(&big_lock);
 }
 
+void free_range(page_frame_t begin, page_frame_t end) {
+    acquire_spinlock(&big_lock);
+    kassert(begin < end);
+    page_frame_map[BYTE_INDEX(begin)] = ~((BIT_INDEX(begin)-1) |
+        BIT_INDEX(begin));
+    page_frame_map[BYTE_INDEX(end)] = BIT_INDEX(end)-1;
+    for (size_t i = BYTE_INDEX(begin)+1; i < BYTE_INDEX(end)-1; ++i) {
+        page_frame_map[i] = 0;
+    }
+    release_spinlock(&big_lock);
+}
+
 page_frame_t alloc_frame() {
     acquire_spinlock(&big_lock);
     page_frame_t new_frame;
