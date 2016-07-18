@@ -36,6 +36,9 @@ void klogf(char* string, ...) {
         if (string[i] == '%') {
             ++i;
             switch(string[i]) {
+                case 's':
+                    write_serial_string(COM1, va_arg(args, char*));
+                    break;
                 case '%':
                     write_serial(COM1, '%');
                     break;
