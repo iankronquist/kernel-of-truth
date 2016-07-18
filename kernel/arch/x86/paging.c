@@ -1,5 +1,12 @@
 #include <arch/x86/paging.h>
 
+static void use_modules(struct multiboot_info *mb) {
+    struct multiboot_mod_list *mboot_mods = (void*)mb->mods_addr;
+    for (uint32_t i = 0; i < mb->mods_count; ++i) {
+        use_range(mboot_mods[i].mod_start, mboot_mods[i].mod_end);
+    }
+}
+
 page_frame_t kernel_page_table_install(struct multiboot_info *mb) {
     // Certain very important things already exist in physical memory. They
     // need to be marked as present so that the allocator doesn't grab them by
@@ -36,6 +43,7 @@ page_frame_t kernel_page_table_install(struct multiboot_info *mb) {
 
     // Mark all the pages the kernel sits on as used
     use_range(KERNEL_START, KERNEL_END);
+    use_modules(mb);
 
     // Mark the kernel heap as in use
     use_frame(KHEAP_PHYS_ROOT);
