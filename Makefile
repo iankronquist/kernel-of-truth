@@ -40,8 +40,9 @@ build/libk.o: build/serial.o kernel/libk/*.c include/libk/*.h
 	${CC} -c kernel/libk/kabort.c -o ${TMP}/kabort.o  ${CFLAGS}
 	${CC} -c kernel/libk/kputs.c -o ${TMP}/kputs.o  ${CFLAGS}
 	${CC} -c kernel/libk/klog.c -o ${TMP}/klog.o  ${CFLAGS}
+	${CC} -c kernel/libk/modloader.c -o ${TMP}/modloader.o  ${CFLAGS}
 	${CC} -c kernel/libk/physical_allocator.c -o ${TMP}/physical_allocator.o  ${CFLAGS}
-	${LD} -r ${TMP}/kmem.o ${TMP}/kabort.o ${TMP}/kputs.o ${TMP}/klog.o ${TMP}/physical_allocator.o -o build/libk.o ${LDFLAGS}
+	${LD} -r ${TMP}/kmem.o ${TMP}/kabort.o ${TMP}/kputs.o ${TMP}/klog.o ${TMP}/physical_allocator.o -o build/libk.o ${TMP}/modloader.o ${LDFLAGS}
 
 build/pci.o: kernel/drivers/pci.c include/drivers/pci.h
 	${CC} -c kernel/drivers/pci.c -o build/pci.o ${CFLAGS}
