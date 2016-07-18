@@ -69,6 +69,10 @@ page_frame_t create_page_dir(void *link_loc, void *stack_loc,
 void *find_free_addr(uint32_t *page_dir, page_frame_t phys_addr,
         uint16_t permissions);
 
+// Find a contiguous free region of virtual memory
+void *find_free_region(page_frame_t phys_addr, size_t num_pages,
+        uint16_t permissions);
+
 // Identity map kernel.
 void map_kernel_pages(uint32_t *page_dir);
 
