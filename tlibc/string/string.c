@@ -77,8 +77,8 @@ size_t strnlen(const char* str, size_t maxlen) {
 	return ret;
 }
 
-size_t strncpy(const char *dst, const char *src, size_t maxlen) {
-	size_t len = strnlen(str, maxlen);
+char *strncpy(char *dst, const char *src, size_t maxlen) {
+	size_t len = strnlen(src, maxlen);
 	memcpy(dst, src, len);
-	return ret;
+	return dst;
 }
