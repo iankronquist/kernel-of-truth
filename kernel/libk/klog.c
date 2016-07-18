@@ -47,11 +47,12 @@ void klogf(char* string, ...) {
                     break;
                 case 'd':
                 case 'i':
-                case 'p':
-                case 'x':
                     if (i+1 == 'u') {
                         klog_uint(va_arg(args, uint32_t), 8);
                     }
+                case 'p':
+                case 'x':
+                    klog_uint(va_arg(args, uint32_t), 8);
                     break;
                 case 'l':
                     if (i+1 == 'u') {
