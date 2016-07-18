@@ -6,6 +6,8 @@ CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 LD=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=yasm
 ASFLAGS=-felf -g DWARF2
+NM=nm
+AWK=awk
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
 LDFLAGS=${CFLAGS} -nostdlib
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
@@ -65,7 +67,7 @@ build/kernel.o: build/libk.o build/terminal.o build/gdt.o build/idt.o build/tlib
 build/truthos.bin: build build/kernel.o build/symbols.o build/boot.o kernel/arch/x86/linker.ld
 	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/*.o
 
-build/symbols.o: build/kernel.o
+build/symbols.o: build/kernel.o Makefile
 	rm -f build/symbols.o
 	echo 'section .symbols' > ${TMP}/symbols.s
 	echo 'db "-----KERNEL SYMBOL ADDRESSES FOUND HERE---"' >> ${TMP}/symbols.s
@@ -76,7 +78,7 @@ build/symbols.o: build/kernel.o
 	echo 'kernel_symbols_end:' >> ${TMP}/symbols.s
 	echo 'db "-----KERNEL SYMBOL ADDRESSES END HERE---"' >> ${TMP}/symbols.s
 	echo 'db "-----KERNEL SYMBOL NAMES START HERE---"' >> ${TMP}/symbols.s
-	nm build/*.o | grep '^[0123456789abcdef]* T' | awk '{ print "__symbol_"$$3": db \""$$3"\",0" }' >> ${TMP}/symbols.s
+	${NM} build/*.o | grep '^[0123456789abcdef]* T' | ${AWK} '{ print "__symbol_"$$3": db \""$$3"\",0" }' >> ${TMP}/symbols.s
 	echo 'db "-----KERNEL SYMBOL NAMES END HERE---"' >> ${TMP}/symbols.s
 	${AS} ${TMP}/symbols.s -o build/symbols.o ${ASFLAGS}
 
