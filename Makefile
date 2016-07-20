@@ -41,7 +41,7 @@ build/libk.o: build/serial.o kernel/libk/*.c include/libk/*.h
 	${CC} -c kernel/libk/physical_allocator.c -o ${TMP}/physical_allocator.o  ${CFLAGS}
 	${LD} -r ${TMP}/kmem.o ${TMP}/kabort.o ${TMP}/kputs.o ${TMP}/klog.o ${TMP}/physical_allocator.o -o build/libk.o ${LDFLAGS}
 
-build/pci.o: kernel/drivers/pci.c include/drivers/pci.h include/contrib/pci/pci_dev_list.h
+build/pci.o: kernel/drivers/pci.c include/drivers/pci.h
 	${CC} -c kernel/drivers/pci.c -o build/pci.o ${CFLAGS}
 
 build/processes.o: kernel/arch/x86/process.c kernel/arch/x86/process.s
