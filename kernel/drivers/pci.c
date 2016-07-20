@@ -1,7 +1,6 @@
 #include <stdint.h>
 
 #include <arch/x86/io.h>
-#include <contrib/pci/pci_dev_list.h>
 #include <drivers/pci.h>
 #include <libk/kassert.h>
 

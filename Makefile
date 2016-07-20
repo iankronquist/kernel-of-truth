@@ -4,8 +4,8 @@ GCOV=llvm-cov
 GRUB_MKRESCUE=grub-mkrescue
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 LD=compiler/$(ARCH)/bin/$(ARCH)-gcc
-AS=nasm
-ASFLAGS=-felf32 -F dwarf -g
+AS=yasm
+ASFLAGS=-felf -g DWARF2
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
 LDFLAGS=${CFLAGS} -nostdlib
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
@@ -41,7 +41,7 @@ build/libk.o: build/serial.o kernel/libk/*.c include/libk/*.h
 	${CC} -c kernel/libk/physical_allocator.c -o ${TMP}/physical_allocator.o  ${CFLAGS}
 	${LD} -r ${TMP}/kmem.o ${TMP}/kabort.o ${TMP}/kputs.o ${TMP}/klog.o ${TMP}/physical_allocator.o -o build/libk.o ${LDFLAGS}
 
-build/pci.o: kernel/drivers/pci.c include/drivers/pci.h include/contrib/pci/pci_dev_list.h
+build/pci.o: kernel/drivers/pci.c include/drivers/pci.h
 	${CC} -c kernel/drivers/pci.c -o build/pci.o ${CFLAGS}
 
 build/processes.o: kernel/arch/x86/process.c kernel/arch/x86/process.s
