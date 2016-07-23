@@ -18,7 +18,7 @@ TMP=/tmp
 
 all: build/truthos.bin
 
-tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests
+tests: build/tests/kmem_tests build/tests/hashtable_tests build/tests/physical_allocator_tests docs-tests
 
 # Check that documentation coverage didn't change.
 # We don't care about enum values.
@@ -29,8 +29,9 @@ docs-tests: docs
 	grep -E 'name="function"\s+undocumented="0"' build/docs/xml/report.xml
 
 run-tests: tests
-	./build/tests/kmem
-	./build/tests/physical_allocator
+	./build/tests/kmem_tests
+	./build/tests/physical_allocator_tests
+	./build/tests/hashtable_tests
 
 build/boot.o:
 	${AS} kernel/arch/x86/boot.s -o build/boot.o ${ASFLAGS}
@@ -60,7 +61,7 @@ build/tests/hashtable_tests: build kernel/libk/tests/hashtable_tests.c kernel/li
 	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_stubs.c kernel/libk/tests/hashtable_tests.c kernel/libk/hashtable.c -o build/tests/hashtable_tests ${TEST_CFLAGS}
 
 build/tests/physical_allocator_tests: build kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c
-	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c -o build/tests/physical_allocator ${TEST_CFLAGS}
+	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c -o build/tests/physical_allocator_tests ${TEST_CFLAGS}
 
 
 build/io.o: kernel/arch/x86/io.s
