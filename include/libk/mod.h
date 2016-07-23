@@ -1,6 +1,8 @@
 #ifndef MOD_H
 #define MOD_H
 
+// Version information about the module.
+// Also used for specifying module dependencies.
 struct mod_version {
         const char *name;
         // Modules are versioned according to semver.
@@ -9,6 +11,7 @@ struct mod_version {
         int patch_version;
 };
 
+// Module metadata.
 struct module {
     struct mod_version version;
     // Modules have authors and licenses.
