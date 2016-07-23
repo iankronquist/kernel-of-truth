@@ -9,4 +9,5 @@ void* memset(void*, int, size_t);
 size_t strlen(const char* str);
 size_t strnlen(const char *s, size_t maxlen);
 char *strncpy(char * dst, const char * src, size_t len);
+size_t strncmp(const char *s1, const char *s2, size_t n);
 #endif
