@@ -40,9 +40,10 @@ build/libk.o: build/serial.o kernel/libk/*.c include/libk/*.h
 	${CC} -c kernel/libk/kabort.c -o ${TMP}/kabort.o  ${CFLAGS}
 	${CC} -c kernel/libk/kputs.c -o ${TMP}/kputs.o  ${CFLAGS}
 	${CC} -c kernel/libk/klog.c -o ${TMP}/klog.o  ${CFLAGS}
+	${CC} -c kernel/libk/hashtable.c -o ${TMP}/hashtable.o  ${CFLAGS}
 	${CC} -c kernel/libk/modloader.c -o ${TMP}/modloader.o  ${CFLAGS}
 	${CC} -c kernel/libk/physical_allocator.c -o ${TMP}/physical_allocator.o  ${CFLAGS}
-	${LD} -r ${TMP}/kmem.o ${TMP}/kabort.o ${TMP}/kputs.o ${TMP}/klog.o ${TMP}/physical_allocator.o -o build/libk.o ${TMP}/modloader.o ${LDFLAGS}
+	${LD} -r ${TMP}/kmem.o ${TMP}/kabort.o ${TMP}/kputs.o ${TMP}/klog.o ${TMP}/physical_allocator.o -o build/libk.o ${TMP}/modloader.o ${TMP}/hashtable.o ${LDFLAGS}
 
 build/pci.o: kernel/drivers/pci.c include/drivers/pci.h
 	${CC} -c kernel/drivers/pci.c -o build/pci.o ${CFLAGS}
@@ -53,7 +54,10 @@ build/processes.o: kernel/arch/x86/process.c kernel/arch/x86/process.s
 	${LD} -r ${TMP}/processess.o ${TMP}/processesc.o -o build/processes.o ${LDFLAGS}
 
 build/tests/kmem_tests: build kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c
-	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c  -o build/tests/kmem ${TEST_CFLAGS}
+	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c  -o build/tests/kmem_tests ${TEST_CFLAGS}
+
+build/tests/hashtable_tests: build kernel/libk/tests/hashtable_tests.c kernel/libk/tests/stubs_tests.c kernel/libk/hashtable.c
+	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_stubs.c kernel/libk/tests/hashtable_tests.c kernel/libk/hashtable.c -o build/tests/hashtable_tests ${TEST_CFLAGS}
 
 build/tests/physical_allocator_tests: build kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c
 	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c -o build/tests/physical_allocator ${TEST_CFLAGS}
