@@ -30,7 +30,7 @@ run-tests: tests
 	./build/tests/kmem
 	./build/tests/physical_allocator
 
-build/boot.o:
+build/boot.o: kernel/arch/x86/boot.s
 	${AS} kernel/arch/x86/boot.s -o build/boot.o ${ASFLAGS}
 
 build/libk.o: build/serial.o kernel/libk/*.c include/libk/*.h
