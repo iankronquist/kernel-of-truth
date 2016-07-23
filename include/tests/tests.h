@@ -8,6 +8,16 @@
 #define GREEN "\x1B[0;32m"
 #define NOCOLOR "\x1B[0m"
 
+#ifndef EXIT_FAILURE
+#define EXIT_FAILURE 1
+#endif
+
+#ifndef EXIT_SUCCESS
+#define EXIT_SUCCESS 0
+#endif
+
+
+
 int RETURN_VALUE = 0;
 int passed;
 
@@ -27,9 +37,8 @@ int passed;
         printf("Function %s, file %s, line %d.\n", __FUNCTION__, __FILE__, \
                 __LINE__); \
 
-
-#define EXPECT_EQ(a, b); printf("Test %s == %s ", (#a), (#b));\
-if ((a) == (b)) {\
+#define _EXPECT_OP(a, b, op); printf("Test %s %s %s ", (#a), (#op), (#b));\
+if ((a) op (b)) {\
     printf(" %sPassed%s\n", GREEN, NOCOLOR);\
 }\
 else {\
@@ -37,6 +46,13 @@ else {\
     DIAGNOSTICS(a, b); \
     RETURN_VALUE = EXIT_FAILURE;\
 }
+
+#define EXPECT_EQ(a, b) _EXPECT_OP(a, b, ==)
+#define EXPECT_NEQ(a, b) _EXPECT_OP(a, b, !=)
+#define EXPECT_LEQ(a, b) _EXPECT_OP(a, b, <=)
+#define EXPECT_GEQ(a, b) _EXPECT_OP(a, b, >=)
+#define EXPECT_GT(a, b) _EXPECT_OP(a, b, >)
+#define EXPECT_LT(a, b) _EXPECT_OP(a, b, <)
 
 #define EXPECT_EQ_STR(a, b); printf("Test %s == %s ", (#a), (#b));\
 if (strcmp((a), (b)) == 0) {\
@@ -50,16 +66,6 @@ else {\
 
 #define EXPECT_NEQ_STR(a, b); printf("Test %s != %s ", (#a), (#b));\
 if (strcmp((a), (b)) != 0) {\
-    printf(" %sPassed%s\n", GREEN, NOCOLOR);\
-}\
-else {\
-    printf(" %sFailed%s\n", RED, NOCOLOR);\
-    DIAGNOSTICS(a, b); \
-    RETURN_VALUE = EXIT_FAILURE;\
-}
-
-#define EXPECT_NEQ(a, b); printf("Test %s != %s ", (#a), (#b));\
-if ((a) != (b)) {\
     printf(" %sPassed%s\n", GREEN, NOCOLOR);\
 }\
 else {\
