@@ -65,7 +65,7 @@ build/kernel.o: build/libk.o build/terminal.o build/gdt.o build/idt.o build/tlib
 build/truthos.bin: build build/kernel.o build/boot.o kernel/arch/x86/linker.ld
 	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/*.o
 
-build/lock.o:
+build/lock.o: kernel/arch/x86/lock.s
 	${AS} kernel/arch/x86/lock.s -o build/lock.o ${ASFLAGS}
 
 build/terminal.o: kernel/drivers/terminal.c
@@ -98,13 +98,13 @@ build/keyboard.o: kernel/drivers/keyboard.c
 build/tlibc.o: tlibc/string/string.c
 	${CC} -c tlibc/string/string.c -o build/tlibc.o ${CFLAGS}
 
-start:
+start: build/truthos.bin
 	qemu-system-i386 -kernel build/truthos.bin ${QEMU_FLAGS}
 
-start-log:
+start-log: build/truthos.bin
 	qemu-system-i386 -kernel build/truthos.bin -d in_asm,cpu_reset,exec,int,guest_errors,pcall -no-reboot ${QEMU_FLAGS} &> qemu.log
 
-start-debug:
+start-debug: build/truthos.bin
 	qemu-system-i386 -S -s -kernel build/truthos.bin ${QEMU_FLAGS} -curses
 
 coverage: run-tests
