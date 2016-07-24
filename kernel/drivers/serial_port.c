@@ -4,20 +4,20 @@
 
 void initialize_serial_port(enum COM_PORT port) {
     // Disable interrupts
-    write_port(port + 1, 0x00);
+    write_port16(port + 1, 0x00);
     // Enable divisor mode to set clock rate
-    write_port(port + 3, 0x80);
+    write_port16(port + 3, 0x80);
     // Set low bytes of divisor to 115200 baud
-    write_port(port + 0, 0x01);
+    write_port16(port + 0, 0x01);
     // Set high bytes of divisor
-    write_port(port + 1, 0x00);
+    write_port16(port + 1, 0x00);
     // Disable divisor mode and set parity
-    write_port(port + 3, 0x03);
+    write_port16(port + 3, 0x03);
     // Enable FIFO mode and clear buffer
-    write_port(port + 2, 0xC7);
+    write_port16(port + 2, 0xC7);
     // Enable interrupts
-    write_port(port + 4, 0x0B);
-    write_port(port + 1, 0x01);
+    write_port16(port + 4, 0x0B);
+    write_port16(port + 1, 0x01);
 }
 
 static inline bool serial_received(enum COM_PORT port) {
@@ -35,13 +35,13 @@ static inline bool is_transmit_empty(enum COM_PORT port) {
 
 void write_serial(enum COM_PORT port, char data) {
     while (is_transmit_empty(port) == 0);
-    write_port(port, data);
+    write_port16(port, data);
 }
 
 void write_serial_string(enum COM_PORT port, char *str) {
     for (size_t i = 0; str[i] != '\0'; ++i) {
         while ((is_transmit_empty(port)) == 0);
-        write_port(port, str[i]);
+        write_port16(port, str[i]);
     }
 }
 
