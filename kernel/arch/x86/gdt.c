@@ -1,3 +1,5 @@
+#include <stdbool.h>
+#include <string.h>
 #include <arch/x86/gdt.h>
 
 /* The Global Descriptor Table and its entries.
@@ -32,10 +34,20 @@ static struct gdt_entry {
     uint16_t limit_low;
     uint16_t base_low;
     uint8_t base_middle;
-    uint8_t access;
-    uint8_t granularity;
+
+    uint8_t segment_type:4;
+    uint8_t descriptor_type:1;
+    uint8_t descriptor_privilege:2;
+    uint8_t present:1;
+
+    uint8_t limit_high:4;
+    uint8_t available:1;
+    uint8_t bit64:1;
+    uint8_t op_size:1;
+    uint8_t granularity:1;
+
     uint8_t base_high;
-}__attribute__((packed)) gdt[3];
+} Gdt[3];
 
 /* A special pointer representing a pointer to the <gdt> and its size.
  * For whatever reason, we only record the full size minus 1.
@@ -43,50 +55,78 @@ static struct gdt_entry {
 static struct gdt_ptr {
     uint16_t limit;
     uint32_t base;
-}__attribute__((packed)) gdtp;
+}__attribute__((packed)) Gdtp;
+
+#define SEGMENT_32_BIT 0
+#define SEGMENT_64_BIT 1
+
+#define SEGMENT_RW_DATA 2
+#define SEGMENT_RX_CODE 10
+
+#define KERNEL_MODE 0
+#define USER_MODE 3
+
+#define GRANULARITY_BYTE 0
+#define GRANULARITY_PAGE 1
+
+#define SYSTEM_TYPE 0
+#define CODE_OR_DATA_TYPE 1
+
+#define OP_16_bit 0
+#define OP_32_bit 1
+
+/* Properly initialize an entry in the <gdt> */
+static void gdt_set_gate(uint32_t index, uint64_t base, uint64_t limit,
+                         bool descriptor_type, uint8_t descriptor_privilege,
+                         bool bit64, bool granularity, bool op_size,
+                         uint8_t segment_type) {
+    // Zero fields.
+    memset(&Gdt[index], 0, sizeof(struct gdt_entry));
+
+    //Set descriptor base access
+    Gdt[index].base_low = (base & 0xffff);
+    Gdt[index].base_middle = (base >> 16) & 0xff;
+    Gdt[index].base_high = (base >> 24) & 0xff;
+
+    //Set descriptor limits
+    Gdt[index].limit_low = (limit & 0xffff);
+    Gdt[index].limit_high = (limit >> 16) & 0x0f;
+
+    Gdt[index].bit64 = bit64;
+    Gdt[index].descriptor_type = descriptor_type;
+    Gdt[index].descriptor_privilege = descriptor_privilege;
+    Gdt[index].granularity = granularity;
+    Gdt[index].op_size = op_size;
+    Gdt[index].segment_type = segment_type;
+
+    Gdt[index].present = 1;
+}
+
 
 /* An assembly function which loads the <gdt>.
  * It is a simple wrapper around the **lgdt** instruction.
  */
 extern void gdt_flush(struct gdt_ptr gdtp);
 
-/* Properly initialize an entry in the <gdt> */
-static void gdt_set_gate(uint32_t num, uint64_t base, uint64_t limit,
-                  uint8_t access, uint8_t granularity)
-{
-    //Set descriptor base access
-    gdt[num].base_low = (base & 0xffff);
-    gdt[num].base_middle = (base >> 16) & 0xff;
-    gdt[num].base_high = (base >> 24) & 0xff;
-
-    //Set descriptor limits
-    gdt[num].limit_low = (limit & 0xffff);
-    gdt[num].granularity = ((limit >> 16) & 0x0f);
-
-    //Set granularity flags
-    gdt[num].granularity |= (granularity & 0xf0);
-    gdt[num].access = access;
-}
-
-void gdt_install()
-{
+void gdt_install() {
     //Setup GDT pointer and limit
-    gdtp.limit = (sizeof(struct gdt_entry) * 3) - 1;
-    gdtp.base = (uint32_t) & gdt;
+    Gdtp.limit = sizeof(Gdt) - 1;
+    Gdtp.base = (uint32_t)&Gdt;
 
     // NULL descriptor
-    gdt_set_gate(0, 0, 0, 0, 0);
+    memset(&Gdt[0], 0, sizeof(struct gdt_entry));
 
-    /* The second entry is the Code Segment. The base address
-    *  is 0, the limit is 4GB, it uses 4KB granularity,
-    *  uses 32-bit opcodes, and is a Code Segment descriptor. */
-    gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
+    // The second entry is the Code Segment. The base address
+    // is 0, the limit is 4GB, it uses 4KB granularity,
+    //  uses 32-bit opcodes, and is a Code Segment descriptor.
+    gdt_set_gate(1, 0, 0xffffffff, CODE_OR_DATA_TYPE, KERNEL_MODE,
+            SEGMENT_32_BIT, GRANULARITY_PAGE, OP_32_bit, SEGMENT_RX_CODE);
 
-    /* The third entry is the Data Segment. It's exactly the
-    *  same as the code segment, but the descriptor type in
-    *  this entry's access byte says it's a Data Segment */
-    gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
+    // The third entry is the Data Segment. It's exactly the
+    // same as the code segment, but the descriptor type in
+    // this entry's access byte says it's a Data Segment */
+    gdt_set_gate(2, 0, 0xffffffff, CODE_OR_DATA_TYPE, KERNEL_MODE,
+            SEGMENT_32_BIT, GRANULARITY_PAGE, OP_32_bit, SEGMENT_RW_DATA);
 
-    /* Flush out the old GDT and install the new changes */
-    gdt_flush(gdtp);
+    gdt_flush(Gdtp);
 }

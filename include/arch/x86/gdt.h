@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-/* Install the <gdt> and set it up as described. */
+/* Install the <Gdt> and set it up as described. */
 void gdt_install(void);
 
 #endif
