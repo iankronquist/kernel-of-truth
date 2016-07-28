@@ -39,7 +39,12 @@ build/libk.o: build/serial.o kernel/libk/*.c include/libk/*.h
 	${CC} -c kernel/libk/kputs.c -o ${TMP}/kputs.o  ${CFLAGS}
 	${CC} -c kernel/libk/klog.c -o ${TMP}/klog.o  ${CFLAGS}
 	${CC} -c kernel/libk/physical_allocator.c -o ${TMP}/physical_allocator.o  ${CFLAGS}
-	${LD} -r ${TMP}/kmem.o ${TMP}/kabort.o ${TMP}/kputs.o ${TMP}/klog.o ${TMP}/physical_allocator.o -o build/libk.o ${LDFLAGS}
+	${CC} -c kernel/libk/kmemcmp.c -o ${TMP}/kmemcmp.o ${CFLAGS}
+	${CC} -c kernel/libk/kmemcpy.c -o ${TMP}/kmemcpy.o ${CFLAGS}
+	${CC} -c kernel/libk/kmemmove.c -o ${TMP}/kmemmove.o ${CFLAGS}
+	${CC} -c kernel/libk/kmemset.c -o ${TMP}/kmemset.o ${CFLAGS}
+	${CC} -c kernel/libk/kstrlen.c -o ${TMP}/kstrlen.o ${CFLAGS}
+	${LD} -r ${TMP}/kmem.o ${TMP}/kabort.o ${TMP}/kputs.o ${TMP}/klog.o ${TMP}/physical_allocator.o ${TMP}/kmemcmp.o ${TMP}/kmemcpy.o ${TMP}/kmemmove.o ${TMP}/kmemset.o ${TMP}/kstrlen.o -o build/libk.o ${LDFLAGS}
 
 build/pci.o: kernel/drivers/pci.c include/drivers/pci.h
 	${CC} -c kernel/drivers/pci.c -o build/pci.o ${CFLAGS}
@@ -59,7 +64,7 @@ build/tests/physical_allocator_tests: build kernel/libk/tests/stubs_tests.c kern
 build/io.o: kernel/arch/x86/io.s
 	${AS} kernel/arch/x86/io.s -o build/io.o ${ASFLAGS}
 
-build/kernel.o: build/libk.o build/terminal.o build/gdt.o build/idt.o build/tlibc.o build/keyboard.o build/timer.o build/paging.o build/io.o build/processes.o kernel/kernel.c build/lock.o
+build/kernel.o: build/libk.o build/terminal.o build/gdt.o build/idt.o build/keyboard.o build/timer.o build/paging.o build/io.o build/processes.o kernel/kernel.c build/lock.o
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
 
 build/truthos.bin: build build/kernel.o build/boot.o kernel/arch/x86/linker.ld
@@ -94,9 +99,6 @@ build/serial.o: kernel/drivers/serial_port.c include/drivers/serial_port.h
 
 build/keyboard.o: kernel/drivers/keyboard.c
 	${CC} -c kernel/drivers/keyboard.c -o build/keyboard.o ${CFLAGS}
-
-build/tlibc.o: tlibc/string/string.c
-	${CC} -c tlibc/string/string.c -o build/tlibc.o ${CFLAGS}
 
 start:
 	qemu-system-i386 -kernel build/truthos.bin ${QEMU_FLAGS}

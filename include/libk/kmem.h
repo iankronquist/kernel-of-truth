@@ -2,6 +2,7 @@
 #define KMEM_H
 #include <stdbool.h>
 #include <stdint.h>
+#include <libk/kmemcpy.h>
 #include <libk/kabort.h>
 #include <libk/kassert.h>
 

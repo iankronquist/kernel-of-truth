@@ -3,8 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <string.h>
-
+#include <libk/kmemset.h>
 #include <libk/kassert.h>
 #include <libk/kabort.h>
 #include <libk/klog.h>

@@ -3,8 +3,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
+//#include <libk/kstring.h>
 #include <libk/kabort.h>
 #include <libk/kassert.h>
 #include <libk/kputs.h>
