@@ -156,6 +156,7 @@ void idt_install(void) {
     idt_set_gate(31, (uint32_t)isr31, 0x08, 0x8e);
     idt_set_gate(32, (uint32_t)isr32, 0x08, 0x8e);
     idt_set_gate(33, (uint32_t)isr33, 0x08, 0x8e);
+    idt_set_gate(34, (uint32_t)isr34, 0x08, 0x8e);
 
     // ICW1 - begin initialization
     write_port(PIC_MASTER_CONTROL, 0x11);
