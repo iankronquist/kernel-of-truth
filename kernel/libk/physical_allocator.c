@@ -21,8 +21,8 @@ void physical_allocator_init(size_t phys_memory_size) {
 }
 
 // Linear search of page frame bitmap
+// Lock must be held when calling this function!
 static void rebuild_frame_cache() {
-    acquire_spinlock(&big_lock);
     frame_count = 0;
     // The first page is reserved for mapping other pages
     for (size_t i = 0; i < page_frame_map_size; ++i) {
@@ -41,7 +41,6 @@ static void rebuild_frame_cache() {
     }
     kputs("Cannot allocate any more pages.");
     kabort();
-    release_spinlock(&big_lock);
     return;
 }
 
@@ -76,6 +75,18 @@ void free_frame(page_frame_t frame) {
     acquire_spinlock(&big_lock);
     frame >>= 12;
     page_frame_map[BYTE_INDEX(frame)] &= ~BIT_INDEX(frame);
+    release_spinlock(&big_lock);
+}
+
+void free_range(page_frame_t begin, page_frame_t end) {
+    acquire_spinlock(&big_lock);
+    kassert(begin < end);
+    page_frame_map[BYTE_INDEX(begin)] = ~((BIT_INDEX(begin)-1) |
+        BIT_INDEX(begin));
+    page_frame_map[BYTE_INDEX(end)] = BIT_INDEX(end)-1;
+    for (size_t i = BYTE_INDEX(begin)+1; i < BYTE_INDEX(end)-1; ++i) {
+        page_frame_map[i] = 0;
+    }
     release_spinlock(&big_lock);
 }
 

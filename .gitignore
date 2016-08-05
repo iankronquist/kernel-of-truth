@@ -3,6 +3,7 @@
 build
 compiler
 qemu.log
+*.o
 
 tags
 

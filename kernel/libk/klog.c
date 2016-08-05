@@ -36,6 +36,9 @@ void klogf(char* string, ...) {
         if (string[i] == '%') {
             ++i;
             switch(string[i]) {
+                case 's':
+                    write_serial_string(COM1, va_arg(args, char*));
+                    break;
                 case '%':
                     write_serial(COM1, '%');
                     break;
@@ -44,11 +47,12 @@ void klogf(char* string, ...) {
                     break;
                 case 'd':
                 case 'i':
-                case 'p':
-                case 'x':
                     if (i+1 == 'u') {
                         klog_uint(va_arg(args, uint32_t), 8);
                     }
+                case 'p':
+                case 'x':
+                    klog_uint(va_arg(args, uint32_t), 8);
                     break;
                 case 'l':
                     if (i+1 == 'u') {

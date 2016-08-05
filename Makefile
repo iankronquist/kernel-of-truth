@@ -5,7 +5,9 @@ GRUB_MKRESCUE=grub-mkrescue
 CC=compiler/$(ARCH)/bin/$(ARCH)-gcc
 LD=compiler/$(ARCH)/bin/$(ARCH)-gcc
 AS=yasm
-ASFLAGS=-felf -g DWARF2
+NM=nm
+AWK=awk
+ASFLAGS=-felf32 -g dwarf2
 CFLAGS= -std=c11 -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include -D ARCH_X86
 LDFLAGS=${CFLAGS} -nostdlib
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
@@ -16,7 +18,7 @@ TMP=/tmp
 
 all: build/truthos.bin
 
-tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests
+tests: build/tests/kmem_tests build/tests/hashtable_tests build/tests/physical_allocator_tests docs-tests
 
 # Check that documentation coverage didn't change.
 # We don't care about enum values.
@@ -27,8 +29,9 @@ docs-tests: docs
 	grep -E 'name="function"\s+undocumented="0"' build/docs/xml/report.xml
 
 run-tests: tests
-	./build/tests/kmem
-	./build/tests/physical_allocator
+	./build/tests/kmem_tests
+	./build/tests/physical_allocator_tests
+	./build/tests/hashtable_tests
 
 build/boot.o:
 	${AS} kernel/arch/x86/boot.s -o build/boot.o ${ASFLAGS}
@@ -38,8 +41,10 @@ build/libk.o: build/serial.o kernel/libk/*.c include/libk/*.h
 	${CC} -c kernel/libk/kabort.c -o ${TMP}/kabort.o  ${CFLAGS}
 	${CC} -c kernel/libk/kputs.c -o ${TMP}/kputs.o  ${CFLAGS}
 	${CC} -c kernel/libk/klog.c -o ${TMP}/klog.o  ${CFLAGS}
+	${CC} -c kernel/libk/hashtable.c -o ${TMP}/hashtable.o  ${CFLAGS}
+	${CC} -c kernel/libk/modloader.c -o ${TMP}/modloader.o  ${CFLAGS}
 	${CC} -c kernel/libk/physical_allocator.c -o ${TMP}/physical_allocator.o  ${CFLAGS}
-	${LD} -r ${TMP}/kmem.o ${TMP}/kabort.o ${TMP}/kputs.o ${TMP}/klog.o ${TMP}/physical_allocator.o -o build/libk.o ${LDFLAGS}
+	${LD} -r ${TMP}/kmem.o ${TMP}/kabort.o ${TMP}/kputs.o ${TMP}/klog.o ${TMP}/physical_allocator.o -o build/libk.o ${TMP}/modloader.o ${TMP}/hashtable.o ${LDFLAGS}
 
 build/pci.o: kernel/drivers/pci.c include/drivers/pci.h
 	${CC} -c kernel/drivers/pci.c -o build/pci.o ${CFLAGS}
@@ -50,10 +55,13 @@ build/processes.o: kernel/arch/x86/process.c kernel/arch/x86/process.s
 	${LD} -r ${TMP}/processess.o ${TMP}/processesc.o -o build/processes.o ${LDFLAGS}
 
 build/tests/kmem_tests: build kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c
-	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c  -o build/tests/kmem ${TEST_CFLAGS}
+	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c  -o build/tests/kmem_tests ${TEST_CFLAGS}
+
+build/tests/hashtable_tests: build kernel/libk/tests/hashtable_tests.c kernel/libk/tests/stubs_tests.c kernel/libk/hashtable.c
+	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_stubs.c kernel/libk/tests/hashtable_tests.c kernel/libk/hashtable.c -o build/tests/hashtable_tests ${TEST_CFLAGS}
 
 build/tests/physical_allocator_tests: build kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c
-	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c -o build/tests/physical_allocator ${TEST_CFLAGS}
+	${TEST_CC} kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c -o build/tests/physical_allocator_tests ${TEST_CFLAGS}
 
 
 build/io.o: kernel/arch/x86/io.s
@@ -62,8 +70,23 @@ build/io.o: kernel/arch/x86/io.s
 build/kernel.o: build/libk.o build/terminal.o build/gdt.o build/idt.o build/tlibc.o build/keyboard.o build/timer.o build/paging.o build/io.o build/processes.o kernel/kernel.c build/lock.o
 	${CC} -c kernel/kernel.c -o build/kernel.o  ${CFLAGS}
 
-build/truthos.bin: build build/kernel.o build/boot.o kernel/arch/x86/linker.ld
+build/truthos.bin: build build/kernel.o build/symbols.o build/boot.o kernel/arch/x86/linker.ld
 	${CC} -T kernel/arch/x86/linker.ld -o build/truthos.bin -ffreestanding -O0 -nostdlib build/*.o
+
+build/symbols.o: build/kernel.o Makefile
+	rm -f build/symbols.o
+	echo 'section .symbols' > ${TMP}/symbols.s
+	echo 'db "-----KERNEL SYMBOL ADDRESSES FOUND HERE---"' >> ${TMP}/symbols.s
+	echo 'global kernel_symbols_start' >> ${TMP}/symbols.s
+	echo 'kernel_symbols_start:' >> ${TMP}/symbols.s
+	nm build/*.o | grep '^[0123456789abcdef]* T' | awk '{ print "extern",$$3,"\ndd",$$3,"\ndd __symbol_"$$3"" }' >> ${TMP}/symbols.s
+	echo 'global kernel_symbols_end' >> ${TMP}/symbols.s
+	echo 'kernel_symbols_end:' >> ${TMP}/symbols.s
+	echo 'db "-----KERNEL SYMBOL ADDRESSES END HERE---"' >> ${TMP}/symbols.s
+	echo 'db "-----KERNEL SYMBOL NAMES START HERE---"' >> ${TMP}/symbols.s
+	${NM} build/*.o | grep '^[0123456789abcdef]* T' | ${AWK} '{ print "__symbol_"$$3": db \""$$3"\",0" }' >> ${TMP}/symbols.s
+	echo 'db "-----KERNEL SYMBOL NAMES END HERE---"' >> ${TMP}/symbols.s
+	${AS} ${TMP}/symbols.s -o build/symbols.o ${ASFLAGS}
 
 build/lock.o:
 	${AS} kernel/arch/x86/lock.s -o build/lock.o ${ASFLAGS}

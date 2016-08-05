@@ -68,3 +68,29 @@ size_t strlen(const char* str) {
 	}
 	return ret;
 }
+
+size_t strnlen(const char* str, size_t maxlen) {
+	size_t ret = 0;
+	while(str[ret] != 0 && ret < maxlen) {
+		ret++;
+	}
+	return ret;
+}
+
+size_t strncmp(const char *s1, const char *s2, size_t n) {
+    unsigned char const *us1 = (unsigned char*)s1, *us2 = (unsigned char*)s2;
+    size_t i;
+    for (i = 0; (us1[i] != 0) && (us2[i] != 0) && (i < n) != 0; ++i) {
+        unsigned char res = us1[i] - us2[i];
+        if (res != 0) {
+            return res;
+        }
+    }
+    return 0;
+}
+
+char *strncpy(char *dst, const char *src, size_t maxlen) {
+	size_t len = strnlen(src, maxlen);
+	memcpy(dst, src, len);
+	return dst;
+}

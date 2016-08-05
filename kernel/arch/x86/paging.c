@@ -1,5 +1,12 @@
 #include <arch/x86/paging.h>
 
+static void use_modules(struct multiboot_info *mb) {
+    struct multiboot_mod_list *mboot_mods = (void*)mb->mods_addr;
+    for (uint32_t i = 0; i < mb->mods_count; ++i) {
+        use_range(mboot_mods[i].mod_start, mboot_mods[i].mod_end);
+    }
+}
+
 page_frame_t kernel_page_table_install(struct multiboot_info *mb) {
     // Certain very important things already exist in physical memory. They
     // need to be marked as present so that the allocator doesn't grab them by
@@ -36,6 +43,7 @@ page_frame_t kernel_page_table_install(struct multiboot_info *mb) {
 
     // Mark all the pages the kernel sits on as used
     use_range(KERNEL_START, KERNEL_END);
+    use_modules(mb);
 
     // Mark the kernel heap as in use
     use_frame(KHEAP_PHYS_ROOT);
@@ -98,6 +106,90 @@ page_frame_t create_page_dir(void *link_loc, void *stack_loc,
     inner_unmap_page(CUR_PAGE_DIRECTORY_ADDR, page_entries, false);
 
     return page_table;
+}
+
+static void mark_as_mapped(uint32_t *page_entries, page_frame_t phys_addr,
+        size_t num_pages, void *virtual_address, uint16_t permissions) {
+    for (void *virt = virtual_address;
+            virt < virtual_address + num_pages * PAGE_SIZE;
+            phys_addr += PAGE_SIZE, virt += PAGE_SIZE) {
+        inner_map_page(page_entries, phys_addr, virt, permissions);
+    }
+}
+
+// Efficiency? What's that?
+void *find_free_range(uint32_t *page_entries, page_frame_t phys_addr,
+        size_t num_pages, uint16_t permissions) {
+    // We choose not to implement this case.
+    kassert(num_pages < PAGE_TABLE_SIZE-1);
+    // Store the beginning of the run of addresses.
+    size_t num_contiguous_found = 0;
+    size_t contiguous_start_inner = 0;
+    size_t contiguous_start_outer = 0;
+    // Remember, the last entry in the page table is where the table itself is
+    // mapped.
+    // Walk the page directory in search of an available address
+    for (size_t i = 0; i < PAGE_TABLE_SIZE-1; ++i) {
+        // If the second level page table exists, walk it.
+        if (page_entries[i] & PAGE_PRESENT) {
+            uint32_t *page_entry = (uint32_t*)(PAGING_DIR_PHYS_ADDR+i);
+            for (size_t j = 0; j < PAGE_TABLE_SIZE-1; ++j) {
+                // Are there enough contiguous addresses available?
+                if (!(page_entry[j] & PAGE_PRESENT)) {
+                    // The address is free. It can be part of the run.
+                    num_contiguous_found++;
+                    // If we found enough pages.
+                    if (num_contiguous_found == num_pages) {
+                        void *virt = (void*)((contiguous_start_outer << 22) |
+                                             (contiguous_start_inner << 12));
+                        // Mark all of the pages as taken and flush the cache.
+                        mark_as_mapped(page_entries, phys_addr, num_pages,
+                                virt, permissions);
+                        flush_tlb();
+                        // Return the beginning of the run of virtual
+                        // addresses.
+                        return virt;
+                    }
+                } else {
+                    // This address was not available so the run is broken.
+                    num_contiguous_found = 0;
+                    // The run can start at the next address.
+                    contiguous_start_inner = j + 1;
+                    // If we are at the end of the second level page table,
+                    // advance the top level table.
+                    if (j == PAGE_TABLE_SIZE - 1) {
+                        // If I is too big, that's okay, we'll exit the loop
+                        // shortly.
+                        contiguous_start_outer = i + 1;
+                        contiguous_start_inner = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    // Allocate a new page table and return its first address. A new page table
+    // will have enough memory, otherwise assertion at the beginning of the
+    // function will fail.
+    // Find the first free top level entry, and return its address.
+    for (size_t i = 0; i < PAGE_TABLE_SIZE-1; ++i) {
+        if (!(page_entries[i] & PAGE_PRESENT)) {
+            page_frame_t page_table_frame = alloc_frame();
+            uint32_t *page_table = (uint32_t*)(PAGING_DIR_PHYS_ADDR+i);
+            page_entries[i] = page_table_frame | PAGE_PRESENT;
+            memset(page_table, 0, PAGE_SIZE);
+            void *virt = (void*)((1 << 22) | (0));
+            // Mark all of the pages as taken and flush the cache.
+            mark_as_mapped(page_entries, phys_addr, num_pages, virt,
+                permissions);
+            flush_tlb();
+            return virt;
+        }
+    }
+
+    // The page table does not have enough room. Fail by returning a special
+    // unaligned address
+    return (void*)EPHYSMEMFULL;
 }
 
 void *find_free_addr(uint32_t *page_entries, page_frame_t phys_addr,
