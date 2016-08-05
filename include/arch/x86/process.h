@@ -9,6 +9,8 @@
 
 #include <libk/kmem.h>
 
+struct virt_region;
+
 /* Represents a single process.
  * Processes are kept in a simple circularly linked list.
  *
@@ -24,6 +26,7 @@ struct process {
     uint32_t user_esp;
     uint32_t kernel_esp;
     uint32_t cr3;
+    struct virt_region *free_virt;
     struct process *next;
 };
 
@@ -41,5 +44,8 @@ void preempt(void);
 
 /* Schedule a process to be run. */
 void schedule_proc(struct process *proc);
+
+/* Get a pointer to the currently running process */
+struct process *get_current_proc(void);
 
 #endif

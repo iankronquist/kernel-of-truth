@@ -1,5 +1,14 @@
 #include <arch/x86/paging.h>
 
+// Identity map kernel.
+static void map_kernel_pages(uint32_t *page_dir);
+// Map the kernel pages into a page table different than the current one.
+static void inner_map_kernel_pages(uint32_t *page_dir);
+
+// TODO: Remove this.
+static void *find_free_addr(uint32_t *page_entries, page_frame_t phys_addr,
+        uint16_t permissions);
+
 page_frame_t kernel_page_table_install(struct multiboot_info *mb) {
     // Certain very important things already exist in physical memory. They
     // need to be marked as present so that the allocator doesn't grab them by
@@ -100,7 +109,7 @@ page_frame_t create_page_dir(void *link_loc, void *stack_loc,
     return page_table;
 }
 
-void *find_free_addr(uint32_t *page_entries, page_frame_t phys_addr,
+static void *find_free_addr(uint32_t *page_entries, page_frame_t phys_addr,
         uint16_t permissions) {
     // Walk the page directory in search of an available address
     for (size_t i = 0; i < PAGE_TABLE_SIZE-1; ++i) {
@@ -135,7 +144,7 @@ void *find_free_addr(uint32_t *page_entries, page_frame_t phys_addr,
 }
 
 
-void map_kernel_pages(uint32_t *page_dir) {
+static void map_kernel_pages(uint32_t *page_dir) {
     map_page(page_dir, 0x100000, (void*)0x100000, 0);
     // Map all those important bits
     for (page_frame_t i = KERNEL_START; i < KERNEL_END; i += PAGE_SIZE) {
@@ -147,7 +156,7 @@ void map_kernel_pages(uint32_t *page_dir) {
     map_page(page_dir, VIDEO_MEMORY_BEGIN, (void*)VIDEO_MEMORY_BEGIN, 0);
 }
 
-void inner_map_kernel_pages(uint32_t *page_dir) {
+static void inner_map_kernel_pages(uint32_t *page_dir) {
     inner_map_page(page_dir, 0x100000, (void*)0x100000, 0);
     // Map all those important bits
     for (page_frame_t i = KERNEL_START; i < KERNEL_END; i += PAGE_SIZE) {
