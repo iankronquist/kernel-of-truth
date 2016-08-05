@@ -10,7 +10,7 @@ struct virt_region {
 };
 
 static inline struct virt_region *get_cur_free_regions(void) {
-    return get_current_proc()->free_virt;
+    return get_current_proc()->memory.free_virt;
 }
 
 static void map_region(void *vr, size_t pages,  uint16_t perms) {

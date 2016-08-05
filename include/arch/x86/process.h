@@ -11,23 +11,30 @@
 
 struct virt_region;
 
+// FIXME: Move to private architecture specific file.
+/* All of the memory structures used by a single process.
+ * This includes a virtual memory space cache, the kernel stack,
+ * the user stack, and the page tables.
+*/
+struct proc_mem {
+    page_frame_t page_dir;
+    void *kernel_stack;
+    void *user_stack;
+    struct virt_region *free_virt;
+};
+
 /* Represents a single process.
  * Processes are kept in a simple circularly linked list.
  *
  * @id: A single process id. Currently, process ids increase monotonically, and
  * will eventually loop around. However, do not rely on this behavior.
- * @user_esp: The stack used by user space programs.
- * @kernel_esp: The stack used by kernel space programs, including syscalls.
- * @cr3: The top level paging directory.
+ * @memory: All data required to describe and manage the process' memory.
  * @next: The next process to be run.
  */
 struct process {
-    uint32_t id;
-    uint32_t user_esp;
-    uint32_t kernel_esp;
-    uint32_t cr3;
-    struct virt_region *free_virt;
+    struct proc_mem memory;
     struct process *next;
+    uint32_t id;
 };
 
 /* Set up multi-processing.  */
