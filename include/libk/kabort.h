@@ -1,9 +1,10 @@
 #ifndef KABORT_H
 #define KABORT_H
-#include "kputs.h"
 
 // Kernel panic!
 // Prints out a message and halts the CPU.
-void kabort();
+void kabort(void);
 
+// Print a formatted message and kernel panic.
+void kabort_message(char *format, ...);
 #endif
