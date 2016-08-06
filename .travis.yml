@@ -12,7 +12,7 @@ addons:
             - yasm
 cache:
     directories:
-        - compiler/
+        - compiler/i686-elf
 
 before_script:
     - virtualenv ~/venv
