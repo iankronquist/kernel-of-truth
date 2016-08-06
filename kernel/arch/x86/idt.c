@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include <arch/x86/cpu.h>
 #include <arch/x86/idt.h>
 #include <arch/x86/io.h>
 
@@ -20,13 +21,6 @@
 
 #define IDT_GATE_PRESENT (1<<7)
 #define IDT_SIZE 256
-
-struct regs {
-    uint32_t ds; /* pushed the segs last */
-    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; /* pushed by 'pusha' */
-    uint32_t int_no, err_code; /* our 'push byte #' and ecodes do this */
-    uint32_t eip, cs, eflags, useresp, ss; /* pushed by the processor automatically */
-};
 
 /* The Interrupt Descriptor Table and its entries.
  * The Interrupt Descriptor Table, or IDT, describes the code called when an
@@ -200,7 +194,7 @@ void idt_install(void) {
 
 /* Dispatch event handler or, if none exists, log information and kernel panic.
  */
-void common_interrupt_handler(struct regs r) {
+void common_interrupt_handler(struct cpu_state r) {
     kassert(r.int_no < 256);
     if (idt_dispatch_table[r.int_no] != NULL) {
         idt_dispatch_table[r.int_no](&r);

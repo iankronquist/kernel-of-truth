@@ -1,8 +1,9 @@
-#include <truth/types.h>
-
 #include <arch/x86/io.h>
+
 #include <drivers/timer.h>
+
 #include <truth/kputs.h>
+#include <truth/types.h>
 
 
 void timer_install() {
@@ -19,7 +20,7 @@ void set_timer_phase(uint8_t hertz) {
     write_port(TIMER_CHAN_0, divisor >> 8);
 }
 
-void timer_irq_handler(struct regs *unused(r)) {
+void timer_irq_handler(struct cpu_state *unused(r)) {
     kputs("tick!");
     // End interrupt
     write_port(0x20, 0x20);

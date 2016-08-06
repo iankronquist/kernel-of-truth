@@ -1,13 +1,15 @@
 #pragma once
 
+#include <arch/x86/cpu.h>
+
 #include <truth/types.h>
 
-/* The state of the CPU when an interrupt is triggered. */
-struct regs;
+// The state of the CPU before an interrupt occurs.
+struct cpu_state;
 
 // Interrupt Service Routine function signature.
 // ISRs with this signature are installed to a dispatch table.
-typedef void (*isr_t)(struct regs*);
+typedef void (*isr_t)(struct cpu_state*);
 
 /* Install an interrupt handler.
  * The handler will have the interrupt number @num, and when triggered it will
