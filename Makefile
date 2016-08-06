@@ -64,7 +64,7 @@ $(BUILD_DIR)/%.libk.o: kernel/libk/%.c
 $(BUILD_DIR)/%.$(ARCH).o: kernel/arch/$(ARCH)/%.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-$(BUILD_DIR)/%.s.$(ARCH).o: kernel/arch/$(ARCH)/%.s
+$(BUILD_DIR)/%.asm.$(ARCH).o: kernel/arch/$(ARCH)/%.asm
 	$(AS) $(ASFLAGS) -o $@ $<
 
 $(BUILD_DIR)/%.driver.o: kernel/drivers/%.c
