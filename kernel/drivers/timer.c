@@ -2,7 +2,7 @@
 
 #include <arch/x86/io.h>
 #include <drivers/timer.h>
-#include <libk/kputs.h>
+#include <truth/kputs.h>
 
 #define UNUSED(x) x __attribute__((unused))
 

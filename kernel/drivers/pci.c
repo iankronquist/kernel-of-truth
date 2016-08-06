@@ -2,7 +2,7 @@
 
 #include <arch/x86/io.h>
 #include <drivers/pci.h>
-#include <libk/kassert.h>
+#include <truth/kassert.h>
 
 static void pci_scan_slot(pci_func_t f, int type, int bus, int slot,
         void *extra);

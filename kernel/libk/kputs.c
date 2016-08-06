@@ -1,4 +1,4 @@
-#include <libk/kputs.h>
+#include <truth/kputs.h>
 
 void kputs(char* string) {
     terminal_writestring(string);

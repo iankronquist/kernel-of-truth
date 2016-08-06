@@ -5,11 +5,11 @@
 
 #include <string.h>
 
-#include <libk/kassert.h>
-#include <libk/kabort.h>
-#include <libk/klog.h>
-#include <libk/kmem.h>
-#include <libk/physical_allocator.h>
+#include <truth/kassert.h>
+#include <truth/kabort.h>
+#include <truth/klog.h>
+#include <truth/kmem.h>
+#include <truth/physical_allocator.h>
 
 #include <contrib/multiboot.h>
 

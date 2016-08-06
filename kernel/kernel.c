@@ -11,9 +11,9 @@
 #include <drivers/timer.h>
 
 
-#include <libk/kmem.h>
-#include <libk/kputs.h>
-#include <libk/klog.h>
+#include <truth/kmem.h>
+#include <truth/kputs.h>
+#include <truth/klog.h>
 
 /* This little function exists to demonstrate the multi-processing
  * functionality. It spins and logs its progress. It takes no arguments and

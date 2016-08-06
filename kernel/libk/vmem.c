@@ -1,7 +1,7 @@
 #include <arch/x86/process.h>
-#include <libk/kmem.h>
-#include <libk/lock.h>
-#include <libk/vmem.h>
+#include <truth/kmem.h>
+#include <truth/lock.h>
+#include <truth/vmem.h>
 
 struct virt_region {
     size_t size;

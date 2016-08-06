@@ -7,11 +7,11 @@
 
 #include <contrib/multiboot.h>
 
-#include <libk/kabort.h>
-#include <libk/kassert.h>
-#include <libk/kmem.h>
-#include <libk/kputs.h>
-#include <libk/lock.h>
+#include <truth/kabort.h>
+#include <truth/kassert.h>
+#include <truth/kmem.h>
+#include <truth/kputs.h>
+#include <truth/lock.h>
 
 #ifdef ARCH_X86
 #include <truth/private/memlayout.h>

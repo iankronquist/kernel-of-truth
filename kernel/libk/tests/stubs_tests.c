@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include <assert.h>
 
-#include <libk/lock.h>
+#include <truth/lock.h>
 
 // I should really include a more robust implementation of the spinlock
 void acquire_spinlock(spinlock_t *s) {

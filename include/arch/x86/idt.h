@@ -5,10 +5,10 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <libk/kabort.h>
-#include <libk/kassert.h>
-#include <libk/kputs.h>
-#include <libk/klog.h>
+#include <truth/kabort.h>
+#include <truth/kassert.h>
+#include <truth/kputs.h>
+#include <truth/klog.h>
 
 #include <arch/x86/io.h>
 

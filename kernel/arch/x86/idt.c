@@ -1,5 +1,5 @@
 #include <arch/x86/idt.h>
-#include <libk/lock.h>
+#include <truth/lock.h>
 
 // Definitions of locations of the PIC ports.
 // The Programmable Interrupt Controller, or PIC, has two parts, the master and

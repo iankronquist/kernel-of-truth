@@ -1,7 +1,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
-#include <libk/kabort.h>
-#include <libk/kputs.h>
+#include <truth/kabort.h>
+#include <truth/kputs.h>
 #include <arch/x86/idt.h>
 #include <arch/x86/cpu.h>
 

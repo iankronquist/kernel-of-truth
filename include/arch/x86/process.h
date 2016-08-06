@@ -7,7 +7,7 @@
 #include <arch/x86/idt.h>
 #include <drivers/timer.h>
 
-#include <libk/kmem.h>
+#include <truth/kmem.h>
 
 struct virt_region;
 

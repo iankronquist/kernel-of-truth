@@ -2,8 +2,8 @@
 #define KMEM_H
 #include <stdbool.h>
 #include <stdint.h>
-#include <libk/kabort.h>
-#include <libk/kassert.h>
+#include <truth/kabort.h>
+#include <truth/kassert.h>
 
 #ifdef ARCH_X86
 #include <truth/private/memlayout.h>

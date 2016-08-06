@@ -1,4 +1,4 @@
-#include <libk/klog.h>
+#include <truth/klog.h>
 
 void initialize_klog() {
     initialize_serial_port(COM1);

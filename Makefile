@@ -33,7 +33,7 @@ run-tests: tests
 build/boot.o:
 	${AS} kernel/arch/x86/boot.s -o build/boot.o ${ASFLAGS}
 
-build/libk.o: build/serial.o kernel/libk/*.c include/libk/*.h
+build/libk.o: build/serial.o kernel/libk/*.c include/truth/*.h
 	${CC} -c kernel/libk/kmem.c -o ${TMP}/kmem.o  ${CFLAGS}
 	${CC} -c kernel/libk/vmem.c -o ${TMP}/vmem.o  ${CFLAGS}
 	${CC} -c kernel/libk/kabort.c -o ${TMP}/kabort.o  ${CFLAGS}
@@ -129,7 +129,7 @@ clean-all: clean
 	rm -f *.gcda
 
 docs:
-	cldoc generate -I ./include -DARCH_X86 -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/libk/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
+	cldoc generate -I ./include -DARCH_X86 -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/truth/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
 
 run: all start
 	rm -rf build
