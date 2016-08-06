@@ -1,5 +1,4 @@
-#ifndef KPUTS_H
-#define KPUTS_H
+#pragma once
 
 #include <stdarg.h>
 
@@ -9,4 +8,3 @@ void kputs(char *string);
 void kprintf(char *string, ...);
 // Variable arguments version of kprintf.
 void kvprintf(char* string, va_list args);
-#endif

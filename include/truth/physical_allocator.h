@@ -1,5 +1,4 @@
-#ifndef PHYSICAL_ALLOCATOR_H
-#define PHYSICAL_ALLOCATOR_H
+#pragma once
 
 #include <truth/types.h>
 
@@ -27,5 +26,3 @@ bool is_free_frame(page_frame_t frame);
  * @end page.
  */
 void use_range(page_frame_t begin, page_frame_t end);
-
-#endif

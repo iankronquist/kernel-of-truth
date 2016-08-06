@@ -1,5 +1,5 @@
-#ifndef KMEM_H
-#define KMEM_H
+#pragma once
+
 #include <truth/types.h>
 
 // Extend heap by page sized increments
@@ -20,5 +20,3 @@ void kfree(void *mem);
 
 // Defragment the kernel heap.
 void kheap_defragment(void);
-
-#endif
