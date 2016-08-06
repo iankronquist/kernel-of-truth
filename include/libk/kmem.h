@@ -6,7 +6,7 @@
 #include <libk/kassert.h>
 
 #ifdef ARCH_X86
-#include <arch/x86/memlayout.h>
+#include <truth/private/memlayout.h>
 #include <arch/x86/paging.h>
 #endif
 

@@ -13,7 +13,7 @@
 
 #include <contrib/multiboot.h>
 
-#include <arch/x86/memlayout.h>
+#include <truth/private/memlayout.h>
 
 #define PAGE_TABLE_SIZE 1024
 

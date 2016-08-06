@@ -14,7 +14,7 @@
 #include <libk/lock.h>
 
 #ifdef ARCH_X86
-#include <arch/x86/memlayout.h>
+#include <truth/private/memlayout.h>
 #endif
 
 #ifdef ARCH_USERLAND
