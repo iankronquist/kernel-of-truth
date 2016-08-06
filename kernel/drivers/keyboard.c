@@ -1,4 +1,5 @@
 #include <drivers/keyboard.h>
+#include <drivers/terminal.h>
 
 // This table was shamelessly stolen from:
 // http://www.osdever.net/bkerndev/Docs/keyboard.htm

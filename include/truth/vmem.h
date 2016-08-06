@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stddef.h>
+#include <truth/types.h>
 
 // A region of virtual memory.
 struct virt_region;
