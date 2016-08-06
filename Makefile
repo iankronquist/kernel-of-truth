@@ -16,7 +16,7 @@ TMP=/tmp
 
 all: build/truthos.bin
 
-tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests
+tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests test_status_types
 
 # Check that documentation coverage didn't change.
 # We don't care about enum values.
@@ -25,6 +25,11 @@ docs-tests: docs
 	grep -E 'name="typedef"\s+undocumented="0"' build/docs/xml/report.xml
 	grep -E 'name="struct"\s+undocumented="0"' build/docs/xml/report.xml
 	grep -E 'name="function"\s+undocumented="0"' build/docs/xml/report.xml
+
+test_status_types:
+	# Check that function declarations or definitions which return status_t
+	# are decorated with the checked attribute.
+	! grep -RE 'status_t \w*\(.*\)' include/ kernel/
 
 run-tests: tests
 	./build/tests/kmem
