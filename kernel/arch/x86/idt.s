@@ -6,6 +6,16 @@ idt_load:
 	sti
 	ret
 
+global disable_interrupts
+disable_interrupts:
+	cli
+	ret
+
+global enable_interrupts
+enable_interrupts:
+	sti
+	ret
+
 global _service_interrupt
 _service_interrupt:
 	pusha

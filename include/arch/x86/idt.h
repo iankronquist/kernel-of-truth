@@ -45,4 +45,10 @@ int install_interrupt(uint8_t num, isr_t function);
  */
 void idt_install(void);
 
+/* Disable interrupts */
+extern void disable_interrupts(void);
+
+/* Enable interrupts */
+extern void enable_interrupts(void);
+
 #endif
