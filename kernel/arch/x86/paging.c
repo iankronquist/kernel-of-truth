@@ -1,4 +1,38 @@
+#include <string.h>
+
 #include <arch/x86/paging.h>
+
+#include <truth/kassert.h>
+#include <truth/kabort.h>
+#include <truth/klog.h>
+#include <truth/kmem.h>
+#include <truth/physical_allocator.h>
+#include <truth/types.h>
+
+#include <truth/private/memlayout.h>
+
+
+
+#define PAGE_TABLE_SIZE 1024
+
+// The macros PAGE_DIRECTORY, PAGE_ALIGN, and NEXT_PAGE are defined in
+// memlayout.h
+
+#define TOP20(x) ((uintptr_t)(x) & 0xfffff000)
+#define TOP10(x) ((uintptr_t)(x) & 0xffc00000)
+#define MID10(x) ((uintptr_t)(x) & 0x003ff000)
+#define LOW10(x) ((uintptr_t)(x) & 0x000003ff)
+
+#define HIGHINDEX(x) ((uintptr_t)x >> 22)
+#define LOWINDEX(x) ((uintptr_t)x >> 12)
+#define GETADDRESS(x) ((uintptr_t)x & ~ 0xfff)
+#define GETFLAGS(x) ((uintptr_t)x & 0xfff)
+#define PAGE_TABLE_SIZE 1024
+
+#define EPHYSMEMFULL (~0)
+
+#define PAGING_DIR_PHYS_ADDR 0xffc00000
+
 
 // Identity map kernel.
 static void map_kernel_pages(uint32_t *page_dir);

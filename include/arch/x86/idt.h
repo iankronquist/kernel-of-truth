@@ -1,24 +1,9 @@
 #pragma once
 
-#include <string.h>
-
-#include <truth/kabort.h>
-#include <truth/kassert.h>
-#include <truth/kputs.h>
-#include <truth/klog.h>
 #include <truth/types.h>
 
-#include <arch/x86/io.h>
-
-#define IDT_SIZE 256
-
 /* The state of the CPU when an interrupt is triggered. */
-struct regs {
-    uint32_t ds; /* pushed the segs last */
-    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; /* pushed by 'pusha' */
-    uint32_t int_no, err_code; /* our 'push byte #' and ecodes do this */
-    uint32_t eip, cs, eflags, useresp, ss; /* pushed by the processor automatically */
-};
+struct regs;
 
 // Interrupt Service Routine function signature.
 // ISRs with this signature are installed to a dispatch table.

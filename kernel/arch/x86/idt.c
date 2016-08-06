@@ -1,5 +1,14 @@
+#include <string.h>
+
 #include <arch/x86/idt.h>
+#include <arch/x86/io.h>
+
+#include <truth/kabort.h>
+#include <truth/kassert.h>
+#include <truth/kputs.h>
+#include <truth/klog.h>
 #include <truth/lock.h>
+
 
 // Definitions of locations of the PIC ports.
 // The Programmable Interrupt Controller, or PIC, has two parts, the master and
@@ -10,6 +19,14 @@
 #define PIC_SLAVE_MASK 0xa1
 
 #define IDT_GATE_PRESENT (1<<7)
+#define IDT_SIZE 256
+
+struct regs {
+    uint32_t ds; /* pushed the segs last */
+    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; /* pushed by 'pusha' */
+    uint32_t int_no, err_code; /* our 'push byte #' and ecodes do this */
+    uint32_t eip, cs, eflags, useresp, ss; /* pushed by the processor automatically */
+};
 
 /* The Interrupt Descriptor Table and its entries.
  * The Interrupt Descriptor Table, or IDT, describes the code called when an

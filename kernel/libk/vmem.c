@@ -1,7 +1,14 @@
+#include <arch/x86/paging.h>
 #include <arch/x86/process.h>
+
+#include <truth/kassert.h>
 #include <truth/kmem.h>
+#include <truth/types.h>
 #include <truth/lock.h>
+#include <truth/physical_allocator.h>
 #include <truth/vmem.h>
+
+#include <truth/private/memlayout.h>
 
 struct virt_region {
     size_t size;

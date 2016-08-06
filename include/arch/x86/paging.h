@@ -1,34 +1,10 @@
 #pragma once
 
-
-#include <string.h>
-
-#include <truth/kassert.h>
-#include <truth/kabort.h>
-#include <truth/klog.h>
-#include <truth/kmem.h>
-#include <truth/physical_allocator.h>
 #include <truth/types.h>
 
 #include <contrib/multiboot.h>
 
-#include <truth/private/memlayout.h>
-
-#define PAGE_TABLE_SIZE 1024
-
-// The macros PAGE_DIRECTORY, PAGE_ALIGN, and NEXT_PAGE are defined in
-// memlayout.h
-
-#define TOP20(x) ((uintptr_t)(x) & 0xfffff000)
-#define TOP10(x) ((uintptr_t)(x) & 0xffc00000)
-#define MID10(x) ((uintptr_t)(x) & 0x003ff000)
-#define LOW10(x) ((uintptr_t)(x) & 0x000003ff)
-
-#define HIGHINDEX(x) ((uintptr_t)x >> 22)
-#define LOWINDEX(x) ((uintptr_t)x >> 12)
-#define GETADDRESS(x) ((uintptr_t)x & ~ 0xfff)
-#define GETFLAGS(x) ((uintptr_t)x & 0xfff)
-#define PAGE_TABLE_SIZE 1024
+#define CUR_PAGE_DIRECTORY_ADDR ((uint32_t*)(0xfffff000))
 
 #define PAGE_PRESENT 1
 #define PAGE_WRITABLE 2
@@ -37,11 +13,6 @@
 #define PAGE_CACHE_DISABLE 16
 #define PAGE_ACCESSED 32
 #define PAGE_DIRTY 64
-
-#define EPHYSMEMFULL (~0)
-
-#define CUR_PAGE_DIRECTORY_ADDR ((uint32_t*)(0xfffff000))
-#define PAGING_DIR_PHYS_ADDR 0xffc00000
 
 // Set the current page table to the provided top level directory and enable
 // paging.

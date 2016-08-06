@@ -1,6 +1,8 @@
 #include <string.h>
-#include <truth/types.h>
+
 #include <arch/x86/gdt.h>
+
+#include <truth/types.h>
 
 /* The Global Descriptor Table and its entries.
  * x86 uses a backward, antiquated segmented memory model for compatibility

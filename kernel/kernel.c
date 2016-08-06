@@ -1,19 +1,22 @@
-#include <stddef.h>
-#include <stdint.h>
+#include <string.h>
+
 #include <arch/x86/gdt.h>
 #include <arch/x86/idt.h>
 #include <arch/x86/io.h>
 #include <arch/x86/paging.h>
 #include <arch/x86/process.h>
+
 #include <contrib/multiboot.h>
+
 #include <drivers/terminal.h>
 #include <drivers/keyboard.h>
 #include <drivers/timer.h>
 
-
 #include <truth/kmem.h>
 #include <truth/kputs.h>
 #include <truth/klog.h>
+#include <truth/physical_allocator.h>
+#include <truth/types.h>
 
 /* This little function exists to demonstrate the multi-processing
  * functionality. It spins and logs its progress. It takes no arguments and

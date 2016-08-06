@@ -1,4 +1,9 @@
+#include <arch/x86/io.h>
+#include <arch/x86/paging.h>
 #include <arch/x86/process.h>
+
+#include <truth/klog.h>
+#include <truth/private/memlayout.h>
 
 extern uint32_t get_flags(void);
 extern void _process_handler(void);

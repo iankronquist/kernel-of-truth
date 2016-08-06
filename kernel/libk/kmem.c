@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include <truth/kabort.h>
 #include <truth/kassert.h>
 #include <truth/kmem.h>
