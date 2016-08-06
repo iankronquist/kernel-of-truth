@@ -57,12 +57,8 @@ static void kprint_int(int i) {
         terminal_putchar(buf[c]+'0');
     }
 }
-
-
 // A subset of printf
-void kprintf(char* string, ...) {
-    va_list args;
-    va_start(args, string);
+void kvprintf(char* string, va_list args) {
     for (size_t i = 0; string[i] != '\0'; ++i) {
         if (string[i] == '%') {
             ++i;
@@ -91,5 +87,12 @@ void kprintf(char* string, ...) {
         }
         terminal_putchar(string[i]);
     }
+}
+
+// A subset of printf
+void kprintf(char* string, ...) {
+    va_list args;
+    va_start(args, string);
+    kvprintf(string, args);
     va_end(args);
 }
