@@ -1,5 +1,5 @@
-#include <stdbool.h>
 #include <string.h>
+#include <truth/types.h>
 #include <arch/x86/gdt.h>
 
 /* The Global Descriptor Table and its entries.

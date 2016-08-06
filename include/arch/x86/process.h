@@ -1,7 +1,6 @@
-#ifndef PROC_H
-#define PROC_H
+#pragma once
 
-#include <stdint.h>
+#include <truth/types.h>
 
 #include <arch/x86/paging.h>
 #include <arch/x86/idt.h>
@@ -54,5 +53,3 @@ void schedule_proc(struct process *proc);
 
 /* Get a pointer to the currently running process */
 struct process *get_current_proc(void);
-
-#endif

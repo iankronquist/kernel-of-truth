@@ -1,14 +1,12 @@
-#ifndef IDT_H
-#define IDT_H
+#pragma once
 
-#include <stddef.h>
-#include <stdint.h>
 #include <string.h>
 
 #include <truth/kabort.h>
 #include <truth/kassert.h>
 #include <truth/kputs.h>
 #include <truth/klog.h>
+#include <truth/types.h>
 
 #include <arch/x86/io.h>
 
@@ -50,5 +48,3 @@ extern void disable_interrupts(void);
 
 /* Enable interrupts */
 extern void enable_interrupts(void);
-
-#endif

@@ -1,7 +1,5 @@
-#ifndef PAGING_H
-#define PAGING_H
-#include <stdint.h>
-#include <stdbool.h>
+#pragma once
+
 
 #include <string.h>
 
@@ -10,6 +8,7 @@
 #include <truth/klog.h>
 #include <truth/kmem.h>
 #include <truth/physical_allocator.h>
+#include <truth/types.h>
 
 #include <contrib/multiboot.h>
 
@@ -81,4 +80,3 @@ void free_table(uint32_t *page_dir);
 // Map a page into a different page table than the current one.
 int inner_map_page(uint32_t *page_dir, page_frame_t physical_page,
         void *virtual_address, uint16_t permissions);
-#endif

@@ -1,7 +1,6 @@
-#ifndef TSS_H
-#define TSS_H
+#pragma once
 
-#include <stdint.h>
+#include <truth/types.h>
 
 // State of the processor when switching tasks during hardware multitasking.
 // See figure 7-2, 32-Bit Task-State-Segment Volume 3-A
@@ -42,5 +41,3 @@ struct tss_descriptor {
     uint64_t granularity:1;
     uint64_t base_high:8;
 };
-
-#endif

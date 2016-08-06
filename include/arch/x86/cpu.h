@@ -1,9 +1,6 @@
-#ifndef CPU_H
-#define CPU_H
+#pragma once
 
 // Halt the CPU.
 static inline void halt(void) {
     __asm__ volatile ("hlt");
 }
-
-#endif

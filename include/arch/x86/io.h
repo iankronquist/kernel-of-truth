@@ -1,6 +1,6 @@
-#ifndef IO_H
-#define IO_H
-#include <stdint.h>
+#pragma once
+
+#include <truth/types.h>
 
 /* Write to an I/O port.
  * A wrapper around outb. Takes a value to write and a port to write it to.
@@ -19,5 +19,3 @@ uint16_t read_port(uint16_t port);
 uint16_t read_port16(uint16_t port);
 /* Read a word from an I/O port. */
 uint32_t read_port32(uint16_t port);
-
-#endif
