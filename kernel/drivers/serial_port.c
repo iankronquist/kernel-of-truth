@@ -1,6 +1,8 @@
-#include <drivers/serial_port.h>
 #include <arch/x86/io.h>
-#include <arch/x86/idt.h>
+
+#include <drivers/serial_port.h>
+
+#include <truth/interrupts.h>
 
 void initialize_serial_port(enum COM_PORT port) {
     // Disable interrupts

@@ -7,6 +7,7 @@
 #define MB (1024*1024)
 #define GB (1024*1024*1024)
 
+// FIXME: Move elsewhere
 #define FRACTAL_MAP 0xffc00000
 
 
@@ -29,6 +30,7 @@ extern int kernel_end;
 #define KHEAP_PHYS_ROOT NEXT_PAGE(KERNEL_END)
 #define KHEAP_PHYS_END ((void*)NEXT_PAGE(KHEAP_PHYS_ROOT))
 
+// FIXME: Move elsewhere
 // Video memory related
 #define VIDEO_MEMORY_BEGIN 0xB8000
 #define VIDEO_MEMORY_SIZE (80 * 24)

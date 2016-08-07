@@ -1,6 +1,6 @@
 #ifndef TIMER_H
 #define TIMER_H
-#include <arch/x86/idt.h>
+#include <truth/interrupts.h>
 
 #define TIMER_INTERRUPT_MASK (~1)
 // Comes from hardware clock cycle of 1.19 MHz
