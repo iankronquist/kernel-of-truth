@@ -4,6 +4,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// This is posix and not defined in a standard header.
+typedef long ssize_t;
+
 // A boolean status for functions which may fail.
 enum status {
     Err = 0,
