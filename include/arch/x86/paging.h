@@ -26,8 +26,8 @@ extern page_frame_t get_page_dir(void);
 // Flush the translation look-aside buffer.
 extern void flush_tlb(void);
 
-// Install the kernel page table.
-page_frame_t kernel_page_table_install(struct multiboot_info*);
+// Install the bootstrap kernel page table.
+page_frame_t bootstrap_kernel_page_table(void);
 
 // Create a new page directory and map important data.
 // Map code at entrypoint, the code location, and the code's stack.

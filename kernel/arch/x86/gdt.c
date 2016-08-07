@@ -110,7 +110,7 @@ static void gdt_set_gate(uint32_t index, uint64_t base, uint64_t limit,
  */
 extern void gdt_flush(struct gdt_ptr gdtp);
 
-void gdt_install() {
+void init_cpu(void) {
     //Setup GDT pointer and limit
     Gdtp.limit = sizeof(Gdt) - 1;
     Gdtp.base = (uint32_t)&Gdt;
@@ -132,3 +132,4 @@ void gdt_install() {
 
     gdt_flush(Gdtp);
 }
+

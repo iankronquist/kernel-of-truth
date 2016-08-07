@@ -5,7 +5,7 @@
 
 #include <drivers/serial_port.h>
 
-void initialize_klog() {
+void init_logging(void) {
     initialize_serial_port(COM1);
     write_serial_string(COM1, "Logger initialized!\n");
 }

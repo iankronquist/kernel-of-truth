@@ -37,7 +37,7 @@ struct process {
 };
 
 /* Set up multi-processing.  */
-void proc_init(void);
+void init_multitasking(void);
 
 /* Create a new process.
  * The process will have all of its memory reserved

@@ -22,7 +22,7 @@ struct process *get_current_proc(void) {
     return running_proc;
 }
 
-void proc_init() {
+void init_multitasking(void) {
     struct process *kernel_proc = kmalloc(sizeof(struct process));
     kernel_proc->next = kernel_proc;
     kernel_proc->memory.page_dir = get_page_dir();
