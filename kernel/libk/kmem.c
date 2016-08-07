@@ -1,4 +1,32 @@
-#include <libk/kmem.h>
+#include <string.h>
+
+#include <truth/kabort.h>
+#include <truth/kassert.h>
+#include <truth/kmem.h>
+
+// FIXME: these ifdefs are ugly!
+#ifdef ARCH_X86
+#include <truth/private/memlayout.h>
+#include <arch/x86/paging.h>
+#endif
+
+#ifdef ARCH_USERLAND
+#include "tests/memlayout.h"
+#endif
+
+// KHEAP_PHYS_ROOT is defined in memlayout.h because it is architecture
+// specific.
+#define KHEAP_END_SENTINEL (NULL)
+
+#define KHEAP_BLOCK_SLOP 32
+
+// Keep allocations on the kernel heap in a linked list.
+// This information is squirreled away before each allocation on the heap.
+struct kheap_metadata {
+    size_t size;
+    struct kheap_metadata *next;
+    bool is_free;
+};
 
 static struct kheap_metadata *root;
 static void *heap_end = NULL;
@@ -113,7 +141,7 @@ void kfree(void *mem) {
 }
 
 // Install the heap
-void kheap_install(struct kheap_metadata *new_root, size_t initial_heap_size) {
+void kheap_install(void *new_root, size_t initial_heap_size) {
     root = new_root;
     root->next = KHEAP_END_SENTINEL;
     root->is_free = true;

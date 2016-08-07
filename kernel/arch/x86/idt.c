@@ -1,5 +1,15 @@
+#include <string.h>
+
+#include <arch/x86/cpu.h>
 #include <arch/x86/idt.h>
-#include <libk/lock.h>
+#include <arch/x86/io.h>
+
+#include <truth/kabort.h>
+#include <truth/kassert.h>
+#include <truth/kputs.h>
+#include <truth/klog.h>
+#include <truth/lock.h>
+
 
 // Definitions of locations of the PIC ports.
 // The Programmable Interrupt Controller, or PIC, has two parts, the master and
@@ -10,6 +20,7 @@
 #define PIC_SLAVE_MASK 0xa1
 
 #define IDT_GATE_PRESENT (1<<7)
+#define IDT_SIZE 256
 
 /* The Interrupt Descriptor Table and its entries.
  * The Interrupt Descriptor Table, or IDT, describes the code called when an
@@ -115,12 +126,18 @@ int install_interrupt(uint8_t num, isr_t function) {
 }
 
 
-void idt_install(void) {
-    // 256 is the number of entries in the table.
-    idtp.limit = (sizeof(struct idt_entry) * 256) - 1;
-    idtp.base = (uint32_t) & idt;
+void init_interrupts(void) {
+    /* Initialize the <idt> and the 8259 Programmable Interrupt Controller.
+     * There are actually two PICs, a master and a slave. Each is controlled
+     * via a dedicated I/O port. We remap interrupts so that we can catch CPU
+     * exceptions.  Interrupts 0 through 31 are CPU exceptions and currently
+     * get sent to the <common_interrupt_handler>. Interrupt 32 is used by
+     * the programmable timer which dispatches the <timer_handler>. Interrupt
+     * 33 is used by the keyboard, and dispatches the <keyboard_handler>.
+     */
 
-    //memset(&idt, 0, sizeof(struct idt_entry) * 256);
+    idtp.limit = (sizeof(struct idt_entry) * IDT_SIZE) - 1;
+    idtp.base = (uint32_t) & idt;
 
     idt_set_gate(0, (uint32_t)isr0, 0x08, 0x8e);
     idt_set_gate(1, (uint32_t)isr1, 0x08, 0x8e);
@@ -183,8 +200,8 @@ void idt_install(void) {
 
 /* Dispatch event handler or, if none exists, log information and kernel panic.
  */
-void common_interrupt_handler(struct regs r) {
-    kassert(r.int_no < 256);
+void common_interrupt_handler(struct cpu_state r) {
+    kassert(r.int_no < IDT_SIZE);
     if (idt_dispatch_table[r.int_no] != NULL) {
         idt_dispatch_table[r.int_no](&r);
     } else {

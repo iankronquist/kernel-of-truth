@@ -19,7 +19,7 @@
 #define RW_ONESHOT_SQUARE 0x36
 
 // Print "tick" on every timer interrupt.
-void timer_irq_handler(struct regs *r);
+void timer_irq_handler(struct cpu_state *);
 
 // Install the <timer_irq_handler>.
 void timer_install(void);

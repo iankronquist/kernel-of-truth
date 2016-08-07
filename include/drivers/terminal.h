@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include <arch/x86/memlayout.h>
+#include <truth/private/memlayout.h>
 
 /* Hardware text mode color constants. */
 enum vga_color {

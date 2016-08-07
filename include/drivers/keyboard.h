@@ -1,7 +1,7 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
-#include <libk/kputs.h>
+#include <truth/kputs.h>
 #include <arch/x86/io.h>
 #include <arch/x86/idt.h>
 #include <stdbool.h>

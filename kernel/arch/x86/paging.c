@@ -1,71 +1,46 @@
+#include <string.h>
+
 #include <arch/x86/paging.h>
 
-// Identity map kernel.
-static void map_kernel_pages(uint32_t *page_dir);
+#include <truth/kassert.h>
+#include <truth/kabort.h>
+#include <truth/klog.h>
+#include <truth/kmem.h>
+#include <truth/physical_allocator.h>
+#include <truth/types.h>
+
+#include <truth/private/memlayout.h>
+
+
+
+#define PAGE_TABLE_SIZE 1024
+
+// The macros PAGE_DIRECTORY, PAGE_ALIGN, and NEXT_PAGE are defined in
+// memlayout.h
+
+#define TOP20(x) ((uintptr_t)(x) & 0xfffff000)
+#define TOP10(x) ((uintptr_t)(x) & 0xffc00000)
+#define MID10(x) ((uintptr_t)(x) & 0x003ff000)
+#define LOW10(x) ((uintptr_t)(x) & 0x000003ff)
+
+#define HIGHINDEX(x) ((uintptr_t)x >> 22)
+#define LOWINDEX(x) ((uintptr_t)x >> 12)
+#define GETADDRESS(x) ((uintptr_t)x & ~ 0xfff)
+#define GETFLAGS(x) ((uintptr_t)x & 0xfff)
+#define PAGE_TABLE_SIZE 1024
+
+#define EPHYSMEMFULL (~0)
+
+#define PAGING_DIR_PHYS_ADDR 0xffc00000
+
+
 // Map the kernel pages into a page table different than the current one.
 static void inner_map_kernel_pages(uint32_t *page_dir);
+static void map_kernel_pages(uint32_t *page_dir);
 
 // TODO: Remove this.
 static void *find_free_addr(uint32_t *page_entries, page_frame_t phys_addr,
         uint16_t permissions);
-
-page_frame_t kernel_page_table_install(struct multiboot_info *mb) {
-    // Certain very important things already exist in physical memory. They
-    // need to be marked as present so that the allocator doesn't grab them by
-    // accident.
-    // After they are marked as present they can safely be mapped with
-    // map_page.
-
-    // Iterate over the multiboot memory map table and mark certain addresses
-    // as unusable.
-    klogf("Marking unusable!\n");
-    multiboot_memory_map_t *mm_last = (multiboot_memory_map_t*)(mb->mmap_addr +
-        mb->mmap_length);
-    for (multiboot_memory_map_t *mm = (multiboot_memory_map_t*)mb->mmap_addr;
-         mm < mm_last;
-         mm = (multiboot_memory_map_t*)((uintptr_t)mm +
-                                        mm->size + sizeof(mm->size))) {
-        // If the memory is not available
-        if (mm->type != MULTIBOOT_MEMORY_AVAILABLE) {
-            klogf("Unusable physical address %p of type %p and length %p\n",
-                    mm->addr, mm->type, mm->len);
-            for (uint64_t page = PAGE_ALIGN(mm->addr);
-                 page < NEXT_PAGE(mm->addr+mm->len); page += PAGE_SIZE) {
-                use_frame(page);
-            }
-        }
-    }
-    klogf("mm_addr table %p\n", mb->mmap_addr);
-    klogf("apm table %p\n", mb->apm_table);
-    klogf("fb table %p\n", mb->framebuffer_addr);
-    klogf("vbe int off %p\n", mb->vbe_interface_off);
-
-    // Catch NULL pointer dereferences
-    use_frame(0);
-
-    // Mark all the pages the kernel sits on as used
-    use_range(KERNEL_START, KERNEL_END);
-
-    // Mark the kernel heap as in use
-    use_frame(KHEAP_PHYS_ROOT);
-    // Mark video memory as in use
-    use_range(VGA_BEGIN, VGA_END);
-
-    // Mark the paging directory as in use
-    use_frame(PAGE_DIRECTORY);
-
-    page_frame_t page_dir = alloc_frame();
-    uint32_t *page_entries = (uint32_t *)page_dir;
-    memset(page_entries, 0, PAGE_SIZE);
-
-    // Fractal page mapping
-    page_entries[PAGE_TABLE_SIZE-1] = GETADDRESS(page_dir) | PAGE_PRESENT;
-
-    map_kernel_pages(page_entries);
-
-    enable_paging(page_dir);
-    return page_dir;
-}
 
 page_frame_t create_page_dir(void *link_loc, void *stack_loc,
         void(*entrypoint)(), uint16_t permissions) {
@@ -141,19 +116,6 @@ static void *find_free_addr(uint32_t *page_entries, page_frame_t phys_addr,
 
     // The page table is full. Fail by returning a special unaligned address
     return (void*)EPHYSMEMFULL;
-}
-
-
-static void map_kernel_pages(uint32_t *page_dir) {
-    map_page(page_dir, 0x100000, (void*)0x100000, 0);
-    // Map all those important bits
-    for (page_frame_t i = KERNEL_START; i < KERNEL_END; i += PAGE_SIZE) {
-        map_page(page_dir, i, (void*)i, 0);
-    }
-    map_page(page_dir, KHEAP_PHYS_ROOT, (void*)KHEAP_PHYS_ROOT, 0);
-
-    // FIXME: Move to video memory driver
-    map_page(page_dir, VIDEO_MEMORY_BEGIN, (void*)VIDEO_MEMORY_BEGIN, 0);
 }
 
 static void inner_map_kernel_pages(uint32_t *page_dir) {
@@ -262,4 +224,29 @@ void free_table(uint32_t *page_dir) {
         }
     }
     free_frame((page_frame_t)page_dir);
+}
+
+page_frame_t bootstrap_kernel_page_table(void) {
+    page_frame_t page_dir = alloc_frame();
+    uint32_t *page_entries = (uint32_t *)page_dir;
+    memset(page_entries, 0, PAGE_SIZE);
+
+    // Fractal page mapping
+    page_entries[PAGE_TABLE_SIZE-1] = GETADDRESS(page_dir) | PAGE_PRESENT;
+
+    map_kernel_pages(page_entries);
+
+    return page_dir;
+}
+
+static void map_kernel_pages(uint32_t *page_dir) {
+    map_page(page_dir, 0x100000, (void*)0x100000, 0);
+    // Map all those important bits
+    for (page_frame_t i = KERNEL_START; i < KERNEL_END; i += PAGE_SIZE) {
+        map_page(page_dir, i, (void*)i, 0);
+    }
+    map_page(page_dir, KHEAP_PHYS_ROOT, (void*)KHEAP_PHYS_ROOT, 0);
+
+    // FIXME: Move to video memory driver
+    map_page(page_dir, VIDEO_MEMORY_BEGIN, (void*)VIDEO_MEMORY_BEGIN, 0);
 }

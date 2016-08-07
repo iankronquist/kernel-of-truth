@@ -1,4 +1,5 @@
 #include <drivers/keyboard.h>
+#include <drivers/terminal.h>
 
 // This table was shamelessly stolen from:
 // http://www.osdever.net/bkerndev/Docs/keyboard.htm
@@ -80,8 +81,7 @@ static unsigned char keyboard_shift_map[256] = {
     0,    /* All other keys are undefined */
 };
 
-void keyboard_irq_handler(struct regs *r) {
-    (void)r;
+void keyboard_irq_handler(struct cpu_state *unused(r)) {
     static bool shift_held = false;
     uint8_t status;
     uint8_t key_code;

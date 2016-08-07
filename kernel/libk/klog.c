@@ -1,6 +1,11 @@
-#include <libk/klog.h>
+#include <stdarg.h>
 
-void initialize_klog() {
+#include <truth/klog.h>
+#include <truth/types.h>
+
+#include <drivers/serial_port.h>
+
+void init_logging(void) {
     initialize_serial_port(COM1);
     write_serial_string(COM1, "Logger initialized!\n");
 }

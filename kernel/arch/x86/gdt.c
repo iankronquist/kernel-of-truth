@@ -1,6 +1,8 @@
-#include <stdbool.h>
 #include <string.h>
+
 #include <arch/x86/gdt.h>
+
+#include <truth/types.h>
 
 /* The Global Descriptor Table and its entries.
  * x86 uses a backward, antiquated segmented memory model for compatibility
@@ -108,7 +110,7 @@ static void gdt_set_gate(uint32_t index, uint64_t base, uint64_t limit,
  */
 extern void gdt_flush(struct gdt_ptr gdtp);
 
-void gdt_install() {
+void init_cpu(void) {
     //Setup GDT pointer and limit
     Gdtp.limit = sizeof(Gdt) - 1;
     Gdtp.base = (uint32_t)&Gdt;
@@ -130,3 +132,4 @@ void gdt_install() {
 
     gdt_flush(Gdtp);
 }
+

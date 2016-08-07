@@ -1,7 +1,11 @@
+#include <arch/x86/io.h>
+#include <arch/x86/paging.h>
 #include <arch/x86/process.h>
 
+#include <truth/klog.h>
+#include <truth/private/memlayout.h>
+
 extern uint32_t get_flags(void);
-extern uint32_t get_page_dir(void);
 extern void _process_handler(void);
 extern void switch_task(uint32_t esp, uint32_t page_dir, uint32_t *kernel_esp);
 
@@ -18,7 +22,7 @@ struct process *get_current_proc(void) {
     return running_proc;
 }
 
-void proc_init() {
+void init_multitasking(void) {
     struct process *kernel_proc = kmalloc(sizeof(struct process));
     kernel_proc->next = kernel_proc;
     kernel_proc->memory.page_dir = get_page_dir();

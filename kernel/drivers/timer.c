@@ -1,10 +1,10 @@
-#include <stdint.h>
-
 #include <arch/x86/io.h>
-#include <drivers/timer.h>
-#include <libk/kputs.h>
 
-#define UNUSED(x) x __attribute__((unused))
+#include <drivers/timer.h>
+
+#include <truth/kputs.h>
+#include <truth/types.h>
+
 
 void timer_install() {
     uint8_t current_mask = read_port(0x21);
@@ -20,7 +20,7 @@ void set_timer_phase(uint8_t hertz) {
     write_port(TIMER_CHAN_0, divisor >> 8);
 }
 
-void timer_irq_handler(struct regs *UNUSED(r)) {
+void timer_irq_handler(struct cpu_state *unused(r)) {
     kputs("tick!");
     // End interrupt
     write_port(0x20, 0x20);

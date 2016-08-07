@@ -2,7 +2,7 @@
 #include <assert.h>
 
 #include <tests/tests.h>
-#include <libk/kmem.h>
+#include <truth/kmem.h>
 #include "../kmem.c"
 
 // Useful for debugging

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <tests/tests.h>
-#include <libk/kmem.h>
-#include <libk/process_table.h>
+#include <truth/kmem.h>
+#include <truth/process_table.h>
 
 void test_process_table() {
     struct process_table *t = init_process_table();

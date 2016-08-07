@@ -1,35 +1,10 @@
-#ifndef PAGING_H
-#define PAGING_H
-#include <stdint.h>
-#include <stdbool.h>
+#pragma once
 
-#include <string.h>
-
-#include <libk/kassert.h>
-#include <libk/kabort.h>
-#include <libk/klog.h>
-#include <libk/kmem.h>
-#include <libk/physical_allocator.h>
+#include <truth/types.h>
 
 #include <contrib/multiboot.h>
 
-#include <arch/x86/memlayout.h>
-
-#define PAGE_TABLE_SIZE 1024
-
-// The macros PAGE_DIRECTORY, PAGE_ALIGN, and NEXT_PAGE are defined in
-// memlayout.h
-
-#define TOP20(x) ((uintptr_t)(x) & 0xfffff000)
-#define TOP10(x) ((uintptr_t)(x) & 0xffc00000)
-#define MID10(x) ((uintptr_t)(x) & 0x003ff000)
-#define LOW10(x) ((uintptr_t)(x) & 0x000003ff)
-
-#define HIGHINDEX(x) ((uintptr_t)x >> 22)
-#define LOWINDEX(x) ((uintptr_t)x >> 12)
-#define GETADDRESS(x) ((uintptr_t)x & ~ 0xfff)
-#define GETFLAGS(x) ((uintptr_t)x & 0xfff)
-#define PAGE_TABLE_SIZE 1024
+#define CUR_PAGE_DIRECTORY_ADDR ((uint32_t*)(0xfffff000))
 
 #define PAGE_PRESENT 1
 #define PAGE_WRITABLE 2
@@ -38,11 +13,6 @@
 #define PAGE_CACHE_DISABLE 16
 #define PAGE_ACCESSED 32
 #define PAGE_DIRTY 64
-
-#define EPHYSMEMFULL (~0)
-
-#define CUR_PAGE_DIRECTORY_ADDR ((uint32_t*)(0xfffff000))
-#define PAGING_DIR_PHYS_ADDR 0xffc00000
 
 // Set the current page table to the provided top level directory and enable
 // paging.
@@ -56,8 +26,8 @@ extern page_frame_t get_page_dir(void);
 // Flush the translation look-aside buffer.
 extern void flush_tlb(void);
 
-// Install the kernel page table.
-page_frame_t kernel_page_table_install(struct multiboot_info*);
+// Install the bootstrap kernel page table.
+page_frame_t bootstrap_kernel_page_table(void);
 
 // Create a new page directory and map important data.
 // Map code at entrypoint, the code location, and the code's stack.
@@ -81,4 +51,3 @@ void free_table(uint32_t *page_dir);
 // Map a page into a different page table than the current one.
 int inner_map_page(uint32_t *page_dir, page_frame_t physical_page,
         void *virtual_address, uint16_t permissions);
-#endif

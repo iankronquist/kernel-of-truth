@@ -1,4 +1,24 @@
-#include <libk/physical_allocator.h>
+#include <truth/physical_allocator.h>
+#include <contrib/multiboot.h>
+
+#include <truth/kabort.h>
+#include <truth/kassert.h>
+#include <truth/kmem.h>
+#include <truth/kputs.h>
+#include <truth/lock.h>
+
+#ifdef ARCH_X86
+#include <truth/private/memlayout.h>
+#endif
+
+#ifdef ARCH_USERLAND
+#include "tests/memlayout.h"
+#endif
+
+#define BIT_INDEX(x) (1 << ((x) % 8))
+#define BYTE_INDEX(x) ((x)/8)
+#define PAGE_FRAME_CACHE_SIZE 32
+#define PAGE_FRAME_MAP_SIZE(x) (x/8/PAGE_SIZE)
 
 // A lock to prevent multiple process from modifying the page frame map at
 // once.

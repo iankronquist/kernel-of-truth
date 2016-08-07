@@ -1,19 +1,24 @@
-#include <stddef.h>
-#include <stdint.h>
+#include <string.h>
+
 #include <arch/x86/gdt.h>
 #include <arch/x86/idt.h>
 #include <arch/x86/io.h>
 #include <arch/x86/paging.h>
 #include <arch/x86/process.h>
+
 #include <contrib/multiboot.h>
+
 #include <drivers/terminal.h>
 #include <drivers/keyboard.h>
 #include <drivers/timer.h>
 
+#include <truth/kmem.h>
+#include <truth/kputs.h>
+#include <truth/klog.h>
+#include <truth/physical_allocator.h>
+#include <truth/types.h>
 
-#include <libk/kmem.h>
-#include <libk/kputs.h>
-#include <libk/klog.h>
+#include <truth/private/init.h>
 
 /* This little function exists to demonstrate the multi-processing
  * functionality. It spins and logs its progress. It takes no arguments and
@@ -42,13 +47,12 @@ void worker(void) {
  * is created, and multi-processing is initialized.
  * @return this function should never return.
 */
-void kernel_main(struct multiboot_info *mb) {
-    gdt_install();
-    idt_install();
+void kernel_main(void *multiboot_tables) {
+    init_cpu();
+    init_interrupts();
     terminal_initialize();
-    initialize_klog();
-    kheap_install((struct kheap_metadata*)KHEAP_PHYS_ROOT, PAGE_SIZE);
-    physical_allocator_init(mb->mem_upper + mb->mem_lower);
+    init_logging();
+    init_memory(multiboot_tables);
     keyboard_install();
     char *hi = "Hello kernel!\n";
     void *testing = kmalloc(16);
@@ -56,9 +60,8 @@ void kernel_main(struct multiboot_info *mb) {
     kputs(testing);
     klog(testing);
     kfree(testing);
-    (void)kernel_page_table_install(mb);
 
-    proc_init();
+    init_multitasking();
     struct process *worker_proc = create_proc(worker);
     schedule_proc(worker_proc);
 

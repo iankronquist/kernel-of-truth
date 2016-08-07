@@ -1,4 +1,8 @@
-#include <libk/kputs.h>
+#include <truth/kputs.h>
+
+#ifdef ARCH_X86
+#include "drivers/terminal.h"
+#endif
 
 void kputs(char* string) {
     terminal_writestring(string);

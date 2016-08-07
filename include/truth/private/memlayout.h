@@ -1,7 +1,7 @@
 #ifndef MEMLAYOUT_H
 #define MEMLAYOUT_H
 
-#include <stdint.h>
+#include <truth/types.h>
 
 #define KB 1024
 #define MB (1024*1024)
@@ -11,9 +11,9 @@
 
 
 // The address of the start of the kernel. Defined by the linker.
-extern uint32_t kernel_start;
+extern int kernel_start;
 // The address of the end of the kernel. Defined by the linker.
-extern uint32_t kernel_end;
+extern int kernel_end;
 
 #define KERNEL_END ((uint32_t)&kernel_end)
 #define KERNEL_START ((uint32_t)&kernel_start)
@@ -24,9 +24,6 @@ extern uint32_t kernel_end;
 #define NEXT_PAGE(x) (((uintptr_t)(x)+PAGE_SIZE) & ~0xfff)
 #define PAGE_DIRECTORY NEXT_PAGE(KERNEL_END)
 #define PAGE_SIZE 4096
-
-// A physical address.
-typedef uint32_t page_frame_t;
 
 // Heap related
 #define KHEAP_PHYS_ROOT NEXT_PAGE(KERNEL_END)

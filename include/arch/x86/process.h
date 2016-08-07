@@ -1,13 +1,12 @@
-#ifndef PROC_H
-#define PROC_H
+#pragma once
 
-#include <stdint.h>
+#include <truth/types.h>
 
 #include <arch/x86/paging.h>
 #include <arch/x86/idt.h>
 #include <drivers/timer.h>
 
-#include <libk/kmem.h>
+#include <truth/kmem.h>
 
 struct virt_region;
 
@@ -38,7 +37,7 @@ struct process {
 };
 
 /* Set up multi-processing.  */
-void proc_init(void);
+void init_multitasking(void);
 
 /* Create a new process.
  * The process will have all of its memory reserved
@@ -54,5 +53,3 @@ void schedule_proc(struct process *proc);
 
 /* Get a pointer to the currently running process */
 struct process *get_current_proc(void);
-
-#endif

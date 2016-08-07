@@ -1,5 +1,4 @@
-#ifndef LOCK_H
-#define LOCK_H
+#pragma once
 
 /* A spin lock is a CPU lock which is not likely to be contended for long.
  * A spin lock is a simple integer -- it is 1 if locked and 0 otherwise. It
@@ -16,5 +15,3 @@ void acquire_spinlock(spinlock_t *s);
 
 // Release a <spinlock_t>.
 int release_spinlock(spinlock_t *s);
-
-#endif
