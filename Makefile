@@ -1,42 +1,48 @@
-# The platform which GCC was built to target.
-TARGET := i686-elf
-
 # The name of the target platform.
 ARCH := x86
-
-# The path to GCC and friends.
-TOOLCHAIN := compiler/$(TARGET)/bin/$(TARGET)
-
-# Select the appropriate architecture specific CFLAGS and QEMU
-ifeq ($(ARCH),x86)
-ARCH_CFLAGS := -D ARCH_X86
-QEMU := qemu-system-i386
-endif
 
 # The place to put all of the build artifacts.
 BUILD_DIR := build
 
+# Flags for the tools.
+CFLAGS := -std=c11 -MP -MMD -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include
+LDFLAGS := $(CFLAGS) -nostdlib
+QEMU_FLAGS := -m 1G
+TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
+
+# Select the appropriate architecture specific CFLAGS and QEMU
+ifeq ($(ARCH),x86)
+CFLAGS += -D ARCH_X86
+QEMU := qemu-system-i386
+QEMU_FLAGS += -serial file:$(BUILD_DIR)/qemu-serial.log
+TARGET := i686-elf
+AS := yasm
+ASFLAGS := -felf -g DWARF2
+else ifeq ($(ARCH),arm)
+CFLAGS += -mcpu=arm1176jzf-s -fpic
+QEMU := qemu-system-arm
+QEMU_FLAGS += -serial stdio -M raspi2
+TARGET := arm-none-eabi
+AS := $(TOOLCHAIN)-gcc
+ASFLAGS := -c $(CFLAGS)
+endif
+
+# The path to GCC and friends.
+TOOLCHAIN := compiler/$(TARGET)/bin/$(TARGET)
+
 # Tools.
 CC := $(TOOLCHAIN)-gcc
-AS := yasm
 GRUB_MKRESCUE := grub-mkrescue
 VB=virtualbox
 VBM=VBoxManage
 TEST_CC=clang
 GCOV=llvm-cov
 
-# Flags for the tools.
-ASFLAGS := -felf -g DWARF2
-CFLAGS := -std=c11 -MP -MMD -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include $(ARCH_CFLAGS)
-LDFLAGS := $(CFLAGS) -nostdlib
-QEMU_FLAGS := -m 1G -serial file:$(BUILD_DIR)/qemu-serial.log
-TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
-
 # The kernel is broken down into several components.
 COMPONENTS := kernel/arch/$(ARCH) kernel kernel/libk tlibc kernel/drivers
 
 # The name of the final elf file being built.
-KERNEL := $(BUILD_DIR)/truth.elf
+KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
 
 # The list of object files to build.
 OBJ :=
@@ -65,6 +71,9 @@ $(BUILD_DIR)/%.$(ARCH).o: kernel/arch/$(ARCH)/%.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(BUILD_DIR)/%.asm.$(ARCH).o: kernel/arch/$(ARCH)/%.asm
+	$(AS) $(ASFLAGS) -o $@ $<
+
+$(BUILD_DIR)/%.S.$(ARCH).o: kernel/arch/$(ARCH)/%.S
 	$(AS) $(ASFLAGS) -o $@ $<
 
 $(BUILD_DIR)/%.driver.o: kernel/drivers/%.c
