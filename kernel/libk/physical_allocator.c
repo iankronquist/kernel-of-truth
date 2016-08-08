@@ -7,9 +7,7 @@
 #include <truth/kputs.h>
 #include <truth/lock.h>
 
-#ifdef ARCH_X86
 #include <truth/private/memlayout.h>
-#endif
 
 #ifdef ARCH_USERLAND
 #include "tests/memlayout.h"

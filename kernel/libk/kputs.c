@@ -1,7 +1,10 @@
 #include <truth/kputs.h>
+#include <truth/types.h>
 
-#ifdef ARCH_X86
-#include "drivers/terminal.h"
+#ifdef __i386__
+#include <drivers/terminal.h>
+#elif __arm__
+#include <drivers/uart.h>
 #endif
 
 void kputs(char* string) {
