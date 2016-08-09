@@ -1,5 +1,9 @@
 #pragma once
 
+#include <truth/device.h>
+
+extern struct device *klog_char_device;
+
 /* Initialize the kernel logging system.
  * Currently logs to the COM1 serial port.
  */
