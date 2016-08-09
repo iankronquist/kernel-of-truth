@@ -105,9 +105,6 @@ int serial_getc(const struct device *dev) {
     return read_serial(ports[dev->number-1]);
 }
 
-void register_serial_port(void) {
-}
-
 #define DEFINE_COM(n) \
 const struct device serial_com_##n = { \
     .name = "COM" #n, \
@@ -128,10 +125,18 @@ DEFINE_COM(2);
 DEFINE_COM(3);
 DEFINE_COM(4);
 
+void register_serial_port(void) {
+    status_t unused(stat) = register_device(&serial_com_1);
+    stat = register_device(&serial_com_2);
+    stat = register_device(&serial_com_3);
+    stat = register_device(&serial_com_4);
+}
+
 void serial_fini(const struct device *unused(dev)) {
     unregister_device(&serial_com_1);
     unregister_device(&serial_com_2);
     unregister_device(&serial_com_3);
     unregister_device(&serial_com_4);
 }
+
 const struct device *klog_char_device = &serial_com_1;
