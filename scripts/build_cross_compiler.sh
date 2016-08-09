@@ -6,10 +6,10 @@ PATH=$PATH:$PREFIX/bin
 CFLAGS=" -g -O2"
 # if we're on a mac, try our damndest to use real GCC not clang
 if [ "$(uname)" == "Darwin" ]; then
-	export CC=gcc
-	export CXX=g++
-	alias CC=gcc
-	alias CXX=g++
+	export CC=gcc-6
+	export CXX=g++-6
+	alias CC=gcc-6
+	alias CXX=g++-6
 fi
 echo 'Nuking ./compiler/build and ./compiler/arm and recreating directories'
 rm -rf compiler/build
@@ -57,7 +57,7 @@ echo $(pwd)
 mkdir compiler/build/binutils
 cd compiler/build/binutils
 ../../src/binutils-2.26/configure --target=$TARGET --prefix="$PREFIX" --with-sysroot --disable-nls --disable-werror
-make
+make -j8
 make install
 cd -
 
@@ -66,8 +66,8 @@ echo $(pwd)
 mkdir compiler/build/gcc
 cd compiler/build/gcc
 ../../src/gcc-6.1.0/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers
-make all-gcc
-make all-target-libgcc
+make all-gcc -j8 
+make all-target-libgcc -j8 
 make install-gcc
 make install-target-libgcc
 cd -
