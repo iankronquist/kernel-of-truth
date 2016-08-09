@@ -4,13 +4,9 @@
 #include <truth/kassert.h>
 #include <truth/kmem.h>
 
-// FIXME: these ifdefs are ugly!
-#ifdef ARCH_X86
 #include <truth/private/memlayout.h>
-#include <arch/x86/paging.h>
-#endif
 
-#ifdef ARCH_USERLAND
+#ifdef DEBUG
 #include "tests/memlayout.h"
 #endif
 

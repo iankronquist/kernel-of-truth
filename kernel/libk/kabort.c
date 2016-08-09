@@ -1,9 +1,14 @@
 #include <stdarg.h>
 #include <stdbool.h>
+#include <truth/interrupts.h>
 #include <truth/kabort.h>
 #include <truth/kputs.h>
-#include <arch/x86/idt.h>
+
+#ifdef __i386__
 #include <arch/x86/cpu.h>
+#elif __arm__
+#include <arch/arm/cpu.h>
+#endif
 
 void kabort(void) {
     disable_interrupts();

@@ -1,42 +1,49 @@
-# The platform which GCC was built to target.
-TARGET := i686-elf
-
 # The name of the target platform.
 ARCH := x86
-
-# The path to GCC and friends.
-TOOLCHAIN := compiler/$(TARGET)/bin/$(TARGET)
-
-# Select the appropriate architecture specific CFLAGS and QEMU
-ifeq ($(ARCH),x86)
-ARCH_CFLAGS := -D ARCH_X86
-QEMU := qemu-system-i386
-endif
 
 # The place to put all of the build artifacts.
 BUILD_DIR := build
 
+# Flags for the tools.
+CFLAGS := -std=c11 -MP -MMD -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include
+LDFLAGS := $(CFLAGS) -nostdlib
+QEMU_FLAGS := -m 1G
+TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D DEBUG
+
+
+# Select the appropriate architecture specific CFLAGS and QEMU
+ifeq ($(ARCH),x86)
+QEMU := qemu-system-i386
+QEMU_FLAGS += -serial file:$(BUILD_DIR)/qemu-serial.log
+TARGET := i686-elf
+# The path to GCC and friends.
+TOOLCHAIN := compiler/$(TARGET)/bin/$(TARGET)
+AS := yasm
+ASFLAGS := -felf -g DWARF2
+else ifeq ($(ARCH),arm)
+CFLAGS += -mcpu=arm1176jzf-s -fpic
+QEMU := qemu-system-arm
+QEMU_FLAGS += -serial stdio -M raspi2
+TARGET := arm-none-eabi
+# The path to GCC and friends.
+TOOLCHAIN := compiler/$(TARGET)/bin/$(TARGET)
+AS := $(TOOLCHAIN)-gcc
+ASFLAGS := -c $(CFLAGS)
+endif
+
 # Tools.
 CC := $(TOOLCHAIN)-gcc
-AS := yasm
 GRUB_MKRESCUE := grub-mkrescue
 VB=virtualbox
 VBM=VBoxManage
 TEST_CC=clang
 GCOV=llvm-cov
 
-# Flags for the tools.
-ASFLAGS := -felf -g DWARF2
-CFLAGS := -std=c11 -MP -MMD -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include $(ARCH_CFLAGS)
-LDFLAGS := $(CFLAGS) -nostdlib
-QEMU_FLAGS := -m 1G -serial file:$(BUILD_DIR)/qemu-serial.log
-TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
-
 # The kernel is broken down into several components.
 COMPONENTS := kernel/arch/$(ARCH) kernel kernel/libk tlibc kernel/drivers
 
 # The name of the final elf file being built.
-KERNEL := $(BUILD_DIR)/truth.elf
+KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
 
 # The list of object files to build.
 OBJ :=
@@ -65,6 +72,9 @@ $(BUILD_DIR)/%.$(ARCH).o: kernel/arch/$(ARCH)/%.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(BUILD_DIR)/%.asm.$(ARCH).o: kernel/arch/$(ARCH)/%.asm
+	$(AS) $(ASFLAGS) -o $@ $<
+
+$(BUILD_DIR)/%.S.$(ARCH).o: kernel/arch/$(ARCH)/%.S
 	$(AS) $(ASFLAGS) -o $@ $<
 
 $(BUILD_DIR)/%.driver.o: kernel/drivers/%.c
@@ -108,9 +118,9 @@ start-virtualbox:
 	$(VB) --startvm TruthOS --dbg
 
 docs:
-	cldoc generate -I ./include -DARCH_X86 -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/truth/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
+	cldoc generate -I ./include  -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/truth/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
 
-tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests test_status_types
+tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests
 
 # Check that documentation coverage didn't change.
 # We don't care about enum values.
@@ -120,10 +130,6 @@ docs-tests: docs
 	grep -E 'name="struct"\s+undocumented="0"' build/docs/xml/report.xml
 	grep -E 'name="function"\s+undocumented="0"' build/docs/xml/report.xml
 
-test_status_types:
-	# Check that function declarations or definitions which return status_t
-	# are decorated with the checked attribute.
-	! grep -RE 'status_t \w*\(.*\)' include/ kernel/
 
 run-tests: tests
 	$(BUILD_DIR)/tests/kmem

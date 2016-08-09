@@ -1,9 +1,9 @@
 #pragma once
 
 #include <truth/types.h>
+#include <truth/interrupts.h>
 
 #include <arch/x86/paging.h>
-#include <arch/x86/idt.h>
 #include <drivers/timer.h>
 
 #include <truth/kmem.h>

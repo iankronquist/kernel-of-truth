@@ -1,9 +1,9 @@
 #include <string.h>
 
 #include <arch/x86/cpu.h>
-#include <arch/x86/idt.h>
 #include <arch/x86/io.h>
 
+#include <truth/interrupts.h>
 #include <truth/kabort.h>
 #include <truth/kassert.h>
 #include <truth/kputs.h>

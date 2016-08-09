@@ -17,3 +17,9 @@ typedef void (*isr_t)(struct cpu_state*);
  * and -1 if that interrupt number has already been registered.
  */
 int install_interrupt(uint8_t num, isr_t function);
+
+/* Disable interrupts */
+extern void disable_interrupts(void);
+
+/* Enable interrupts */
+extern void enable_interrupts(void);

@@ -6,11 +6,12 @@
 #include <drivers/serial_port.h>
 
 void init_logging(void) {
-    initialize_serial_port(COM1);
-    write_serial_string(COM1, "Logger initialized!\n");
+    status_t unused(stat) = device_char_init(klog_char_device, 1, NULL);
+    device_char_puts(klog_char_device, "Logger initialized!\n");
 }
+
 void klog(char *message) {
-    write_serial_string(COM1, message);
+    device_char_puts(klog_char_device, message);
 }
 
 static void klog_uint(uint64_t n, uint32_t length) {
@@ -21,14 +22,14 @@ static void klog_uint(uint64_t n, uint32_t length) {
         buf[c] = n % 16;
         n /= 16;
     }
-    write_serial(COM1, '0');
-    write_serial(COM1, 'x');
+    device_char_putc(klog_char_device, '0');
+    device_char_putc(klog_char_device, 'x');
     ++c;
     for (; c < length; ++c) {
         if (buf[c] >= 10) {
-            write_serial(COM1, buf[c] + 'a' - 10);
+            device_char_putc(klog_char_device, buf[c] + 'a' - 10);
         } else {
-            write_serial(COM1, buf[c] + '0');
+            device_char_putc(klog_char_device, buf[c] + '0');
         }
     }
 }
@@ -42,7 +43,7 @@ void klogf(char* string, ...) {
             ++i;
             switch(string[i]) {
                 case '%':
-                    write_serial(COM1, '%');
+                    device_char_putc(klog_char_device, '%');
                     break;
                 case 'u':
                     klog_uint(va_arg(args, uint32_t), 8);
@@ -63,7 +64,7 @@ void klogf(char* string, ...) {
             }
             continue;
         }
-        write_serial(COM1, string[i]);
+        device_char_putc(klog_char_device, string[i]);
     }
     va_end(args);
 }

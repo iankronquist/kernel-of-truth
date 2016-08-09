@@ -1,7 +1,6 @@
 #include <string.h>
 
 #include <arch/x86/gdt.h>
-#include <arch/x86/idt.h>
 #include <arch/x86/io.h>
 #include <arch/x86/paging.h>
 #include <arch/x86/process.h>
@@ -12,6 +11,7 @@
 #include <drivers/keyboard.h>
 #include <drivers/timer.h>
 
+#include <truth/interrupts.h>
 #include <truth/kmem.h>
 #include <truth/kputs.h>
 #include <truth/klog.h>
@@ -47,7 +47,7 @@ void worker(void) {
  * is created, and multi-processing is initialized.
  * @return this function should never return.
 */
-void kernel_main(void *multiboot_tables) {
+void kernel_main(void *unused(multiboot_tables)) {
     init_cpu();
     init_interrupts();
     terminal_initialize();
