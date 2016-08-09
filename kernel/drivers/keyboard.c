@@ -1,6 +1,8 @@
 #include <drivers/keyboard.h>
 #include <drivers/terminal.h>
 
+#include <truth/device.h>
+
 #include <arch/x86/io.h>
 
 // This table was shamelessly stolen from:
@@ -113,8 +115,9 @@ void keyboard_irq_handler(struct cpu_state *unused(r)) {
                 c = keyboard_map[key_code];
             }
         }
-        if (c != 0)
-            terminal_putchar(c);
+        if (c != 0) {
+            device_char_putc(terminal_char_device, c);
+        }
     }
 
 }

@@ -1,15 +1,11 @@
 #include <truth/kputs.h>
 #include <truth/types.h>
 
-#ifdef __i386__
 #include <drivers/terminal.h>
-#elif __arm__
-#include <drivers/uart.h>
-#endif
 
 void kputs(char* string) {
-    terminal_writestring(string);
-    terminal_putchar('\n');
+    device_char_puts(terminal_char_device, string);
+    device_char_putc(terminal_char_device, '\n');
 }
 
 static void kprint_ptr(void *p) {
@@ -20,14 +16,14 @@ static void kprint_ptr(void *p) {
         buf[c] = n % 16;
         n /= 16;
     }
-    terminal_putchar('0');
-    terminal_putchar('x');
+    device_char_putc(terminal_char_device, '0');
+    device_char_putc(terminal_char_device, 'x');
     ++c;
     for (; c < 8; ++c) {
         if (buf[c] >= 10) {
-            terminal_putchar(buf[c] + 'a' - 10);
+            device_char_putc(terminal_char_device, buf[c] + 'a' - 10);
         } else {
-            terminal_putchar(buf[c] + '0');
+            device_char_putc(terminal_char_device, buf[c] + '0');
         }
     }
 }
@@ -43,13 +39,13 @@ static void kprint_uint(unsigned int i) {
         }
     }
     for (; c < 10; ++c) {
-        terminal_putchar(buf[c]+'0');
+        device_char_putc(terminal_char_device, buf[c]+'0');
     }
 }
 
 static void kprint_int(int i) {
     if (i < 0) {
-        terminal_putchar('-');
+        device_char_putc(terminal_char_device, '-');
     }
     unsigned char buf[10] = {0};
     unsigned int c;
@@ -61,7 +57,7 @@ static void kprint_int(int i) {
         }
     }
     for (; c < 10; ++c) {
-        terminal_putchar(buf[c]+'0');
+        device_char_putc(terminal_char_device, buf[c]+'0');
     }
 }
 // A subset of printf
@@ -71,7 +67,7 @@ void kvprintf(char* string, va_list args) {
             ++i;
             switch(string[i]) {
                 case '%':
-                    terminal_putchar('%');
+                    device_char_putc(terminal_char_device, '%');
                     break;
                 case 'p':
                     kprint_ptr(va_arg(args, void*));
@@ -81,18 +77,18 @@ void kvprintf(char* string, va_list args) {
                     kprint_int(va_arg(args, int));
                     break;
                 case 's':
-                    terminal_writestring(va_arg(args, char*));
+                    device_char_puts(terminal_char_device, va_arg(args, char*));
                     break;
                 case 'u':
                     kprint_uint(va_arg(args, unsigned int));
                     break;
                 case 'c':
-                    terminal_putchar(va_arg(args, int));
+                    device_char_putc(terminal_char_device, va_arg(args, int));
                     break;
             }
             continue;
         }
-        terminal_putchar(string[i]);
+        device_char_putc(terminal_char_device, string[i]);
     }
 }
 
