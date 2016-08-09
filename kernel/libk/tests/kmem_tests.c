@@ -2,6 +2,8 @@
 #include <assert.h>
 
 #include <tests/tests.h>
+#include <tests/memlayout.h>
+
 #include <truth/kmem.h>
 #include "../kmem.c"
 

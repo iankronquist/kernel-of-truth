@@ -5,12 +5,8 @@
 #include <truth/kmem.h>
 
 #include <truth/private/memlayout.h>
-// FIXME: these ifdefs are ugly!
-#ifdef ARCH_X86
-#include <arch/x86/paging.h>
-#endif
 
-#ifdef ARCH_USERLAND
+#ifdef DEBUG
 #include "tests/memlayout.h"
 #endif
 
