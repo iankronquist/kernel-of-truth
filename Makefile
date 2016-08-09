@@ -120,7 +120,7 @@ start-virtualbox:
 docs:
 	cldoc generate -I ./include  -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/truth/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
 
-tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests test_status_types
+tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests
 
 # Check that documentation coverage didn't change.
 # We don't care about enum values.
@@ -130,10 +130,6 @@ docs-tests: docs
 	grep -E 'name="struct"\s+undocumented="0"' build/docs/xml/report.xml
 	grep -E 'name="function"\s+undocumented="0"' build/docs/xml/report.xml
 
-test_status_types:
-	# Check that function declarations or definitions which return status_t
-	# are decorated with the checked attribute.
-	! grep -RE 'status_t \w*\(.*\)' include/ kernel/
 
 run-tests: tests
 	$(BUILD_DIR)/tests/kmem
