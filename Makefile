@@ -10,12 +10,14 @@ LDFLAGS := $(CFLAGS) -nostdlib
 QEMU_FLAGS := -m 1G
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
 
+
 # Select the appropriate architecture specific CFLAGS and QEMU
 ifeq ($(ARCH),x86)
-CFLAGS += -D ARCH_X86
 QEMU := qemu-system-i386
 QEMU_FLAGS += -serial file:$(BUILD_DIR)/qemu-serial.log
 TARGET := i686-elf
+# The path to GCC and friends.
+TOOLCHAIN := compiler/$(TARGET)/bin/$(TARGET)
 AS := yasm
 ASFLAGS := -felf -g DWARF2
 else ifeq ($(ARCH),arm)
@@ -23,12 +25,11 @@ CFLAGS += -mcpu=arm1176jzf-s -fpic
 QEMU := qemu-system-arm
 QEMU_FLAGS += -serial stdio -M raspi2
 TARGET := arm-none-eabi
+# The path to GCC and friends.
+TOOLCHAIN := compiler/$(TARGET)/bin/$(TARGET)
 AS := $(TOOLCHAIN)-gcc
 ASFLAGS := -c $(CFLAGS)
 endif
-
-# The path to GCC and friends.
-TOOLCHAIN := compiler/$(TARGET)/bin/$(TARGET)
 
 # Tools.
 CC := $(TOOLCHAIN)-gcc
@@ -117,7 +118,7 @@ start-virtualbox:
 	$(VB) --startvm TruthOS --dbg
 
 docs:
-	cldoc generate -I ./include -DARCH_X86 -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/truth/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
+	cldoc generate -I ./include  -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/truth/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
 
 tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests test_status_types
 
