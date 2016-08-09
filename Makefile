@@ -8,7 +8,7 @@ BUILD_DIR := build
 CFLAGS := -std=c11 -MP -MMD -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include
 LDFLAGS := $(CFLAGS) -nostdlib
 QEMU_FLAGS := -m 1G
-TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D ARCH_USERLAND
+TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D DEBUG
 
 
 # Select the appropriate architecture specific CFLAGS and QEMU
