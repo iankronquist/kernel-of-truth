@@ -125,7 +125,7 @@ start-virtualbox: $(BUILD_DIR)/truth.iso
 docs:
 	cldoc generate -I ./include  -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/truth/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
 
-tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests build/tests/hashtable_tests
+tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests build/tests/hashtable_tests build/tests/region_tests
 
 # Check that documentation coverage didn't change.
 # We don't care about enum values.
@@ -140,12 +140,14 @@ run-tests: tests
 	$(BUILD_DIR)/tests/kmem
 	$(BUILD_DIR)/tests/physical_allocator
 
+build/tests/region_tests: kernel/libk/tests/region_tests.c kernel/libk/region.c
+	$(TEST_CC) kernel/libk/tests/paging_stubs.c kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_stubs.c kernel/libk/tests/region_tests.c -o build/tests/region_tests $(TEST_CFLAGS)
 
-build/tests/hashtable_tests: build kernel/libk/tests/hashtable_tests.c kernel/libk/tests/stubs_tests.c kernel/libk/hashtable.c
+build/tests/hashtable_tests: kernel/libk/tests/hashtable_tests.c kernel/libk/tests/stubs_tests.c kernel/libk/hashtable.c
 	$(TEST_CC) kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_stubs.c kernel/libk/tests/hashtable_tests.c kernel/libk/hashtable.c -o build/tests/hashtable_tests $(TEST_CFLAGS)
 
 
-build/tests/kmem_tests: build kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c
+build/tests/kmem_tests: kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c
 	$(TEST_CC) kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c  -o $(BUILD_DIR)/tests/kmem $(TEST_CFLAGS)
 
 build/tests/physical_allocator_tests: build kernel/libk/tests/stubs_tests.c kernel/libk/tests/physical_allocator_tests.c
