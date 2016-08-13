@@ -1,7 +1,8 @@
 #pragma once
 
-#include <truth/types.h>
 #include <truth/interrupts.h>
+#include <truth/memtypes.h>
+#include <truth/types.h>
 
 #include <arch/x86/paging.h>
 #include <drivers/timer.h>
@@ -19,7 +20,7 @@ struct proc_mem {
     page_frame_t page_dir;
     void *kernel_stack;
     void *user_stack;
-    struct virt_region *free_virt;
+    virt_region_t *free_virt;
 };
 
 /* Represents a single process.

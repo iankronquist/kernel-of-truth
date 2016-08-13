@@ -1,13 +1,13 @@
 #pragma once
 
 // Holds a region of virtual or physical memory.
-struct region;
+struct region_head;
 
 // A region of virtual memory.
-typedef struct region virt_region_t;
+typedef struct region_head virt_region_t;
 
 // A region of physical memory
-typedef struct region phys_region_t;
+typedef struct region_head phys_region_t;
 
 // Permissions applied to virtual memory regions.
 // They can be combined with logical or. The values are taken from the bits in

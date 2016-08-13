@@ -2,10 +2,15 @@
 #include <arch/x86/process.h>
 
 #include <truth/kassert.h>
+#include <truth/klog.h>
 #include <truth/pmem.h>
 #include <truth/types.h>
 
 #include <truth/private/memlayout.h>
+
+struct region_head {
+    struct region *list;
+};
 
 struct region {
     uint64_t size;
@@ -13,69 +18,78 @@ struct region {
     struct region *next;
 };
 
+static struct region *init_region(void *address, uint64_t size,
+        struct region *next);
+
 // TODO: Make this an rb tree insertion. This is O(N) linked list insertion.
 // TODO: Implement region merging.
-status_t checked insert_region(void *addr, size_t size, struct region *vr) {
-    struct region *prev = vr;
-    kassert(prev != NULL);
-    struct region *cur = vr;
+status_t checked insert_region(void *addr, uint64_t size,
+        struct region_head *head) {
+    kassert(head != NULL);
+
+    // Walk the list until we either reach an element bigger than the current
+    // size or we reach the end.
+    struct region *prev = NULL;
+    struct region *cur = head->list;
     while (cur != NULL && size < cur->size) {
         prev = cur;
         cur = cur->next;
     }
-    struct region *new = kmalloc(sizeof(struct region));
-    if (new != 0) {
-        new->size = size;
-        new->addr = addr;
-        new->next = cur;
-        prev->next = new;
-        return Ok;
-    } else {
+
+    // Allocate new region.
+    struct region *new = init_region(addr, size, cur);
+    if (new == NULL) {
         return Err;
     }
+
+    // If we should insert it at the head of the list.
+    if (prev == NULL) {
+        head->list = new;
+    } else { // Otherwise insert the region into the middle of the list.
+        prev->next = new;
+    }
+
+    return Ok;
 }
 
 // TODO: Make this an rb tree walk. This is O(N) linked list traversal.
-void *find_region(size_t size, struct region *vr) {
-    struct region *closest_prev = NULL;
-    struct region *closest = NULL;
+void *find_region(size_t size, struct region_head *head) {
     struct region *prev = NULL;
-    struct region *cur = vr;
-    size_t closest_size = SIZE_MAX;
-    while (cur->next != NULL && cur->size < cur->next->size) {
-        if (cur->size >= size && closest_size > cur->size - size) {
-            closest_size = cur->size;
-            closest = cur;
-            closest_prev = prev;
-        }
+    struct region *cur = head->list;
+    while (cur != NULL && size > cur->size) {
         prev = cur;
         cur = cur->next;
     }
     // If there isn't enough space.
-    if (closest == NULL) {
+    if (cur == NULL) {
         return NULL;
     }
-    // Remove the closest match from the list.
-    if (closest_prev != NULL) {
-        closest_prev->next = closest->next;
+    // If we have a previous element, remove the region we found from the list.
+    if (prev != NULL) {
+        prev->next = cur->next;
+    } else {
+        // Otherwise the list is empty.
+        head->list = NULL;
     }
+    klogf("closest %p %p\n", cur->addr, cur->size);
     // If the region is too big, split it and insert the smaller end into the
     // list.
-    if (closest_size > size) {
-        void *split_addr = closest->addr + (size * PAGE_SIZE);
-        size_t split_size = closest->size - size;
-        closest->size = size;
-        status_t stat = insert_region(split_addr, split_size, vr);
+    if (cur->size > size) {
+        void *split_addr = cur->addr + (size * PAGE_SIZE);
+        size_t split_size = cur->size - size;
+        cur->size = size;
+        status_t stat = insert_region(split_addr, split_size, head);
         if (stat != Ok) {
             return NULL;
         }
     }
-    void *addr = closest->addr;
-    kfree(closest);
+    void *addr = cur->addr;
+    kfree(cur);
     return addr;
 }
 
-struct region *init_region(void *address, size_t size, struct region *next) {
+static struct region *init_region(void *address, uint64_t size,
+        struct region *next) {
     struct region *r = kmalloc(sizeof(struct region));
     r->size = size;
     r->addr = address;
@@ -83,14 +97,21 @@ struct region *init_region(void *address, size_t size, struct region *next) {
     return r;
 }
 
-void destroy_free_list(struct region *vr) {
-    struct region *cur = vr;
+struct region_head *init_region_list(void) {
+    struct region_head *new = kmalloc(sizeof(struct region));
+    new->list = NULL;
+    return new;
+}
+
+void destroy_free_list(struct region_head *head) {
+    struct region *cur = head->list;
     while (cur->next != NULL) {
         struct region *next = cur->next;
         kfree(cur);
         cur = next;
     }
     kfree(cur);
+    kfree(head);
 }
 
 void map_region(void *vr, size_t pages,  uint16_t perms) {
