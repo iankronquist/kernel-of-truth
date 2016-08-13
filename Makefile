@@ -120,7 +120,7 @@ start-virtualbox:
 docs:
 	cldoc generate -I ./include  -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/truth/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
 
-tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests
+tests: build/tests/kmem_tests build/tests/physical_allocator_tests docs-tests build/tests/hashtable_tests
 
 # Check that documentation coverage didn't change.
 # We don't care about enum values.
@@ -134,6 +134,11 @@ docs-tests: docs
 run-tests: tests
 	$(BUILD_DIR)/tests/kmem
 	$(BUILD_DIR)/tests/physical_allocator
+
+
+build/tests/hashtable_tests: build kernel/libk/tests/hashtable_tests.c kernel/libk/tests/stubs_tests.c kernel/libk/hashtable.c
+	$(TEST_CC) kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_stubs.c kernel/libk/tests/hashtable_tests.c kernel/libk/hashtable.c -o build/tests/hashtable_tests $(TEST_CFLAGS)
+
 
 build/tests/kmem_tests: build kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c
 	$(TEST_CC) kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c  -o $(BUILD_DIR)/tests/kmem $(TEST_CFLAGS)
