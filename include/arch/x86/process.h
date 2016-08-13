@@ -9,8 +9,6 @@
 
 #include <truth/kmem.h>
 
-struct virt_region;
-
 // FIXME: Move to private architecture specific file.
 /* All of the memory structures used by a single process.
  * This includes a virtual memory space cache, the kernel stack,
