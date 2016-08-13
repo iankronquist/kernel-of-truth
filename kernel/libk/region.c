@@ -105,7 +105,7 @@ struct region_head *init_region_list(void) {
 
 void destroy_free_list(struct region_head *head) {
     struct region *cur = head->list;
-    while (cur->next != NULL) {
+    while (cur != NULL) {
         struct region *next = cur->next;
         kfree(cur);
         cur = next;
