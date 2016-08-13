@@ -39,9 +39,20 @@ void test_insert_region(void) {
     destroy_free_list(rh);
 }
 
+bool in_array(void *item, void **array, size_t size) {
+    for (size_t i = 0; i < size; ++i) {
+        if (array[i] == item) {
+            kprintf("%p %p %p\n", i, array[i], item);
+            return true;
+        }
+    }
+    return false;
+}
+
 void test_find_region(void) {
     void *root_ptr = (void*)0xdeadb000;
     const size_t num_allocs = 100;
+    void *seen[num_allocs];
     const size_t init_size = num_allocs * PAGE_SIZE;
     struct region_head *rh = init_region_list();
     EXPECT_EQ(rh->list, NULL);
@@ -51,9 +62,11 @@ void test_find_region(void) {
     EXPECT_EQ(total_size(rh), init_size);
     for (size_t i = 0; i < num_allocs; ++i) {
         void *ptr = find_region(PAGE_SIZE, rh);
+        EXPECT_EQ(in_array(ptr, (void**)seen, num_allocs), false);
         EXPECT_EQ((void*)PAGE_ALIGN(ptr), ptr);
         EXPECT_GEQ(ptr, root_ptr);
         EXPECT_EQ(total_size(rh), init_size - (i+1) * PAGE_SIZE);
+        seen[i] = ptr;
     }
     EXPECT_EQ(rh->list, NULL);
     destroy_free_list(rh);
