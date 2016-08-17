@@ -13,6 +13,8 @@ TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D
 
 # Select the appropriate architecture specific CFLAGS and QEMU
 ifeq ($(ARCH),x86)
+BOCHS := bochs
+BOCHS_FLAGS :=
 QEMU := qemu-system-i386
 QEMU_FLAGS += -serial file:$(BUILD_DIR)/qemu-serial.log
 TARGET := i686-elf
@@ -101,7 +103,10 @@ start-log:
 start-debug:
 	$(QEMU) -S -s -curses -kernel $(KERNEL) $(QEMU_FLAGS)
 
-start-virtualbox:
+start-bochs: $(BUILD_DIR)/truth.iso
+	$(BOCHS) -q -f bochsrc.txt
+
+start-virtualbox: $(BUILD_DIR)/truth.iso
 	-$(VBM) unregistervm TruthOS --delete;
 	$(VBM) createvm --name TruthOS --register
 	$(VBM) modifyvm TruthOS --memory 1024
@@ -114,7 +119,7 @@ start-virtualbox:
 	$(VBM) modifyvm TruthOS --uartmode1 file $(BUILD_DIR)/virtualbox-serial.log
 	$(VBM) storagectl TruthOS --name "IDE Controller" --add ide
 	$(VBM) storageattach TruthOS --storagectl "IDE Controller" --port 0 \
-	--device 0 --type dvddrive --medium $(BUILD_DIR)/truthos.iso
+	--device 0 --type dvddrive --medium $(BUILD_DIR)/truth.iso
 	$(VB) --startvm TruthOS --dbg
 
 docs:
