@@ -15,7 +15,7 @@ status_t checked init_higher_half(page_frame_t highest_address) {
     acquire_spinlock(&higher_half_lock);
     higher_half_root = init_region_list();
     if (higher_half_root != NULL) {
-        stat = insert_region(KHEAP_PHYS_END,
+        stat = insert_region((void*)KHEAP_PHYS_END,
                 highest_address - (uintptr_t)KHEAP_PHYS_END, higher_half_root);
     }
     release_spinlock(&higher_half_lock);

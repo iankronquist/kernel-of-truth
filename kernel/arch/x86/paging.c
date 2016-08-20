@@ -245,8 +245,11 @@ static void map_kernel_pages(uint32_t *page_dir) {
     for (page_frame_t i = KERNEL_START; i < KERNEL_END; i += PAGE_SIZE) {
         map_page(page_dir, i, (void*)i, 0);
     }
-    map_page(page_dir, KHEAP_PHYS_ROOT, (void*)KHEAP_PHYS_ROOT, 0);
-
+    for (page_frame_t i = KHEAP_PHYS_ROOT;
+            i < (page_frame_t)KHEAP_PHYS_END;
+            i += PAGE_SIZE) {
+        map_page(page_dir, i, (void*)i, 0);
+    }
     // FIXME: Move to video memory driver
     map_page(page_dir, VIDEO_MEMORY_BEGIN, (void*)VIDEO_MEMORY_BEGIN, 0);
 }
