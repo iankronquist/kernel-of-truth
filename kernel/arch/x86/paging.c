@@ -250,6 +250,7 @@ static void map_kernel_pages(uint32_t *page_dir) {
             i += PAGE_SIZE) {
         map_page(page_dir, i, (void*)i, 0);
     }
+
     // FIXME: Move to video memory driver
     map_page(page_dir, VIDEO_MEMORY_BEGIN, (void*)VIDEO_MEMORY_BEGIN, 0);
 }
