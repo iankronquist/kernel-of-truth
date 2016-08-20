@@ -21,6 +21,7 @@ extern int kernel_end;
 #define KERNEL_SIZE (KERNEL_END - KERNEL_START)
 
 // Paging related
+#define ROUND_NEXT_PAGE(x) (((x + 1) / PAGE_SIZE) * PAGE_SIZE)
 #define PAGE_ALIGN(x) (((uintptr_t)(x)) & ~0xfff)
 #define NEXT_PAGE(x) (((uintptr_t)(x)+PAGE_SIZE) & ~0xfff)
 #define PAGE_DIRECTORY NEXT_PAGE(KERNEL_END)
@@ -29,6 +30,7 @@ extern int kernel_end;
 // Heap related
 #define KHEAP_PHYS_ROOT NEXT_PAGE(KERNEL_END)
 #define KHEAP_PHYS_END ((void*)NEXT_PAGE(KHEAP_PHYS_ROOT))
+#define KHEAP_PHYS_SIZE (size_t)(KHEAP_PHYS_END - KHEAP_PHYS_ROOT)
 
 // FIXME: Move elsewhere
 // Video memory related
