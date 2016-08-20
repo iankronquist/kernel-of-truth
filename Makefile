@@ -149,7 +149,7 @@ build/tests/hashtable_tests: kernel/libk/tests/hashtable_tests.c kernel/libk/tes
 
 
 build/tests/kmem_tests: kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c
-	$(TEST_CC) kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c  -o $(BUILD_DIR)/tests/kmem $(TEST_CFLAGS)
+	$(TEST_CC) kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c  -o $(BUILD_DIR)/tests/kmem_tests $(TEST_CFLAGS)
 
 coverage: run-tests
 	$(GCOV) gcov *.gcno
