@@ -6,7 +6,7 @@
 #include <truth/kabort.h>
 #include <truth/klog.h>
 #include <truth/kmem.h>
-#include <truth/physical_allocator.h>
+#include <truth/pmem.h>
 #include <truth/types.h>
 
 #include <truth/private/memlayout.h>
