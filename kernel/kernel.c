@@ -1,5 +1,3 @@
-#include <string.h>
-
 #include <arch/x86/gdt.h>
 #include <arch/x86/io.h>
 #include <arch/x86/paging.h>
@@ -16,6 +14,7 @@
 #include <truth/kputs.h>
 #include <truth/klog.h>
 #include <truth/pmem.h>
+#include <truth/string.h>
 #include <truth/types.h>
 
 #include <truth/private/init.h>

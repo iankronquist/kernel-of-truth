@@ -1,11 +1,9 @@
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-
 #include <truth/kabort.h>
 #include <truth/kassert.h>
 #include <truth/kmem.h>
 #include <truth/hashtable.h>
+#include <truth/string.h>
+#include <truth/types.h>
 
 #define TOMBSTONE ((void*)0x1)
 #define EMPTY NULL

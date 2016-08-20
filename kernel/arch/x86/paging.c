@@ -1,5 +1,3 @@
-#include <string.h>
-
 #include <arch/x86/paging.h>
 
 #include <truth/kassert.h>
@@ -7,6 +5,7 @@
 #include <truth/klog.h>
 #include <truth/kmem.h>
 #include <truth/pmem.h>
+#include <truth/string.h>
 #include <truth/types.h>
 
 #include <truth/private/memlayout.h>

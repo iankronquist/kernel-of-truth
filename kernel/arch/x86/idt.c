@@ -1,5 +1,3 @@
-#include <string.h>
-
 #include <arch/x86/cpu.h>
 #include <arch/x86/io.h>
 
@@ -9,6 +7,7 @@
 #include <truth/kputs.h>
 #include <truth/klog.h>
 #include <truth/lock.h>
+#include <truth/string.h>
 
 
 // Definitions of locations of the PIC ports.

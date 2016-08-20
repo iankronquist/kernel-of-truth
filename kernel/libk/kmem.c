@@ -1,8 +1,7 @@
-#include <string.h>
-
 #include <truth/kabort.h>
 #include <truth/kassert.h>
 #include <truth/kmem.h>
+#include <truth/string.h>
 
 #include <truth/private/memlayout.h>
 
