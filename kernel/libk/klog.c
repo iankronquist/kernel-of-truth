@@ -12,6 +12,7 @@ void init_logging(void) {
 
 void klog(char *message) {
     device_char_puts(klog_char_device, message);
+    device_char_putc(klog_char_device, '\n');
 }
 
 static void klog_uint(uint64_t n, uint32_t length) {
@@ -52,9 +53,7 @@ void klogf(char* string, ...) {
                 case 'i':
                 case 'p':
                 case 'x':
-                    if (i+1 == 'u') {
-                        klog_uint(va_arg(args, uint32_t), 8);
-                    }
+                    klog_uint(va_arg(args, uint32_t), 8);
                     break;
                 case 'l':
                     if (i+1 == 'u') {
