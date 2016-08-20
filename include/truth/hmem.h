@@ -3,6 +3,11 @@
 #include <truth/memtypes.h>
 #include <truth/types.h>
 
+/* Kernel higher half memory allocator.
+ * Allocates memory from the "higher half", the pool of memory in the higher
+ * part of the address space reserved for kernel use.
+ */
+
 // Initialize the higher half memory allocator.
 status_t checked init_higher_half(page_frame_t highest_address);
 

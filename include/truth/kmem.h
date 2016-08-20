@@ -2,6 +2,10 @@
 
 #include <truth/types.h>
 
+/* Kernel heap allocator.
+ * Allocate memory from the kernel heap.
+ */
+
 // Extend heap by page sized increments
 int kheap_extend(size_t bytes);
 
