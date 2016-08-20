@@ -1,6 +1,7 @@
 #include <drivers/terminal.h>
 
 #include <truth/device.h>
+#include <truth/lock.h>
 #include <truth/types.h>
 
 #include <truth/private/memlayout.h>
@@ -38,6 +39,8 @@ static size_t terminal_column;
 static uint8_t terminal_color;
 // A pointer to the terminal buffer.
 static uint16_t* terminal_buffer;
+
+static spinlock_t terminal_lock = SPINLOCK_INIT;
 
 // Scroll all of the text on the VGA console up one line.
 static void terminal_scroll(void);
@@ -164,28 +167,38 @@ static void terminal_scroll(void) {
 
 status_t checked term_dev_init(const struct device *unused(dev),
         int unused(device_number), void *unused(args)) {
+    acquire_spinlock(&terminal_lock);
     terminal_clear();
+    release_spinlock(&terminal_lock);
     return Ok;
 }
 
 void term_dev_fini(const struct device *unused(dev)) {
+    acquire_spinlock(&terminal_lock);
     terminal_clear();
+    release_spinlock(&terminal_lock);
 }
 
 ssize_t term_dev_write(const struct device *unused(dev), char *buf, size_t size) {
+    acquire_spinlock(&terminal_lock);
     ssize_t i;
     for (i = 0; i < (ssize_t)size; i++)
         terminal_putchar(buf[i]);
+    release_spinlock(&terminal_lock);
     return i;
 }
 
 void terminal_initialize(void) {
-    status_t unused(stat) = register_device(terminal_char_device);
+    acquire_spinlock(&terminal_lock);
     terminal_clear();
+    release_spinlock(&terminal_lock);
 }
 
 int term_dev_putc(const struct device *unused(dev), char c) {
-    return terminal_putchar(c);
+    acquire_spinlock(&terminal_lock);
+    char out = terminal_putchar(c);
+    release_spinlock(&terminal_lock);
+    return out;
 }
 
 struct device vga_char_device = {
