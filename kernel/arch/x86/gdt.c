@@ -1,7 +1,6 @@
-#include <string.h>
-
 #include <arch/x86/gdt.h>
 
+#include <truth/string.h>
 #include <truth/types.h>
 
 /* The Global Descriptor Table and its entries.

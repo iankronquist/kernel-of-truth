@@ -5,7 +5,7 @@ ARCH := x86
 BUILD_DIR := build
 
 # Flags for the tools.
-CFLAGS := -std=c11 -MP -MMD -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include
+CFLAGS := -std=c11 -MP -MMD -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include
 LDFLAGS := $(CFLAGS) -nostdlib
 QEMU_FLAGS := -m 1G -no-reboot
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D DEBUG
@@ -42,7 +42,7 @@ TEST_CC=clang
 GCOV=llvm-cov
 
 # The kernel is broken down into several components.
-COMPONENTS := kernel/arch/$(ARCH) kernel kernel/libk tlibc kernel/drivers
+COMPONENTS := kernel/arch/$(ARCH) kernel kernel/libk kernel/drivers
 
 # The name of the final elf file being built.
 KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
@@ -80,9 +80,6 @@ $(BUILD_DIR)/%.S.$(ARCH).o: kernel/arch/$(ARCH)/%.S
 	$(AS) $(ASFLAGS) -o $@ $<
 
 $(BUILD_DIR)/%.driver.o: kernel/drivers/%.c
-	$(CC) -c $(CFLAGS) -o $@ $<
-
-$(BUILD_DIR)/%.tlibc.o: tlibc/%.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(BUILD_DIR)/truth.iso: $(KERNEL) grub.cfg
@@ -157,8 +154,6 @@ coverage: run-tests
 	rm -f *.gcda
 	rm -f *tests.c.gcov
 	rm -f *stubs.c.gcov
-
-
 
 -include $(OBJ:.o=.d)
 
