@@ -18,7 +18,7 @@ extern int kernel_end;
 
 #define KERNEL_END ((uint32_t)&kernel_end)
 #define KERNEL_START ((uint32_t)&kernel_start)
-#define KERNEL_SIZE (KERNEL_START - KERNEL_END)
+#define KERNEL_SIZE (KERNEL_END - KERNEL_START)
 
 // Paging related
 #define PAGE_ALIGN(x) (((uintptr_t)(x)) & ~0xfff)
