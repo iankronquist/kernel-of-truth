@@ -31,6 +31,10 @@ void klogf(char* string, ...) {
     vfprintf(stdout, string, a);
 }
 
+void klog(char* string) {
+    puts(string);
+}
+
 void kabort() {
     assert(0);
 }
