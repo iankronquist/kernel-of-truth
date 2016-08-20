@@ -25,6 +25,16 @@ void kprintf(char* string, ...) {
     vfprintf(stdout, string, a);
 }
 
+void klogf(char* string, ...) {
+    va_list a;
+    va_start(a, string);
+    vfprintf(stdout, string, a);
+}
+
+void klog(char* string) {
+    puts(string);
+}
+
 void kabort() {
     assert(0);
 }
