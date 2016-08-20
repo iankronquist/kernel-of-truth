@@ -25,7 +25,6 @@ static struct region *init_region(void *address, uint64_t size,
 // TODO: Implement region merging.
 status_t checked insert_region(void *addr, uint64_t size,
         struct region_head *head) {
-    klogf("insert: %p %p\n", addr, size);
     kassert(PAGE_ALIGN(size) == size);
     kassert((void*)PAGE_ALIGN(addr) == addr);
     kassert(head != NULL);
@@ -75,7 +74,6 @@ void *find_region(size_t size, struct region_head *head) {
         // Otherwise the list is empty.
         head->list = NULL;
     }
-    klogf("closest %p %p\n", cur->addr, cur->size);
     // If the region is too big, split it and insert the smaller end into the
     // list.
     if (cur->size > size) {
@@ -90,7 +88,6 @@ void *find_region(size_t size, struct region_head *head) {
     void *addr = cur->addr;
     kfree(cur);
     kassert((void*)PAGE_ALIGN(addr) == addr);
-    klogf("%p aligned? \n", addr);
     return addr;
 }
 
@@ -203,6 +200,15 @@ void map_region(void *vr, size_t pages,  uint16_t perms) {
     for (void *addr = vr; addr < vr + (pages * PAGE_SIZE);
             addr += PAGE_SIZE) {
         inner_map_page(CUR_PAGE_DIRECTORY_ADDR, alloc_frame(), addr, perms);
+    }
+}
+
+void map_region_page(void *vr, page_frame_t page, size_t pages,
+        uint16_t perms) {
+    kassert((void*)PAGE_ALIGN(vr) == vr);
+    for (void *addr = vr; addr < vr + (pages * PAGE_SIZE);
+            addr += PAGE_SIZE, page += PAGE_SIZE) {
+        inner_map_page(CUR_PAGE_DIRECTORY_ADDR, page, addr, perms);
     }
 }
 

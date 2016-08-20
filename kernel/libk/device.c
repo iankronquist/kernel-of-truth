@@ -40,10 +40,7 @@ status_t checked device_char_init(const struct device  *cdev, int device_number,
         void *args) {
     kassert(cdev != NULL);
     status_t stat = cdev->character.init(cdev, device_number, args);
-    if (stat != Ok) {
-        return stat;
-    }
-    return register_device(cdev);
+    return stat;
 }
 
 size_t device_char_puts(const struct device *cdev, char *string) {
