@@ -26,7 +26,7 @@
 */
 void worker(void) {
     while(1) {
-        klog("worker\n");
+        klog("worker");
     }
 }
 
@@ -47,7 +47,7 @@ void worker(void) {
  * is created, and multi-processing is initialized.
  * @return this function should never return.
 */
-void kernel_main(void *unused(multiboot_tables)) {
+void kernel_main(void *multiboot_tables) {
     init_cpu();
     init_interrupts();
     terminal_initialize();
@@ -66,7 +66,7 @@ void kernel_main(void *unused(multiboot_tables)) {
     schedule_proc(worker_proc);
 
     while (1) {
-        klog("kernel\n");
+        klog("kernel");
     }
 }
 
