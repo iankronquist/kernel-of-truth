@@ -7,7 +7,7 @@ BUILD_DIR := build
 # Flags for the tools.
 CFLAGS := -std=c11 -MP -MMD -ffreestanding -O0 -Wall -Werror -Wextra -g -I ./include -I tlibc/include
 LDFLAGS := $(CFLAGS) -nostdlib
-QEMU_FLAGS := -m 1G
+QEMU_FLAGS := -m 1G -no-reboot
 TEST_CFLAGS= -std=c11 -O0 -Wall -Wextra -g -I ./include -coverage -Wno-format -D DEBUG
 
 
@@ -97,8 +97,8 @@ clean:
 start: $(KERNEL)
 	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS)
 
-start-log:
-	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall -no-reboot -D $(BUILD_DIR)/qemu.log $(QEMU_FLAGS)
+start-log: $(KERNEL)
+	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall -D $(BUILD_DIR)/qemu.log $(QEMU_FLAGS)
 
 start-debug:
 	$(QEMU) -S -s -curses -kernel $(KERNEL) $(QEMU_FLAGS)
