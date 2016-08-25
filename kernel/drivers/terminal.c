@@ -1,5 +1,6 @@
 #include <drivers/terminal.h>
 
+#include <truth/kassert.h>
 #include <truth/device.h>
 #include <truth/lock.h>
 #include <truth/types.h>
@@ -75,6 +76,7 @@ static uint16_t make_vgaentry(char c, uint8_t color) {
 
 static void terminal_putentryat(char c, uint8_t color, size_t x, size_t y) {
     const size_t index = y * VGA_WIDTH + x;
+    kassert(index < VGA_WIDTH * VGA_HEIGHT);
     terminal_buffer[index] = make_vgaentry(c, color);
 }
 
