@@ -88,6 +88,9 @@ $(BUILD_DIR)/truth.iso: $(KERNEL) grub.cfg
 	cp grub.cfg $(BUILD_DIR)/isodir/boot/grub/grub.cfg
 	cd $(BUILD_DIR) && $(GRUB_MKRESCUE) -o truth.iso isodir
 
+tags: kernel/arch/$(ARCH)/*.c kernel/arch/$(ARCH)/*.asm kernel/libk/*.c kernel/*.c kernel/drivers/*.c
+	ctags -R kernel include
+
 clean:
 	rm -rf $(BUILD_DIR)/*
 
