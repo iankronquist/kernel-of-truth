@@ -20,6 +20,7 @@ struct region {
 
 static struct region *init_region(void *address, uint64_t size,
         struct region *next);
+void debug_region(struct region_head *head);
 
 // TODO: Make this an rb tree insertion. This is O(N) linked list insertion.
 // TODO: Implement region merging.
@@ -28,12 +29,13 @@ status_t checked insert_region(void *addr, uint64_t size,
     kassert(PAGE_ALIGN(size) == size);
     kassert((void*)PAGE_ALIGN(addr) == addr);
     kassert(head != NULL);
+    klogf("before insertion\n");
 
     // Walk the list until we either reach an element bigger than the current
     // size or we reach the end.
     struct region *prev = NULL;
     struct region *cur = head->list;
-    while (cur != NULL && size < cur->size) {
+    while (cur != NULL && size > cur->size) {
         prev = cur;
         cur = cur->next;
     }
@@ -50,6 +52,7 @@ status_t checked insert_region(void *addr, uint64_t size,
     } else { // Otherwise insert the region into the middle of the list.
         prev->next = new;
     }
+    klogf("Insert region %p of size %p\n", addr, size);
 
     return Ok;
 }
@@ -57,6 +60,7 @@ status_t checked insert_region(void *addr, uint64_t size,
 // TODO: Make this an rb tree walk. This is O(N) linked list traversal.
 void *find_region(size_t size, struct region_head *head) {
     kassert(PAGE_ALIGN(size) == size);
+    kassert(head != NULL);
     struct region *prev = NULL;
     struct region *cur = head->list;
     while (cur != NULL && size > cur->size) {
@@ -72,16 +76,18 @@ void *find_region(size_t size, struct region_head *head) {
         prev->next = cur->next;
     } else {
         // Otherwise the list is empty.
-        head->list = NULL;
+        //head->list = NULL;
+        head->list = cur->next;
     }
     // If the region is too big, split it and insert the smaller end into the
     // list.
     if (cur->size > size) {
-        void *split_addr = cur->addr + (size * PAGE_SIZE);
+        void *split_addr = cur->addr + size;
         size_t split_size = cur->size - size;
         cur->size = size;
         status_t stat = insert_region(split_addr, split_size, head);
         if (stat != Ok) {
+            kassert(0);
             return NULL;
         }
     }
@@ -93,29 +99,25 @@ void *find_region(size_t size, struct region_head *head) {
 
 void debug_region(struct region_head *head) {
     struct region *cur = head->list;
-    klogf("%p: {", head);
+    klogf("region %p: [", head);
 
     while (cur != NULL) {
         klogf("{ addr: %p, size: %p }, ", cur->addr, cur->size);
         cur = cur->next;
     }
-    klogf("}\n");
+    klogf("]\n");
 }
 
 status_t checked remove_region(void *addr, size_t size,
         struct region_head *head) {
-    klogf("addr %p size %p\n", addr, size);
     kassert(PAGE_ALIGN(size) == size);
     kassert((void*)PAGE_ALIGN(addr) == addr);
     status_t stat;
     struct region *prev = NULL;
     struct region *cur = head->list;
-    klogf(">>>>%p %p\n", size, cur, cur->size);
     while (cur != NULL) {
-        klogf("%p %p %p %p %p\n", cur, size, cur->size, cur->addr, addr);
         // If the address is in the current region
         if (cur->addr <= addr && cur->addr + cur->size >= addr) {
-            klogf("fits\n");
             // Remove the current region from the list.
             if (prev != NULL) {
                 prev->next = cur->next;
@@ -125,7 +127,6 @@ status_t checked remove_region(void *addr, size_t size,
             // If there is space before the desired address, put it into the
             // list.
             if (cur->addr < addr) {
-                klogf("prefix\n");
                 stat = insert_region(cur->addr, addr - cur->addr, head);
                 if (stat != Ok) {
                     kfree(cur);
@@ -197,7 +198,7 @@ void destroy_free_list(struct region_head *head) {
 
 void map_region(void *vr, size_t pages,  uint16_t perms) {
     kassert((void*)PAGE_ALIGN(vr) == vr);
-    for (void *addr = vr; addr < vr + (pages * PAGE_SIZE);
+    for (void *addr = vr; addr < vr + pages;
             addr += PAGE_SIZE) {
         inner_map_page(CUR_PAGE_DIRECTORY_ADDR, alloc_frame(), addr, perms);
     }
@@ -206,7 +207,7 @@ void map_region(void *vr, size_t pages,  uint16_t perms) {
 void map_region_page(void *vr, page_frame_t page, size_t pages,
         uint16_t perms) {
     kassert((void*)PAGE_ALIGN(vr) == vr);
-    for (void *addr = vr; addr < vr + (pages * PAGE_SIZE);
+    for (void *addr = vr; addr < vr + pages;
             addr += PAGE_SIZE, page += PAGE_SIZE) {
         inner_map_page(CUR_PAGE_DIRECTORY_ADDR, page, addr, perms);
     }
@@ -214,7 +215,7 @@ void map_region_page(void *vr, page_frame_t page, size_t pages,
 
 void unmap_region(void *vr, size_t pages) {
     kassert((void*)PAGE_ALIGN(vr) == vr);
-    for (void *addr = vr; addr < vr + (pages * PAGE_SIZE);
+    for (void *addr = vr; addr < vr + pages;
             addr += PAGE_SIZE) {
         inner_unmap_page(CUR_PAGE_DIRECTORY_ADDR, addr, true);
     }

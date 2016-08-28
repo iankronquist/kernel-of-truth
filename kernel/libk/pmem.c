@@ -32,7 +32,7 @@ status_t checked init_phys_allocator(struct multiboot_info *mb,
     for (size_t i = 0;
             i < mb->mmap_length/sizeof(multiboot_memory_map_t);
             ++i) {
-        if (mmap[i].type == MULTIBOOT_MEMORY_AVAILABLE) {
+        if (mmap[i].type == MULTIBOOT_MEMORY_AVAILABLE && (mmap[i].addr >> 32) == 0) {
             uintptr_t addr_low = (uintptr_t)mmap[i].addr;
             uintptr_t length_low = (uintptr_t)mmap[i].len;
             klogf("size %p len %p type %p\n", addr_low, length_low,

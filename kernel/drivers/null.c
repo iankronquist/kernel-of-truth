@@ -41,4 +41,4 @@ struct device null_char_device = {
     },
 };
 
-//struct device *terminal_char_device = &null_char_device;
+struct device *terminal_char_device = &null_char_device;

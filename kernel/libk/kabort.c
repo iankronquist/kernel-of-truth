@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <truth/interrupts.h>
 #include <truth/kabort.h>
+#include <truth/klog.h>
 #include <truth/kputs.h>
 
 #ifdef __i386__
@@ -12,7 +13,7 @@
 
 void kabort(void) {
     disable_interrupts();
-    kputs("\nKernel Panic!\n");
+    klog("\nKernel Panic!\n");
     while (true) {
         halt();
     }

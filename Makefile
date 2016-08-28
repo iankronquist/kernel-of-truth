@@ -88,6 +88,9 @@ $(BUILD_DIR)/truth.iso: $(KERNEL) grub.cfg
 	cp grub.cfg $(BUILD_DIR)/isodir/boot/grub/grub.cfg
 	cd $(BUILD_DIR) && $(GRUB_MKRESCUE) -o truth.iso isodir
 
+tags: kernel/arch/$(ARCH)/*.c kernel/arch/$(ARCH)/*.asm kernel/libk/*.c kernel/*.c kernel/drivers/*.c
+	ctags -R kernel include
+
 clean:
 	rm -rf $(BUILD_DIR)/*
 
@@ -140,6 +143,9 @@ run-tests: tests docs-tests
 
 build/tests/region_tests: kernel/libk/tests/region_tests.c kernel/libk/region.c
 	$(TEST_CC) kernel/libk/tests/paging_stubs.c kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_stubs.c kernel/libk/tests/region_tests.c -o build/tests/region_tests $(TEST_CFLAGS)
+
+build/tests/random_region_tests: kernel/libk/tests/random_region_tests.c kernel/libk/region.c
+	$(TEST_CC) kernel/libk/tests/paging_stubs.c kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_stubs.c kernel/libk/tests/random_region_tests.c -o build/tests/random_region_tests $(TEST_CFLAGS)
 
 build/tests/hashtable_tests: kernel/libk/tests/hashtable_tests.c kernel/libk/tests/stubs_tests.c kernel/libk/hashtable.c
 	$(TEST_CC) kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_stubs.c kernel/libk/tests/hashtable_tests.c kernel/libk/hashtable.c -o build/tests/hashtable_tests $(TEST_CFLAGS)
