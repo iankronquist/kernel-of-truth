@@ -17,29 +17,37 @@ SECTIONS
 	.text BLOCK(4K) : ALIGN(4K)
 	{
 		*(.multiboot)
+		text_start = .;
 		*(.text)
+		text_end = .;
 	}
 
 	/* Read-only data. */
 	.rodata BLOCK(4K) : ALIGN(4K)
 	{
+		rodata_start = .;
 		*(.rodata)
+		rodata_end = .;
 	}
 
 	/* Read-write data (initialized) */
 	.data BLOCK(4K) : ALIGN(4K)
 	{
+		data_start = .;
 		*(.data)
+		data_end = .;
 	}
 
 	/* Read-write data (uninitialized) and stack */
 	.bss BLOCK(4K) : ALIGN(4K)
 	{
+		bss_start = .;
 		*(COMMON)
 		*(.bss)
 		*(.bootstrap_stack)
-		kernel_end = .;
+		bss_end = .;
 	}
+	kernel_end = .;
 
 	/* The compiler may produce other sections, by default it will put them in
 	   a segment with the same name. Simply add stuff here as needed. */
