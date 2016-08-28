@@ -7,12 +7,6 @@ get_flags:
 	ret
 
 
-global get_page_dir
-get_page_dir:
-	mov eax, cr3
-	ret
-
-
 
 ; extern void switch_task(uint32_t esp, uint32_t cr3, uint32_t *kernel_esp);
 global switch_task

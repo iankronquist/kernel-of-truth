@@ -42,7 +42,7 @@ TEST_CC=clang
 GCOV=llvm-cov
 
 # The kernel is broken down into several components.
-COMPONENTS := kernel/arch/$(ARCH) kernel kernel/libk kernel/drivers
+COMPONENTS := kernel/arch/$(ARCH) kernel kernel/drivers
 
 # The name of the final elf file being built.
 KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
@@ -67,9 +67,6 @@ $(KERNEL): kernel/arch/$(ARCH)/linker.ld $(OBJ)
 $(BUILD_DIR)/%.o: kernel/%.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-$(BUILD_DIR)/%.libk.o: kernel/libk/%.c
-	$(CC) -c $(CFLAGS) -o $@ $<
-
 $(BUILD_DIR)/%.$(ARCH).o: kernel/arch/$(ARCH)/%.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
@@ -88,7 +85,7 @@ $(BUILD_DIR)/truth.iso: $(KERNEL) grub.cfg
 	cp grub.cfg $(BUILD_DIR)/isodir/boot/grub/grub.cfg
 	cd $(BUILD_DIR) && $(GRUB_MKRESCUE) -o truth.iso isodir
 
-tags: kernel/arch/$(ARCH)/*.c kernel/arch/$(ARCH)/*.asm kernel/libk/*.c kernel/*.c kernel/drivers/*.c
+tags: kernel/arch/$(ARCH)/*.c kernel/arch/$(ARCH)/*.asm kernel/*.c kernel/*.c kernel/drivers/*.c
 	ctags -R kernel include
 
 clean:
@@ -123,9 +120,9 @@ start-virtualbox: $(BUILD_DIR)/truth.iso
 	$(VB) --startvm TruthOS --dbg
 
 docs:
-	cldoc generate -I ./include  -Wno-int-to-pointer-cast -- --output build/docs kernel/libk/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/truth/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
+	cldoc generate -I ./include  -Wno-int-to-pointer-cast -- --output build/docs kernel/*.c kernel/arch/x86/*.c kernel/drivers/*.c include/truth/*.h include/drivers/*.h kernel/*.c include/arch/x86/*.h --language c --report
 
-tests: build/tests/kmem_tests docs-tests build/tests/hashtable_tests build/tests/region_tests
+tests: build/tests/kmem_tests docs-tests build/tests/hashtable_tests build/tests/region_tests build/tests/random_region_tests
 
 # Check that documentation coverage didn't change.
 # We don't care about enum values.
@@ -141,18 +138,18 @@ run-tests: tests docs-tests
 	$(BUILD_DIR)/tests/hashtable_tests
 	$(BUILD_DIR)/tests/region_tests
 
-build/tests/region_tests: kernel/libk/tests/region_tests.c kernel/libk/region.c
-	$(TEST_CC) kernel/libk/tests/paging_stubs.c kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_stubs.c kernel/libk/tests/region_tests.c -o build/tests/region_tests $(TEST_CFLAGS)
+build/tests/region_tests: kernel/tests/region_tests.c kernel/region.c
+	$(TEST_CC) kernel/tests/paging_stubs.c kernel/tests/stubs_tests.c kernel/tests/kmem_stubs.c kernel/tests/region_tests.c -o build/tests/region_tests $(TEST_CFLAGS)
 
-build/tests/random_region_tests: kernel/libk/tests/random_region_tests.c kernel/libk/region.c
-	$(TEST_CC) kernel/libk/tests/paging_stubs.c kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_stubs.c kernel/libk/tests/random_region_tests.c -o build/tests/random_region_tests $(TEST_CFLAGS)
+build/tests/random_region_tests: kernel/tests/random_region_tests.c kernel/region.c
+	$(TEST_CC) kernel/tests/paging_stubs.c kernel/tests/stubs_tests.c kernel/tests/kmem_stubs.c kernel/tests/random_region_tests.c -o build/tests/random_region_tests $(TEST_CFLAGS)
 
-build/tests/hashtable_tests: kernel/libk/tests/hashtable_tests.c kernel/libk/tests/stubs_tests.c kernel/libk/hashtable.c
-	$(TEST_CC) kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_stubs.c kernel/libk/tests/hashtable_tests.c kernel/libk/hashtable.c -o build/tests/hashtable_tests $(TEST_CFLAGS)
+build/tests/hashtable_tests: kernel/tests/hashtable_tests.c kernel/tests/stubs_tests.c kernel/hashtable.c
+	$(TEST_CC) kernel/tests/stubs_tests.c kernel/tests/kmem_stubs.c kernel/tests/hashtable_tests.c kernel/hashtable.c -o build/tests/hashtable_tests $(TEST_CFLAGS)
 
 
-build/tests/kmem_tests: kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c
-	$(TEST_CC) kernel/libk/tests/stubs_tests.c kernel/libk/tests/kmem_tests.c  -o $(BUILD_DIR)/tests/kmem_tests $(TEST_CFLAGS)
+build/tests/kmem_tests: kernel/tests/stubs_tests.c kernel/tests/kmem_tests.c
+	$(TEST_CC) kernel/tests/stubs_tests.c kernel/tests/kmem_tests.c  -o $(BUILD_DIR)/tests/kmem_tests $(TEST_CFLAGS)
 
 coverage: run-tests
 	$(GCOV) gcov *.gcno

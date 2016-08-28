@@ -1,3 +1,9 @@
+section .text
+
+global get_page_dir
+get_page_dir:
+	mov eax, cr3
+	ret
 
 ; extern void flush_tlb(void);
 global flush_tlb

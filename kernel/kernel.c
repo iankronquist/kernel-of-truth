@@ -60,10 +60,6 @@ void kernel_main(void *multiboot_tables) {
     klog(testing);
     kfree(testing);
 
-    init_multitasking();
-    struct process *worker_proc = create_proc(worker);
-    schedule_proc(worker_proc);
-
     while (1) {
         klog("kernel");
     }

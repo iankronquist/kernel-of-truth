@@ -1,1 +1,9 @@
+OBJ += build/device.o
+OBJ += build/kabort.o
+OBJ += build/kmem.o
+OBJ += build/region.o
 OBJ += build/kernel.o
+OBJ += build/kputs.o
+OBJ += build/string.o
+OBJ += build/klog.o
+OBJ += build/pmem.o
