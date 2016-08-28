@@ -5,7 +5,5 @@ OBJ += build/region.o
 OBJ += build/kernel.o
 OBJ += build/kputs.o
 OBJ += build/string.o
-OBJ += build/hmem.o
 OBJ += build/klog.o
 OBJ += build/pmem.o
-OBJ += build/vmem.o
