@@ -37,12 +37,17 @@ static void klog_uint(uint64_t n, uint32_t length) {
 
 // A subset of printf
 void klogf(char* string, ...) {
+    char *str;
     va_list args;
     va_start(args, string);
     for (size_t i = 0; string[i] != '\0'; ++i) {
         if (string[i] == '%') {
             ++i;
             switch(string[i]) {
+                case 's':
+                    str = va_arg(args, char *);
+                    device_char_puts(klog_char_device, str);
+                    break;
                 case '%':
                     device_char_putc(klog_char_device, '%');
                     break;
