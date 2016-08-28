@@ -16,12 +16,38 @@ extern int kernel_start;
 // The address of the end of the kernel. Defined by the linker.
 extern int kernel_end;
 
-#define KERNEL_END ((uint32_t)&kernel_end)
-#define KERNEL_START ((uint32_t)&kernel_start)
+// The address of the start of the text section.
+extern int text_start;
+// The address of the end of the text section.
+extern int text_end;
+// The address of the start of the data section.
+extern int data_start;
+// The address of the end of the data section.
+extern int data_end;
+// The address of the start of the read-only data section.
+extern int rodata_start;
+// The address of the end of the read-only data section.
+extern int rodata_end;
+// The address of the start of the bss section.
+extern int bss_start;
+// The address of the end of the bss section.
+extern int bss_end;
+
+#define TEXT_START   ((uintptr_t)&text_start)
+#define TEXT_END     ((uintptr_t)&text_end)
+#define DATA_START   ((uintptr_t)&data_start)
+#define DATA_END     ((uintptr_t)&data_end)
+#define RODATA_START ((uintptr_t)&rodata_start)
+#define RODATA_END   ((uintptr_t)&rodata_end)
+#define BSS_START    ((uintptr_t)&bss_start)
+#define BSS_END      ((uintptr_t)&bss_end)
+#define KERNEL_END   ((uintptr_t)&kernel_end)
+#define KERNEL_START ((uintptr_t)&kernel_start)
+
 #define KERNEL_SIZE (KERNEL_END - KERNEL_START)
 
 // Paging related
-#define ROUND_NEXT_PAGE(x) (((x + 1) / PAGE_SIZE) * PAGE_SIZE)
+#define ROUND_NEXT_PAGE(x) (((x + (PAGE_SIZE / 2)) / PAGE_SIZE) * PAGE_SIZE)
 #define PAGE_ALIGN(x) (((uintptr_t)(x)) & ~0xfff)
 #define NEXT_PAGE(x) (((uintptr_t)(x)+PAGE_SIZE) & ~0xfff)
 #define PAGE_DIRECTORY NEXT_PAGE(KERNEL_END)
