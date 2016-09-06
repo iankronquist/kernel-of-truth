@@ -53,15 +53,15 @@ void bootstrap_paging(void) {
     // We assume that the kernel will fit on one page directory entry.
     // Point PDPT to PD.
     bootstrap_pdpt[pdpt_index((void*)BOOTSTRAP_START)] =
-        (uintptr_t)bootstrap_page_dir | perm_present;
+        (uintptr_t)bootstrap_page_dir | perm_present | perm_write;
     // Point PD to PT.
     bootstrap_page_dir[page_dir_index((void*)BOOTSTRAP_START)] =
-        (uintptr_t)bootstrap_page_table | perm_present;
+        (uintptr_t)bootstrap_page_table | perm_present | perm_write;
     map_range(BOOTSTRAP_START, BOOTSTRAP_END, perm_present);
     map_range(TEXT_START, TEXT_END, perm_present);
-    map_range(DATA_START, DATA_END, perm_write | perm_present);
+    map_range(DATA_START, DATA_END, perm_write | perm_present | perm_write);
     map_range(RODATA_START, RODATA_END, perm_present);
-    map_range(BSS_START, BSS_END, perm_write | perm_present);
+    map_range(BSS_START, BSS_END, perm_write | perm_present | perm_write);
 
     // Fractal paging.
     bootstrap_page_dir[PAGE_DIR_ENTRY_COUNT-1] =
