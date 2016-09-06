@@ -3,6 +3,9 @@
 // Holds a region of virtual or physical memory.
 struct region_head;
 
+// A physical address.
+typedef uintptr_t phys_addr_t;
+
 // A region of virtual memory.
 typedef struct region_head virt_region_t;
 
