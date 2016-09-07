@@ -204,11 +204,7 @@ void common_interrupt_handler(struct cpu_state r) {
     if (idt_dispatch_table[r.int_no] != NULL) {
         idt_dispatch_table[r.int_no](&r);
     } else {
-        kprintf("Unhandled Interrupt Triggered!\nRegisters:");
         klogf("Unhandled Interrupt Triggered!\nRegisters:");
-        kprintf("ds: %p edi: %p esi: %p ebp: %p esp: %p ebx: %p edx: %p "
-                "ecx: %p eax: %p int_no: %p err_code: %p eip: %p cs: %p "
-                "eflags: %p useresp: %p ss: %p", r);
         klogf("ds: %p edi: %p esi: %p ebp: %p esp: %p ebx: %p edx: %p ecx: %p "
               "eax: %p int_no: %p err_code: %p eip: %p cs: %p eflags: %p "
               "useresp: %p ss: %p", r);
