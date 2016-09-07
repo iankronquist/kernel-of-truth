@@ -9,6 +9,7 @@ global bootstrap_pdpt
 global bootstrap_stack_canary
 global bootstrap_stack_bottom
 global bootstrap_stack_top
+global bootstrap_heap
 
 ; Define symbols used in the multiboot header.
 MBALIGN  equ 1 << 0
@@ -68,6 +69,9 @@ bootstrap_page_dir:
 resb 4096
 
 bootstrap_page_table:
+resb 4096
+
+bootstrap_heap:
 resb 4096
 
 bootstrap_stack_canary:
