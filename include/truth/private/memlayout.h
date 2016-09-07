@@ -44,19 +44,21 @@ extern int rodata_end;
 extern int bss_start;
 // The address of the end of the bss section.
 extern int bss_end;
+// The address of the start of the bootstrap heap.
+extern int bootstrap_heap;
 
 #define BOOTSTRAP_START ((uintptr_t)&bootstrap_start)
-#define BOOTSTRAP_END ((uintptr_t)&bootstrap_end)
+#define BOOTSTRAP_END (ROUND_NEXT_PAGE((uintptr_t)&bootstrap_end))
 #define TEXT_START   ((uintptr_t)&text_start)
-#define TEXT_END     ((uintptr_t)&text_end)
+#define TEXT_END     (ROUND_NEXT_PAGE((uintptr_t)&text_end))
 #define DATA_START   ((uintptr_t)&data_start)
-#define DATA_END     ((uintptr_t)&data_end)
+#define DATA_END     (ROUND_NEXT_PAGE((uintptr_t)&data_end))
 #define RODATA_START ((uintptr_t)&rodata_start)
-#define RODATA_END   ((uintptr_t)&rodata_end)
+#define RODATA_END   (ROUND_NEXT_PAGE((uintptr_t)&rodata_end))
 #define BSS_START    ((uintptr_t)&bss_start)
-#define BSS_END      ((uintptr_t)&bss_end)
-#define KERNEL_END   (ROUND_NEXT_PAGE((uintptr_t)&kernel_end))
+#define BSS_END      (ROUND_NEXT_PAGE((uintptr_t)&bss_end))
 #define KERNEL_START ((uintptr_t)&kernel_start)
+#define KERNEL_END   (ROUND_NEXT_PAGE((uintptr_t)&kernel_end))
 #define BOOTSTRAP_STACK_CANARY_START ((uintptr_t)&bootstrap_stack_canary)
 
 #define KERNEL_SIZE (KERNEL_END - KERNEL_START)
