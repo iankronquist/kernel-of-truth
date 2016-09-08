@@ -196,11 +196,13 @@ void destroy_free_list(struct region_head *head) {
     kfree(head);
 }
 
-void map_region(void *vr, size_t pages,  uint16_t perms) {
+void map_region(void *vr, size_t pages,  enum memory_permissions perms) {
     kassert((void*)PAGE_ALIGN(vr) == vr);
     for (void *addr = vr; addr < vr + pages;
             addr += PAGE_SIZE) {
-        inner_map_page(CUR_PAGE_DIRECTORY_ADDR, alloc_frame(), addr, perms);
+        // FIXME check this.
+        status_t unused(stat);
+        stat = map_page(get_cur_page_table(), addr, alloc_frame(), perms);
     }
 }
 
@@ -209,7 +211,10 @@ void map_region_page(void *vr, page_frame_t page, size_t pages,
     kassert((void*)PAGE_ALIGN(vr) == vr);
     for (void *addr = vr; addr < vr + pages;
             addr += PAGE_SIZE, page += PAGE_SIZE) {
-        inner_map_page(CUR_PAGE_DIRECTORY_ADDR, page, addr, perms);
+        // FIXME check this.
+        status_t unused(stat);
+        stat = map_page(get_cur_page_table(), addr, page, perms);
+
     }
 }
 
@@ -217,6 +222,8 @@ void unmap_region(void *vr, size_t pages) {
     kassert((void*)PAGE_ALIGN(vr) == vr);
     for (void *addr = vr; addr < vr + pages;
             addr += PAGE_SIZE) {
-        inner_unmap_page(CUR_PAGE_DIRECTORY_ADDR, addr, true);
+        // FIXME check this.
+        status_t unused(stat);
+        stat = unmap_page(get_cur_page_table(), addr, true);
     }
 }
