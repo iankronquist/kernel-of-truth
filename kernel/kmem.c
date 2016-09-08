@@ -15,16 +15,20 @@
 
 #define KHEAP_BLOCK_SLOP 32
 
+
 // Keep allocations on the kernel heap in a linked list.
 // This information is squirreled away before each allocation on the heap.
 struct kheap_metadata {
     size_t size;
     struct kheap_metadata *next;
     bool is_free;
+    char data[0];
 };
 
 static struct kheap_metadata *root;
 static void *heap_end = NULL;
+
+static void *carve_block(struct kheap_metadata *cur, size_t bytes);
 
 void *krealloc(void *ptr, size_t bytes) {
     struct kheap_metadata *ptr_md = ptr - sizeof(struct kheap_metadata);
@@ -74,6 +78,24 @@ void *krealloc(void *ptr, size_t bytes) {
     }
 }
 
+void *kmalloc_aligned(size_t bytes, size_t alignment) {
+    // If the alignment is not a power of 2, return NULL.
+    if ((alignment & (alignment-1)) != 0) {
+        return NULL;
+    }
+    struct kheap_metadata *cur = root;
+    if (bytes == 0) {
+        return NULL;
+    }
+    // Find the first free block which is big enough and aligned.
+    while (cur != KHEAP_END_SENTINEL && (!cur->is_free ||
+                (((((uintptr_t)&cur->data) & (alignment - 1)) == 0) &&
+                 cur->size < bytes))) {
+        cur = cur->next;
+    }
+    return carve_block;
+}
+
 void *kmalloc(size_t bytes) {
     struct kheap_metadata *cur = root;
     if (bytes == 0) {
@@ -83,6 +105,10 @@ void *kmalloc(size_t bytes) {
     while (cur != KHEAP_END_SENTINEL && (!cur->is_free || cur->size < bytes)) {
         cur = cur->next;
     }
+    return carve_block(cur, bytes);
+}
+
+static void *carve_block(struct kheap_metadata *cur, size_t bytes) {
     // If there wasn't one, grow the heap
     if (cur == KHEAP_END_SENTINEL) {
         cur = heap_end;
@@ -92,6 +118,7 @@ void *kmalloc(size_t bytes) {
             return NULL;
         }
     }
+
     // Potentially partition the free block
     if (cur->size > bytes + sizeof(struct kheap_metadata) +
             KHEAP_BLOCK_SLOP) {
@@ -107,7 +134,7 @@ void *kmalloc(size_t bytes) {
         cur->next = new_block;
     }
     cur->is_free = false;
-    return cur + 1;
+    return &cur->data;
 }
 
 // Extend heap by page sized increments

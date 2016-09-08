@@ -16,6 +16,10 @@ void kheap_install(void *root, size_t initial_heap_size);
 // Similar to malloc.
 void *kmalloc(size_t bytes);
 
+// Return a usable aligned allocation on the kernel heap. The alignment must be
+// a power of two.
+void *kmalloc_aligned(size_t bytes, size_t alignment);
+
 // Similar to realloc.
 void *krealloc(void *ptr, size_t bytes);
 
