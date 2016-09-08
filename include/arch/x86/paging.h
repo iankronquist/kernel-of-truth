@@ -44,7 +44,9 @@ static inline size_t page_table_index(void *addr) {
 
 status_t checked map_page(struct page_table*, void*, phys_addr_t,
         enum memory_permissions);
-status_t checked unmap_page(struct page_table*, void*, phys_addr_t);
+
+status_t checked unmap_page(struct page_table *pt, void *va,
+        bool free_phys_addr);
 
 status_t checked create_page_table(struct page_table**);
 
