@@ -49,10 +49,14 @@ void worker(void) {
 void kernel_main(phys_addr_t multiboot_tables) {
     init_cpu();
     init_interrupts();
-    terminal_initialize();
     init_logging();
     init_memory(multiboot_tables);
-    keyboard_install();
+    status_t stat = device_char_init(terminal_char_device, 0, NULL);
+    if (stat != Ok) {
+        klog("Could not initialize vga_char_device\n");
+    } else {
+        keyboard_install();
+    }
     char *hi = "Hello kernel!\n";
     void *testing = kmalloc(16);
     memcpy(testing, hi, 16);
