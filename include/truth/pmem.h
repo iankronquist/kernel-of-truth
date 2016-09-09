@@ -9,8 +9,8 @@
  */
 
 // Initialize the physical memory allocator using the multiboot tables
-status_t checked init_phys_allocator(struct multiboot_info *mb,
-        page_frame_t *highest_address);
+status_t checked init_phys_allocator(
+        const struct multiboot_info const *const mb);
 
 // Find an available range of physical memory.
 page_frame_t get_phys_region(size_t pages);

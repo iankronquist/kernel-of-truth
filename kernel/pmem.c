@@ -17,12 +17,8 @@ static inline phys_region_t *get_cur_free_regions(void) {
     return physical_memory;
 }
 
-void physical_allocator_init(struct multiboot_info *mb) {
-    kassert(init_phys_allocator(mb, 0) == Ok);
-}
-
-status_t checked init_phys_allocator(struct multiboot_info *mb,
-        page_frame_t *unused(highest_address)) {
+status_t checked init_phys_allocator(
+        const struct multiboot_info const *const mb) {
 
     acquire_spinlock(&physical_memory_lock);
 
@@ -57,7 +53,7 @@ status_t checked init_phys_allocator(struct multiboot_info *mb,
         return stat;
     }
 
-    stat = remove_region((void*)KHEAP_PHYS_ROOT, KHEAP_PHYS_SIZE,
+    stat = remove_region((void*)PAGE_ALIGN(mb), PAGE_SIZE,
             physical_memory);
     if (stat != Ok) {
         return stat;
