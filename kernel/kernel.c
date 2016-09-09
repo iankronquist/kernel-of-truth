@@ -46,7 +46,7 @@ void worker(void) {
  * is created, and multi-processing is initialized.
  * @return this function should never return.
 */
-void kernel_main(void *multiboot_tables) {
+void kernel_main(phys_addr_t multiboot_tables) {
     init_cpu();
     init_interrupts();
     terminal_initialize();
