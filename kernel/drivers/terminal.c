@@ -7,6 +7,8 @@
 
 #include <truth/private/memlayout.h>
 
+#include <arch/x86/paging.h>
+
 /* Hardware text mode color constants. */
 enum vga_color {
     COLOR_BLACK = 0,
@@ -170,6 +172,12 @@ static void terminal_scroll(void) {
 status_t checked term_dev_init(const struct device *unused(dev),
         int unused(device_number), void *unused(args)) {
     acquire_spinlock(&terminal_lock);
+    // FIXME use get_kern_region_page API
+    status_t stat = map_page(get_cur_page_table(), (void*)VIDEO_MEMORY_BEGIN,
+            VIDEO_MEMORY_BEGIN, perm_write);
+    if (stat != Ok) {
+        return stat;
+    }
     terminal_clear();
     release_spinlock(&terminal_lock);
     return Ok;
