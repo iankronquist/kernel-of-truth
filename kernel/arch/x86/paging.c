@@ -10,246 +10,123 @@
 
 #include <truth/private/memlayout.h>
 
+#define USED_PDE 0xcccccccc
 
+struct page_table {
+    uint64_t page_directory[PDPT_COUNT];
+};
 
-#define PAGE_TABLE_SIZE 1024
-
-// The macros PAGE_DIRECTORY, PAGE_ALIGN, and NEXT_PAGE are defined in
-// memlayout.h
-
-#define TOP20(x) ((uintptr_t)(x) & 0xfffff000)
-#define TOP10(x) ((uintptr_t)(x) & 0xffc00000)
-#define MID10(x) ((uintptr_t)(x) & 0x003ff000)
-#define LOW10(x) ((uintptr_t)(x) & 0x000003ff)
-
-#define HIGHINDEX(x) ((uintptr_t)x >> 22)
-#define LOWINDEX(x) ((uintptr_t)x >> 12)
-#define GETADDRESS(x) ((uintptr_t)x & ~ 0xfff)
-#define GETFLAGS(x) ((uintptr_t)x & 0xfff)
-#define PAGE_TABLE_SIZE 1024
-
-#define EPHYSMEMFULL (~0)
-
-#define PAGING_DIR_PHYS_ADDR 0xffc00000
-
-
-// Map the kernel pages into a page table different than the current one.
-static void inner_map_kernel_pages(uint32_t *page_dir);
-static void map_kernel_pages(uint32_t *page_dir);
-
-// TODO: Remove this.
-static void *find_free_addr(uint32_t *page_entries, page_frame_t phys_addr,
-        uint16_t permissions);
-
-page_frame_t create_page_dir(void *link_loc, void *stack_loc,
-        void(*entrypoint)(), uint16_t permissions) {
-
-    // Allocate a physical address for the new page table
-    page_frame_t page_table = alloc_frame();
-
-    // Map the new page table into the current page table.
-    uint32_t *page_entries = find_free_addr(CUR_PAGE_DIRECTORY_ADDR,
-            page_table, 0);
-
-    // Zero page table to make sure present bits are clear
-    memset(page_entries, 0, PAGE_SIZE);
-
-    // Set up fractal mapping
-    page_entries[PAGE_TABLE_SIZE-1] = GETADDRESS(page_table) | PAGE_PRESENT;
-
-    // Install kernel pages into the table
-    inner_map_kernel_pages(page_entries);
-
-    // Allocate a kernel stack and the location where the code will live
-    page_frame_t link_page = alloc_frame();
-    page_frame_t stack_page = alloc_frame();
-    inner_map_page(page_entries, link_page, link_loc, permissions);
-    inner_map_page(page_entries, stack_page, stack_loc, permissions);
-
-    // Runtime test
-    page_frame_t orig_page_table = get_page_dir();
-    klog("Loading new page table to make sure it is well formed\n");
-    enable_paging(page_table);
-    klogf("%p %p\n", &((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-44], PAGE_SIZE);
-    memset(&((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-44], 0, 44);
-    ((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-1] = (uint32_t)entrypoint;
-    ((uint32_t*)stack_loc)[PAGE_TABLE_SIZE-5] = (uint32_t)(stack_loc+PAGE_TABLE_SIZE-1);
-    klog("Yep, it's valid. Reverting to old page table.\n");
-    enable_paging(orig_page_table);
-
-    // Unmap the new page table from the current page table
-    inner_unmap_page(CUR_PAGE_DIRECTORY_ADDR, page_entries, false);
-
-    return page_table;
+static uint64_t *get_page_dir_address(void *address) {
+    return (uint64_t*)(((uintptr_t)address & PDPT_MASK) |
+        ((PAGE_DIR_ENTRY_COUNT-1) << PD_SHIFT) |
+        ((PAGE_TABLE_ENTRY_COUNT-1) << PT_SHIFT));
 }
 
-static void *find_free_addr(uint32_t *page_entries, page_frame_t phys_addr,
-        uint16_t permissions) {
-    // Walk the page directory in search of an available address
-    for (size_t i = 0; i < PAGE_TABLE_SIZE-1; ++i) {
-        if (page_entries[i] & PAGE_PRESENT) {
-            uint32_t *page_entry = (uint32_t*)(PAGING_DIR_PHYS_ADDR+i);
-            for (size_t j = 0; j < PAGE_TABLE_SIZE-1; ++j) {
-                if (!(page_entry[j] & PAGE_PRESENT)) {
-                    page_entry[j] = phys_addr | PAGE_PRESENT;
-                    flush_tlb();
-                    return (void*)((i << 22) | (j << 12));
-                }
-            }
-        }
-
-    }
-
-    // Allocate a new page table and return its first address
-    for (size_t i = 0; i < PAGE_TABLE_SIZE-1; ++i) {
-        if (!(page_entries[i] & PAGE_PRESENT)) {
-            page_frame_t page_table_frame = alloc_frame();
-            uint32_t *page_table = (uint32_t*)(PAGING_DIR_PHYS_ADDR+i);
-            page_entries[i] = page_table_frame | PAGE_PRESENT;
-            memset(page_table, 0, PAGE_SIZE);
-            page_table[0] = phys_addr | permissions | PAGE_PRESENT;
-            flush_tlb();
-            return (void*)((1 << 22) | (0));
-        }
-    }
-
-    // The page table is full. Fail by returning a special unaligned address
-    return (void*)EPHYSMEMFULL;
+static uint64_t *get_page_table_address(void *address) {
+    return (uint64_t*)(((uintptr_t)address & PDPT_MASK) |
+        ((PAGE_DIR_ENTRY_COUNT-1) << PD_SHIFT));
 }
 
-static void inner_map_kernel_pages(uint32_t *page_dir) {
-    inner_map_page(page_dir, 0x100000, (void*)0x100000, 0);
-    // Map all those important bits
-    for (page_frame_t i = KERNEL_START; i < KERNEL_END; i += PAGE_SIZE) {
-        inner_map_page(page_dir, i, (void*)i, 0);
-    }
-    inner_map_page(page_dir, KHEAP_PHYS_ROOT, (void*)KHEAP_PHYS_ROOT, 0);
-
-    // FIXME: Move to video memory driver
-    inner_map_page(page_dir, VIDEO_MEMORY_BEGIN, (void*)VIDEO_MEMORY_BEGIN, 0);
+static inline phys_addr_t entry_to_phys_addr(uint64_t p) {
+    return p & ~0xfff;
 }
 
-int map_page(uint32_t *page_dir, page_frame_t physical_page,
-        void *virtual_address, uint16_t permissions) {
+static inline bool is_present(uint64_t entry) {
+    return entry & perm_present;
+}
 
-    kassert((physical_page % PAGE_SIZE) == 0);
-    kassert(((uintptr_t)virtual_address % PAGE_SIZE) == 0);
 
-    uint32_t *page_entry;
-    uint32_t dir_index = HIGHINDEX(virtual_address);
-    uint32_t entry_index = LOWINDEX(virtual_address);
+status_t checked map_page(struct page_table *cur_table, void *va,
+        phys_addr_t pa, enum memory_permissions perms) {
+    uint64_t *pd, *pt, page_dir_entry, page_table_entry;
 
-    // If the relevant page directory entry is absent, allocate it.
-    if ((page_dir[dir_index] & PAGE_PRESENT) == 0) {
-        page_frame_t page_frame = alloc_frame();
-        page_entry = (uint32_t*)(PAGING_DIR_PHYS_ADDR+dir_index);
-        memset(page_entry, 0, PAGE_SIZE);
+    kassert(PAGE_ALIGN(va) == (uintptr_t)va);
+    kassert(PAGE_ALIGN(pa) == pa);
 
-        page_dir[dir_index] = GETADDRESS(page_frame) | permissions |
-            PAGE_PRESENT;
+    size_t pdpt_index = page_dir_index(va);
+    if (!is_present(cur_table->page_directory[pdpt_index])) {
+        page_dir_entry = alloc_frame();
+        cur_table->page_directory[pdpt_index] = page_dir_entry | perm_write |
+            perm_present;
+        memset(get_page_dir_address(va), 0, PAGE_SIZE);
+    }
+
+    pd = get_page_dir_address(va);
+    size_t pd_index = page_dir_index(va);
+    if (!is_present(pd[pd_index])) {
+        page_table_entry = alloc_frame();
+        pd[pd_index] = page_table_entry | perm_write | perm_present;
+        memset(get_page_table_address(va), 0, PAGE_SIZE);
+    }
+
+    pt = get_page_table_address(va);
+    size_t pt_index = page_table_index(va);
+    if (is_present(pt[pt_index])) {
+        return Err;
+    }
+
+    pt[pt_index] = pa | perms | perm_present;
+
+    return Ok;
+}
+
+status_t checked unmap_page(struct page_table *cur_table, void *va,
+        bool free_phys_addr) {
+    uint64_t *pd, *pt;
+
+    kassert(PAGE_ALIGN(va) == (uintptr_t)va);
+
+    size_t pdpt_index = page_dir_index(va);
+    if (!is_present(cur_table->page_directory[pdpt_index])) {
+        return Err;
+    }
+
+    pd = get_page_dir_address(va);
+    size_t pd_index = page_dir_index(va);
+    if (!is_present(pd[pd_index])) {
+        return Err;
+    }
+
+    pt = get_page_table_address(va);
+    size_t pt_index = page_table_index(va);
+    if (!is_present(pt[pt_index])) {
+        return Err;
     } else {
-        page_entry = (uint32_t*)GETADDRESS(page_dir[dir_index]);
-    }
-    page_entry[entry_index] = GETADDRESS(virtual_address) | permissions |
-        PAGE_PRESENT;
-    return 0;
-}
-
-int inner_map_page(uint32_t *page_dir, page_frame_t physical_page,
-        void *virtual_address, uint16_t permissions) {
-    uint32_t *cur_page_dir = CUR_PAGE_DIRECTORY_ADDR;
-    kassert((physical_page % PAGE_SIZE) == 0);
-    kassert(((uintptr_t)virtual_address % PAGE_SIZE) == 0);
-
-    uint32_t *page_entry;
-    uint32_t dir_index = HIGHINDEX(virtual_address);
-    uint32_t entry_index = LOWINDEX(virtual_address);
-
-    // If the relevant page directory entry is absent, allocate it.
-    if ((page_dir[dir_index] & PAGE_PRESENT) == 0) {
-        page_frame_t page_frame = alloc_frame();
-        page_entry = find_free_addr(cur_page_dir, page_frame, 0);
-        memset(page_entry, 0, PAGE_SIZE);
-
-        page_dir[dir_index] = GETADDRESS(page_frame) | permissions |
-            PAGE_PRESENT;
-    } else {
-        page_entry = (uint32_t*)GETADDRESS(page_dir[dir_index]);
-        page_entry = find_free_addr(cur_page_dir, GETADDRESS(page_dir[dir_index]), 0);
-    }
-    page_entry[entry_index] = GETADDRESS(virtual_address) | permissions |
-        PAGE_PRESENT;
-    inner_unmap_page(cur_page_dir, page_entry, false);
-    return 0;
-}
-
-int inner_unmap_page(uint32_t *page_entries, void *virtual_address,
-        bool should_free_frame) {
-
-    uint32_t *page_entry;
-    uint32_t dir_index = HIGHINDEX(virtual_address);
-    uint32_t entry_index = LOWINDEX(virtual_address);
-
-    // Original top level page table was not mapped. Return error.
-    if ((page_entries[dir_index] & 1) == 0) {
-        return -1;
-    }
-    page_entry = (uint32_t*)(FRACTAL_MAP + PAGE_SIZE * dir_index);
-    // Clear present bit
-    page_entry[entry_index] &= ~PAGE_PRESENT;
-
-    if (should_free_frame) {
-        page_frame_t physical_page = GETADDRESS(page_entry[entry_index]);
-        free_frame(physical_page);
-    }
-
-    return 0;
-}
-
-void free_table(uint32_t *page_dir) {
-    // The last entry of the page directory is reserved. It points to the page
-    // table itself.
-    for (size_t i = 0; i < PAGE_TABLE_SIZE-2; ++i) {
-        uint32_t *page_entry = (uint32_t*)GETADDRESS(page_dir[i]);
-        for (size_t j = 0; j < PAGE_TABLE_SIZE; ++j) {
-            uintptr_t addr = (i<<20|j<<12);
-            if (addr == VIDEO_MEMORY_BEGIN ||
-                    (addr >= KERNEL_START && addr < KERNEL_END)) {
-                continue;
-            }
-            if ((page_entry[j] & PAGE_PRESENT) == 1) {
-                free_frame(page_entry[j]);
-            }
+        if (free_phys_addr) {
+            free_frame(entry_to_phys_addr(pt[pt_index]));
         }
+        pt[pt_index] = USED_PDE;
     }
-    free_frame((page_frame_t)page_dir);
+
+    return Ok;
 }
 
-page_frame_t bootstrap_kernel_page_table(void) {
-    page_frame_t page_dir = alloc_frame();
-    uint32_t *page_entries = (uint32_t *)page_dir;
-    memset(page_entries, 0, PAGE_SIZE);
+status_t checked create_page_table(struct page_table **pt) {
+    uint64_t page_dir;
+    struct page_table *new_pt;
 
-    // Fractal page mapping
-    page_entries[PAGE_TABLE_SIZE-1] = GETADDRESS(page_dir) | PAGE_PRESENT;
-
-    map_kernel_pages(page_entries);
-
-    return page_dir;
+    new_pt = kmalloc_aligned(sizeof(struct page_table), 4);
+    if (new_pt == NULL) {
+        return Err;
+    }
+    // Create top level PDPT structure.
+    for (size_t i = 0; i < PDPT_COUNT; ++i) {
+        page_dir = alloc_frame();
+        if (page_dir == 0) {
+            kfree(new_pt);
+            return Err;
+        }
+        new_pt->page_directory[i] = page_dir | perm_present | perm_write;
+    }
+    *pt = new_pt;
+    return Ok;
 }
 
-static void map_kernel_pages(uint32_t *page_dir) {
-    map_page(page_dir, 0x100000, (void*)0x100000, 0);
-    // Map all those important bits
-    for (page_frame_t i = KERNEL_START; i < KERNEL_END; i += PAGE_SIZE) {
-        map_page(page_dir, i, (void*)i, 0);
-    }
-    for (page_frame_t i = KHEAP_PHYS_ROOT;
-            i < (page_frame_t)KHEAP_PHYS_END;
-            i += PAGE_SIZE) {
-        map_page(page_dir, i, (void*)i, 0);
-    }
 
-    // FIXME: Move to video memory driver
-    map_page(page_dir, VIDEO_MEMORY_BEGIN, (void*)VIDEO_MEMORY_BEGIN, 0);
+extern struct page_table bootstrap_pdpt;
+// FIXME: When I turn multiprocess back on, remember to fetch this from the
+// current process.
+struct page_table *get_cur_page_table(void) {
+    struct page_table *table = &bootstrap_pdpt;
+    return table;
 }
