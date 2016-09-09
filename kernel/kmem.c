@@ -22,7 +22,6 @@ struct kheap_metadata {
     size_t size;
     struct kheap_metadata *next;
     bool is_free;
-    char data[0];
 };
 
 static struct kheap_metadata *root;
@@ -89,7 +88,7 @@ void *kmalloc_aligned(size_t bytes, size_t alignment) {
     }
     // Find the first free block which is big enough and aligned.
     while (cur != KHEAP_END_SENTINEL && (!cur->is_free ||
-                (((((uintptr_t)&cur->data) & (alignment - 1)) == 0) &&
+                (((((uintptr_t)(cur + 1)) & (alignment - 1)) == 0) &&
                  cur->size < bytes))) {
         cur = cur->next;
     }
@@ -134,7 +133,7 @@ static void *carve_block(struct kheap_metadata *cur, size_t bytes) {
         cur->next = new_block;
     }
     cur->is_free = false;
-    return &cur->data;
+    return cur + 1;
 }
 
 // Extend heap by page sized increments
