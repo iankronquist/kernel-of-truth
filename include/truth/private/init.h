@@ -17,7 +17,7 @@ void init_logging(void);
 // boot_tables are a pointer to any processor specific memory tables built by
 // the bootloader and inherited by the kernel. On multiboot platforms this is
 // the multiboot tables.
-void init_memory(void *boot_tables);
+void init_memory(phys_addr_t boot_tables);
 
 // Initialize multi-processing.
 void init_multitasking(void);
