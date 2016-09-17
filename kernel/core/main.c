@@ -1,12 +1,13 @@
 #include <truth/cpu.h>
 #include <truth/types.h>
 #include <truth/log.h>
+#include <truth/physical_allocator.h>
 
-set_log_level(Log_Debug);
-
-void kernel_main(void) {
+void kernel_main(void *multiboot_tables) {
     init_interrupts();
     enum status unused(status) = init_log("log");
-    log(Log_Debug, "Hello kernel!");
-    while(true);
+    log("Hello kernel!");
+    init_physical_allocator(multiboot_tables);
+    logf("Hello kernel! %p\n", multiboot_tables);
+    halt();
 }

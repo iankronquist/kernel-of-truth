@@ -11,7 +11,7 @@ typedef char *string;
 #define str(x) x
 #define str_to_bytes(s) ((byte*)s)
 
-typedef uint64_t phys_addr_t;
+typedef uint64_t phys_addr;
 
 enum partial {
     Partial_Equal,
@@ -35,12 +35,13 @@ enum status {
     Error_No_Memory,
     Error_Invalid,
     Error_Permissions,
+    Error_Present,
 };
 
 #define bubble(condition, message) { \
     enum status error = condition; \
     if (error != Ok) { \
-        log(Log_Error, message); \
+        log(message); \
     } \
 }
 

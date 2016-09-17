@@ -34,3 +34,5 @@
 #define PAGE_EXEC_DISABLE (1 << 63)
 
 #define IA32_EFER_MSR 0xc0000080
+
+#define KERNEL_PAGES_COUNT ((__kernel_end - __kernel_start) / SMALL_PAGE)
