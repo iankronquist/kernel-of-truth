@@ -1,5 +1,7 @@
 #pragma once
 
+#include <truth/types.h>
+
 // A reader-writer spinlock.
 struct lock {
     atomic_uint readers;
