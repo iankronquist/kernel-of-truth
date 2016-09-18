@@ -76,7 +76,8 @@ static pl1*get_pl1(void *address) {
                    0x200000 * pl2_index(address));
 }
 
-static inline bool is_pl3_present(struct page_table *page_table, void *address) {
+static inline bool is_pl3_present(struct page_table *page_table,
+                                  void *address) {
     return page_table->entries[pl4_index(address)] & page_present;
 }
 

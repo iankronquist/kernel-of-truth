@@ -8,7 +8,8 @@
 #define buf_size 256
 
 static enum status checked print_number(struct file *file, char *buf,
-                                        size_t *top, bool is_signed, uint8_t base, uint8_t size,
+                                        size_t *top, bool is_signed,
+                                        uint8_t base, uint8_t size,
                                         int64_t snumber) {
     char digits_safe[] = "BUG0123456789abcdefBUG";
     char *digits = &digits_safe[3];

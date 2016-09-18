@@ -20,7 +20,8 @@ void init_slab(void) {
 }
 
 void*slab_alloc(size_t count, enum slab_type type,
-                enum slab_attributes attrs, enum page_attributes page_attributes) {
+                enum slab_attributes attrs,
+                enum page_attributes page_attributes) {
     union address virt_address;
     union address phys_address;
     struct region_vector *vect;
