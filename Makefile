@@ -1,16 +1,18 @@
 TRIPLE := x86_64-elf
+
+# Version & meta data
 KERNEL_MAJOR := 0
 KERNEL_MINOR := 0
 KERNEL_PATCH := 0
 VCS_VERSION := $(shell git rev-parse HEAD)
 WEBSITE := https://github.com/iankronquist/kernel-of-truth
-MACROS := -D project_website=$(WEBSITE) -D kernel_major=$(KERNEL_MAJOR) -D kernel_minor=$(KERNEL_MINOR) -D kernel_patch=$(KERNEL_PATCH) -D vcs_version='"$(VCS_VERSION)"'
+MACROS := -D project_website='"$(WEBSITE)"' -D kernel_major=$(KERNEL_MAJOR) -D kernel_minor=$(KERNEL_MINOR) -D kernel_patch=$(KERNEL_PATCH) -D vcs_version='"$(VCS_VERSION)"'
 CC := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
-CFLAGS := -std=gnu11 -MP -MMD -ffreestanding -fpic -O0 -Wall -Werror -Wextra -Wpedantic -g -I ./include $(MACROS)
+CFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Werror -Wextra -Wpedantic -g -I ./include $(MACROS)
 AS := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
-ASFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O0 -Wall -Werror -Wextra -Wpedantic -g -I ./include $(MACROS)
+ASFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Werror -Wextra -Wpedantic -g -I ./include $(MACROS)
 LD := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
-LDFLAGS := -nostdlib -ffreestanding -O0
+LDFLAGS := -nostdlib -ffreestanding -O2
 ARCH := x64
 QEMU := qemu-system-x86_64
 QEMU_FLAGS := -no-reboot
