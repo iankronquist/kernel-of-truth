@@ -17,6 +17,6 @@ void log(string message) {
 void logf(string message, ...) {
     va_list args;
     va_start(args, message);
-    fprintf(Log_File, message, args);
+    vfprintf(Log_File, message, args);
     va_end(args);
 }

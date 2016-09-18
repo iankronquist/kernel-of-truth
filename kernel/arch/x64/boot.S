@@ -16,7 +16,23 @@ init_pl3:
 	.skip SMALL_PAGE
 init_pl2:
 	.skip SMALL_PAGE
-init_pl1:
+init_pl1_a:
+	.skip SMALL_PAGE
+init_pl1_b:
+	.skip SMALL_PAGE
+frac_pl3:
+	.skip SMALL_PAGE
+frac_pl2:
+	.skip SMALL_PAGE
+frac_pl1:
+	.skip SMALL_PAGE
+physpml3:
+	.skip SMALL_PAGE
+.global slab_higher_half
+slab_higher_half:
+	.skip SMALL_PAGE
+.global slab_lower_half
+slab_lower_half:
 	.skip SMALL_PAGE
 .global init_physical_allocator_vector
 init_physical_allocator_vector:
@@ -55,29 +71,35 @@ _start:
 	movl %edi, %cr3
 
 	# Page-Map Level 4.
-	movl $(init_pl4 + (PAGE_WRITE | PAGE_PRESENT)), init_pl4 + 511 * 8
 	movl $(init_pl3 + (PAGE_USER | PAGE_WRITE | PAGE_PRESENT)), init_pl4
 
 	# Page Directory Pointer Table.
 	movl $(init_pl2 + (PAGE_USER | PAGE_WRITE | PAGE_PRESENT)), init_pl3
 
 	# Page Directory (no user-space access here).
-	movl $(init_pl1 + (PAGE_WRITE | PAGE_PRESENT)), init_pl2
+	movl $(init_pl1_a + (PAGE_WRITE | PAGE_PRESENT)), init_pl2
+	movl $(init_pl1_b + (PAGE_WRITE | PAGE_PRESENT)), init_pl2 + 8
 
 	# Page Table (identity map the first 4 MiB, except NULL).
 	# TODO: This is insecure as it doesn't restrict write & execute access to
 	#       the code kernel code & variables appropriately.
-	movl $(init_pl1 + 256*8), %edi
-	movl $(__kernel_start + (PAGE_PRESENT | PAGE_WRITE)), %esi
-	movl $(__kernel_end + SMALL_PAGE), %ecx
-	subl $(__kernel_start), %ecx
-	sarl $12, %ecx
-loop_begin:
+	movl $(init_pl1_a + 8), %edi
+	movl $(0x1000 | PAGE_PRESENT | PAGE_WRITE), %esi
+	movl $1023, %ecx
 1:
 	movl %esi, (%edi)
 	addl $SMALL_PAGE, %esi
 	addl $8, %edi
 	loop 1b
+
+	# Fractal mapping.
+	movl $(init_pl4 + (PAGE_WRITE | PAGE_PRESENT)), init_pl4 + 511 * 8
+	movl $(frac_pl3 + (PAGE_WRITE | PAGE_PRESENT)), init_pl4 + 510 * 8
+	movl $(init_pl4 + (PAGE_WRITE | PAGE_PRESENT)), frac_pl3 + 511 * 8
+	movl $(frac_pl2 + (PAGE_WRITE | PAGE_PRESENT)), frac_pl3 + 510 * 8
+	movl $(init_pl4 + (PAGE_WRITE | PAGE_PRESENT)), frac_pl2 + 511 * 8
+	movl $(frac_pl1 + (PAGE_WRITE | PAGE_PRESENT)), frac_pl2 + 510 * 8
+	movl $(init_pl4 + (PAGE_WRITE | PAGE_PRESENT)), frac_pl1 + 511 * 8
 
 	# Enable PAE.
 	movl %cr4, %eax

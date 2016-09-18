@@ -1,14 +1,12 @@
 #pragma once
 
+#include <truth/memory_sizes.h>
+
 #define MB_MAGIC    0x1badb002
 #define MB_ALIGN    (1 << 1)
 #define MB_INFO     (1 << 1)
 #define MB_FLAGS    (MB_ALIGN | MB_INFO)
 #define MB_CHECKSUM -(MB_MAGIC + MB_FLAGS)
-
-#define KB 0x400
-#define MB 0x100000
-#define SMALL_PAGE 0x1000
 
 #define PL1_SIZE 0x1000
 #define PL2_SIZE 0x1000
@@ -34,5 +32,3 @@
 #define PAGE_EXEC_DISABLE (1 << 63)
 
 #define IA32_EFER_MSR 0xc0000080
-
-#define KERNEL_PAGES_COUNT ((__kernel_end - __kernel_start) / SMALL_PAGE)

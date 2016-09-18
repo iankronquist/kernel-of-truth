@@ -31,5 +31,6 @@ SECTIONS {
 	}
 	__bss_end = .;
 
+	. = ALIGN(4K);
 	__kernel_end = .;
 }

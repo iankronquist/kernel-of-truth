@@ -101,6 +101,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     log("0");
     if (!is_pl3_present(page_table, virtual_address)) {
         log("here!");
+        phys_addr phys_address = physical_alloc(1);
     log("1.5");
         page_table->entries[pl4_index(virtual_address)] =
             (phys_address | permissions | page_user_access |
@@ -111,6 +112,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     pl3 *level_three = get_pl3(virtual_address);
     if (!is_pl2_present(level_three, virtual_address)) {
     log("2.5");
+        phys_addr phys_address = physical_alloc(1);
         (*level_three)[pl3_index(virtual_address)] =
             (phys_address | permissions | page_user_access |
                     page_present);
@@ -120,6 +122,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     pl2 *level_two = get_pl2(virtual_address);
     if (!is_pl1_present(level_two, virtual_address)) {
     log("3.5");
+        phys_addr phys_address = physical_alloc(1);
         (*level_two)[pl2_index(virtual_address)] =
             (phys_address | permissions | page_user_access |
                     page_present);

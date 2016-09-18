@@ -1,3 +1,5 @@
+#pragma once
+
 #include <truth/types.h>
 
 struct page_table;
