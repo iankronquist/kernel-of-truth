@@ -28,8 +28,7 @@
  * Chapter 3, Volume 3 of the Intel Manual and the rest of the chapter for more
  * information.
  */
-struct gdt_entry
-{
+struct gdt_entry {
     uint16_t limit_low;
     uint16_t base_low;
     uint8_t base_middle;
@@ -38,8 +37,7 @@ struct gdt_entry
     uint8_t base_high;
 };
 
-struct gdt_entry64
-{
+struct gdt_entry64 {
     uint16_t limit_low;
     uint16_t base_low;
     uint8_t base_middle;
@@ -50,8 +48,7 @@ struct gdt_entry64
     uint32_t reserved0;
 };
 
-struct tss_entry
-{
+struct tss_entry {
     uint32_t reserved0;
     uint64_t stack0;     /* This is not naturally aligned, so packed is needed. */
     uint64_t stack1;
@@ -63,8 +60,7 @@ struct tss_entry
     uint16_t iomap_base;
 } pack;
 
-struct tss_entry Tss =
-{
+struct tss_entry Tss = {
     .reserved0 = 0,
     .stack0 = 0,
     .stack1 = 0,

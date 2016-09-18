@@ -58,20 +58,20 @@ static inline phys_addr table_phys_address(struct page_table *page_table) {
     return (phys_addr)(uintptr_t)page_table;
 }
 
-static struct page_table*current_page_table(void) {
+static struct page_table *current_page_table(void) {
     return (struct page_table *)0xfffffffffffff000;
 }
 
-static pl3*get_pl3(void *address) {
+static pl3 *get_pl3(void *address) {
     return (pl3 *)(0xffffffffffe00000 + 0x1000 * pl3_index(address));
 }
 
-static pl2*get_pl2(void *address) {
+static pl2 *get_pl2(void *address) {
     return (pl2 *)(0xffffffffc0000000 + 0x200000 * pl3_index(address) + 0x1000 *
                    pl2_index(address));
 }
 
-static pl1*get_pl1(void *address) {
+static pl1 *get_pl1(void *address) {
     return (pl1 *)(0xffffff8000000000 + 0x40000000 * pl3_index(address) +
                    0x200000 * pl2_index(address));
 }

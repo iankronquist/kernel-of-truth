@@ -19,9 +19,9 @@ void init_slab(void) {
     init_region_vector(&slab_lower_half);
 }
 
-void*slab_alloc(size_t count, enum slab_type type,
-                enum slab_attributes attrs,
-                enum page_attributes page_attributes) {
+void *slab_alloc(size_t count, enum slab_type type,
+                 enum slab_attributes attrs,
+                 enum page_attributes page_attributes) {
     union address virt_address;
     union address phys_address;
     struct region_vector *vect;

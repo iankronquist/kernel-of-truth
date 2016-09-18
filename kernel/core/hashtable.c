@@ -4,7 +4,7 @@
 #include <truth/string.h>
 #include <truth/types.h>
 
-#define tombstone ((void*)0x1)
+#define tombstone ((void *)0x1)
 #define empty NULL
 
 struct hashdata {
@@ -55,7 +55,8 @@ void hashtable_destroy(struct hashtable *ht) {
 
 static struct hashdata *hashtable_seek(struct hashtable *ht, void *key) {
     size_t hash = ht->hash(key) % ht->size;
-    if (ht->data[hash].key > tombstone && ht->comp(key, ht->data[hash].key) == Partial_Not_Equal) {
+    if (ht->data[hash].key > tombstone &&
+        ht->comp(key, ht->data[hash].key) == Partial_Not_Equal) {
         return &ht->data[hash];
     }
     // There was a collision, probe the hash table.
@@ -155,7 +156,7 @@ void *hashtable_get(struct hashtable *ht, void *key) {
 }
 
 enum status checked hashtable_put(struct hashtable *ht, void *key,
-        void *value) {
+                                  void *value) {
     struct hashdata *hd = hashtable_seek_empty(ht, key);
     hd->key = key;
     hd->value = value;

@@ -18,7 +18,7 @@ enum slab_attributes {
 
 void init_slab(void);
 
-void*slab_alloc(size_t count, enum slab_type type,
-                enum slab_attributes attrs,
-                enum page_attributes page_attributes);
+void *slab_alloc(size_t count, enum slab_type type,
+                 enum slab_attributes attrs,
+                 enum page_attributes page_attributes);
 void slab_free(size_t count, enum slab_type type, void *address);

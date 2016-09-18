@@ -53,7 +53,7 @@ enum status checked region_alloc(struct region_vector *vect, size_t size,
     return Error_No_Memory;
 }
 
-static struct region_vector*extend_vector(void) {
+static struct region_vector *extend_vector(void) {
     struct region_vector *new = slab_alloc(1, slab_small, slab_kernel_memory,
                                            page_none);
     if (new == NULL) {
