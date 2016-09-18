@@ -55,6 +55,11 @@ $(BUILD_DIR)/%.S.$(ARCH).o: kernel/arch/$(ARCH)/%.S
 	mkdir -p $(BUILD_DIR)
 	$(AS) -c $< -o $@ $(ASFLAGS)
 
+docs: $(BUILD_DIR)/docs/index.html
+
+$(BUILD_DIR)/docs/index.html: $(OBJ)
+	cldoc generate -I ./include -Wno-pragma-once-outside-header -ffreestanding $(MACROS) -- --output $(BUILD_DIR)/docs include/truth/*.h include/arch/*/*.h kernel/*/*.c kernel/arch/*/*.c --language c --report
+
 start: $(KERNEL)
 	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -serial file:$(BUILD_DIR)/qemu-serial.txt
 
@@ -81,4 +86,4 @@ clean:
 
 -include $(OBJ:.o=.d)
 
-.PHONY: all clean start start-debug start-log
+.PHONY: all docs clean start start-debug start-log
