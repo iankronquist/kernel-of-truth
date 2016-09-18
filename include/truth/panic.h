@@ -1,7 +1,10 @@
 #pragma once
 
 #include <truth/cpu.h>
+#include <truth/types.h>
 #include <truth/log.h>
+
+#define not_reached false
 
 #define assert(x) \
     if (!(x)) { \

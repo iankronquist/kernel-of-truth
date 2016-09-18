@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <truth/memory_sizes.h>
+
 typedef uint8_t byte;
 typedef char *string;
 
