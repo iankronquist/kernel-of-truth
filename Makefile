@@ -1,3 +1,5 @@
+# Target information
+ARCH := x64
 TRIPLE := x86_64-elf
 
 # Version & meta data
@@ -7,17 +9,21 @@ KERNEL_PATCH := 0
 VCS_VERSION := $(shell git rev-parse HEAD)
 WEBSITE := https://github.com/iankronquist/kernel-of-truth
 MACROS := -D project_website='"$(WEBSITE)"' -D kernel_major=$(KERNEL_MAJOR) -D kernel_minor=$(KERNEL_MINOR) -D kernel_patch=$(KERNEL_PATCH) -D vcs_version='"$(VCS_VERSION)"'
+
+# Build tools & flags
 CC := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
 CFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Werror -Wextra -Wpedantic -g -I ./include $(MACROS)
 AS := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
 ASFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Werror -Wextra -Wpedantic -g -I ./include $(MACROS)
 LD := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
 LDFLAGS := -nostdlib -ffreestanding -O2
-ARCH := x64
-QEMU := qemu-system-x86_64
-QEMU_FLAGS := -no-reboot
 OBJCOPY := objcopy
 GRUB_MKRESCUE := grub-mkrescue
+
+
+# Emulators & flags
+QEMU := qemu-system-x86_64
+QEMU_FLAGS := -no-reboot
 BOCHS := bochs
 
 OBJ :=
@@ -72,6 +78,8 @@ start-debug:
 tags: $(OBJ)
 	ctags -R kernel include
 
+iso: $(BUILD_DIR)/truth.iso
+
 $(BUILD_DIR)/truth.iso: $(KERNEL) grub.cfg
 	mkdir -p $(BUILD_DIR)/isodir/boot/grub
 	cp $(KERNEL) $(BUILD_DIR)/isodir/boot/truth.elf
@@ -86,4 +94,4 @@ clean:
 
 -include $(OBJ:.o=.d)
 
-.PHONY: all docs clean start start-debug start-log
+.PHONY: all clean docs iso start start-debug start-log
