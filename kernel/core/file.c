@@ -41,7 +41,7 @@ static enum status checked print_number(struct file *file, char *buf,
             return Error_Invalid;
     }
 
-    // assert(*top <= buf_size);
+    assert(*top <= buf_size);
 
     for (size_t i = *top; i != 0; --i) {
         buf[i-1] = digits[number%base];
