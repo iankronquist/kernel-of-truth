@@ -26,11 +26,12 @@ QEMU := qemu-system-x86_64
 QEMU_FLAGS := -no-reboot
 BOCHS := bochs
 
-OBJ :=
-
 COMPONENTS := kernel/arch/$(ARCH) kernel/core kernel/device
 
-BUILD_DIR := build
+BUILD_DIR := build/$(ARCH)
+
+OBJ :=
+FULL_OBJ = $(patsubst %,$(BUILD_DIR)/%,$(OBJ))
 
 KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
 
@@ -42,18 +43,18 @@ all: $(KERNEL)
 $(KERNEL): $(KERNEL)64
 	$(OBJCOPY) $< -O elf32-i386 $@
 
-$(KERNEL)64: kernel/arch/$(ARCH)/link.ld $(OBJ)
-	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $@ $(LDFLAGS)
+$(KERNEL)64: kernel/arch/$(ARCH)/link.ld $(FULL_OBJ)
+	$(LD) -T kernel/arch/$(ARCH)/link.ld $(FULL_OBJ) -o $@ $(LDFLAGS)
 
-$(BUILD_DIR)/%.c.$(ARCH).o: kernel/*/%.c 
+$(BUILD_DIR)/%.c.o: kernel/*/%.c
 	mkdir -p $(BUILD_DIR)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-$(BUILD_DIR)/%.c.$(ARCH).o: kernel/arch/$(ARCH)/%.c
+$(BUILD_DIR)/%.c.o: kernel/arch/$(ARCH)/%.c
 	mkdir -p $(BUILD_DIR)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-$(BUILD_DIR)/%.S.$(ARCH).o: kernel/arch/$(ARCH)/%.S
+$(BUILD_DIR)/%.S.o: kernel/arch/$(ARCH)/%.S
 	mkdir -p $(BUILD_DIR)
 	$(AS) -c $< -o $@ $(ASFLAGS)
 
