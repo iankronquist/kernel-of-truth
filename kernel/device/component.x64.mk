@@ -1,1 +1,1 @@
-OBJ += $(BUILD_DIR)/serial.c.device.x64.o
+OBJ += $(BUILD_DIR)/serial.c.x64.o

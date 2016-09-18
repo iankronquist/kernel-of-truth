@@ -45,15 +45,11 @@ $(KERNEL): $(KERNEL)64
 $(KERNEL)64: kernel/arch/$(ARCH)/link.ld $(OBJ)
 	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $@ $(LDFLAGS)
 
-$(BUILD_DIR)/%.c.device.$(ARCH).o: kernel/device/%.c
+$(BUILD_DIR)/%.c.$(ARCH).o: kernel/*/%.c 
 	mkdir -p $(BUILD_DIR)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-$(BUILD_DIR)/%.c.core.$(ARCH).o: kernel/core/%.c
-	mkdir -p $(BUILD_DIR)
-	$(CC) -c $< -o $@ $(CFLAGS)
-
-$(BUILD_DIR)/%.c.arch.$(ARCH).o: kernel/arch/$(ARCH)/%.c
+$(BUILD_DIR)/%.c.$(ARCH).o: kernel/arch/$(ARCH)/%.c
 	mkdir -p $(BUILD_DIR)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
