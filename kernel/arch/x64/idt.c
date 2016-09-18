@@ -205,18 +205,17 @@ void init_interrupts(void) {
     __asm__ volatile ("lidt (%0)" : : "r" (&idtp));
 }
 
-/* Dispatch event handler or, if none exists, log information and kernel panic. */
+/* Dispatch event handler or, if none exists, log information and kernel panic.
+ */
 void common_interrupt_handler(struct cpu_state r) {
-    // assert(r.int_no > IDT_SIZE);
+    assert(r.int_no > IDT_SIZE);
     if (Interrupt_Dispatch[r.int_no] != NULL) {
         Interrupt_Dispatch[r.int_no](&r);
     } else {
-        /*
-           log("Unhandled Interrupt Triggered!\nRegisters:");
-           logf("ds: %p edi: %p esi: %p ebp: %p esp: %p ebx: %p edx: %p ecx: %p "
-              "eax: %p int_no: %p err_code: %p eip: %p cs: %p eflags: %p "
-              "useresp: %p ss: %p", r);
-           panic();
-         */
+        log("Unhandled Interrupt Triggered!\nRegisters:");
+        logf("ds: %p edi: %p esi: %p ebp: %p esp: %p ebx: %p edx: %p "
+             "ecx: %p eax: %p int_no: %p err_code: %p eip: %p cs: %p "
+             "eflags: %p useresp: %p ss: %p", r);
+        panic();
     }
 }
