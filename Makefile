@@ -67,7 +67,7 @@ start-log: $(KERNEL)
 	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall -D $(BUILD_DIR)/qemu.log $(QEMU_FLAGS)
 
 start-debug:
-	$(QEMU) -S -s -nographic -monitor stdio -kernel $(KERNEL) $(QEMU_FLAGS)
+	$(QEMU) -S -s -monitor stdio -kernel $(KERNEL) $(QEMU_FLAGS)
 
 tags: $(OBJ)
 	ctags -R kernel include
