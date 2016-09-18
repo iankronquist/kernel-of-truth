@@ -12,7 +12,7 @@ addons:
             - yasm
 cache:
     directories:
-        - compiler/i686-elf
+        - compiler/x86_64-elf
 
 before_script:
     - virtualenv ~/venv
@@ -20,8 +20,7 @@ before_script:
     - pip install cldoc
 
 script:
-    - if [[ ! -e compiler/i686-elf/bin/i686-elf-gcc ]]; then
+    - if [[ ! -e compiler/x86_64-elf/bin/x86_64-elf-gcc ]]; then
         bash ./scripts/build_cross_compiler.sh;
       fi
     - make
-    - make run-tests
