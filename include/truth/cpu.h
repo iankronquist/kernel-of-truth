@@ -7,7 +7,7 @@ struct cpu_state;
 
 // Interrupt Service Routine function signature.
 // ISRs with this signature are installed to a dispatch table.
-typedef void isr_f(struct cpu_state*);
+typedef void (isr_f)(struct cpu_state *);
 
 /* Install an interrupt handler.
  * The handler will have the interrupt number @num, and when triggered it will

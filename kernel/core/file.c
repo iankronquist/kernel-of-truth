@@ -8,8 +8,8 @@
 #define buf_size 256
 
 static enum status checked print_number(struct file *file, char *buf,
-        size_t *top, bool is_signed, uint8_t base, uint8_t size,
-        int64_t snumber) {
+                                        size_t *top, bool is_signed, uint8_t base, uint8_t size,
+                                        int64_t snumber) {
     char digits_safe[] = "BUG0123456789abcdefBUG";
     char *digits = &digits_safe[3];
 
@@ -20,7 +20,7 @@ static enum status checked print_number(struct file *file, char *buf,
     }
     uint64_t number = (uint64_t)snumber;
     // Clear the buffer because we're going to need some space.
-    bubble(file->write((byte*)buf, *top), "Clearing buffer in print_number");
+    bubble(file->write((byte *)buf, *top), "Clearing buffer in print_number");
 
     switch (base) {
         case 2:
@@ -40,9 +40,9 @@ static enum status checked print_number(struct file *file, char *buf,
             return Error_Invalid;
     }
 
-    //assert(*top <= buf_size);
+    // assert(*top <= buf_size);
 
-    for (size_t i = *top; i != 0 ; --i) {
+    for (size_t i = *top; i != 0; --i) {
         buf[i-1] = digits[number%base];
         number /= base;
     }
@@ -50,13 +50,13 @@ static enum status checked print_number(struct file *file, char *buf,
 }
 
 static enum status checked print_string(struct file *file, char *buf,
-        size_t *top, const char *string) {
+                                        size_t *top, const char *string) {
     for (size_t i = 0; string[i] != '\0'; ++i) {
         buf[*top] = string[i];
         (*top)++;
         if (*top == buf_size) {
-            bubble(file->write((byte*)buf, buf_size),
-                    "Clearing buffer in print_string" );
+            bubble(file->write((byte *)buf, buf_size),
+                   "Clearing buffer in print_string");
             *top = 0;
         }
     }
@@ -90,8 +90,8 @@ static enum status checked print_string(struct file *file, char *buf,
  * We always fill leading zeros.
  *
  */
-enum status vfprintf(struct file *file, const char * restrict format,
-        va_list args) {
+enum status vfprintf(struct file *file, const char *restrict format,
+                     va_list args) {
     size_t top = 0;
     char buf[buf_size];
     if (file->write == NULL) {
@@ -126,7 +126,7 @@ enum status vfprintf(struct file *file, const char * restrict format,
                     i++;
                     if (format[i+1] != 'u') {
                         bubble(print_string(file, buf, &top, "%z"),
-                                "Clearing buffer after print_string");
+                               "Clearing buffer after print_string");
                     } else {
                         i++;
                         is_signed = false;
@@ -134,14 +134,14 @@ enum status vfprintf(struct file *file, const char * restrict format,
                         number = va_arg(args, size_t);
                         base = 10;
                         bubble(print_number(file, buf, &top, is_signed, base,
-                                size, number),
-                                "Clearing buffer after print_number");
+                                            size, number),
+                               "Clearing buffer after print_number");
                     }
                     goto next_iteration;
             }
             switch (format[i+1]) {
                 case 'i':
-                    // fall through.
+                // fall through.
                 case 'd':
                     i++;
                     base = 10;
@@ -154,15 +154,15 @@ enum status vfprintf(struct file *file, const char * restrict format,
                 case 'p':
                     i++;
                     if (size == 0) {
-                        size = sizeof(void*);
+                        size = sizeof(void *);
                     }
                     is_signed = false;
                     base = 16;
                     break;
                 case 'X':
-                    // We don't support capitalized hexadecimal because caps
-                    // are ugly.
-                    // fall through.
+                // We don't support capitalized hexadecimal because caps
+                // are ugly.
+                // fall through.
                 case 'x':
                     i++;
                     is_signed = false;
@@ -192,14 +192,14 @@ enum status vfprintf(struct file *file, const char * restrict format,
                         str = "(NULL)";
                     }
                     bubble(print_string(file, buf, &top, str),
-                            "clearing buffer after print_string");
+                           "clearing buffer after print_string");
                     goto next_iteration;
                 case '%':
                     i++;
                     buf[top] = '%';
                     top++;
                     goto next_iteration;
-                    // fall through.
+                // fall through.
                 default:
                     // Invalid specifier, just print a '%'.
                     buf[top] = format[i];
@@ -225,7 +225,7 @@ enum status vfprintf(struct file *file, const char * restrict format,
                     break;
             }
             bubble(print_number(file, buf, &top, is_signed, base, size,
-                    number), "Clearing buffer after print_number");
+                                number), "Clearing buffer after print_number");
         } else {
             buf[top] = format[i];
             top++;
@@ -233,16 +233,16 @@ enum status vfprintf(struct file *file, const char * restrict format,
 next_iteration:
         // If we have filled the buffer, flush it.
         if (top == buf_size) {
-            bubble(file->write((byte*)buf, buf_size),
-                    "Clearing buffer in vfprintf");
+            bubble(file->write((byte *)buf, buf_size),
+                   "Clearing buffer in vfprintf");
         }
     }
     // Flush anything remaining in the buffer.
-    return file->write((byte*)buf, top);
+    return file->write((byte *)buf, top);
 }
 
 enum status checked fprintf(struct file *file,
-        const char *restrict format, ...) {
+                            const char *restrict format, ...) {
     va_list args;
     va_start(args, format);
     enum status status = vfprintf(file, format, args);

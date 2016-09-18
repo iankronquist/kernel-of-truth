@@ -5,7 +5,7 @@
 #include <truth/region_vector.h>
 
 // The highest lower half canonical address.
-#define lower_half_end ((void*)0xffffffffffff)
+#define lower_half_end ((void *)0xffffffffffff)
 
 extern struct region_vector slab_lower_half;
 extern struct region_vector slab_higher_half;
@@ -19,8 +19,8 @@ void init_slab(void) {
     init_region_vector(&slab_lower_half);
 }
 
-void *slab_alloc(size_t count, enum slab_type type,
-        enum slab_attributes attrs, enum page_attributes page_attributes) {
+void*slab_alloc(size_t count, enum slab_type type,
+                enum slab_attributes attrs, enum page_attributes page_attributes) {
     union address virt_address;
     union address phys_address;
     struct region_vector *vect;
@@ -39,7 +39,7 @@ void *slab_alloc(size_t count, enum slab_type type,
         goto out;
     }
     if (map_page(virt_address.virtual, phys_address.physical,
-                page_attributes) != Ok) {
+                 page_attributes) != Ok) {
         physical_free(count * type, phys_address.physical);
         goto out;
     }

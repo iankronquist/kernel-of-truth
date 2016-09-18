@@ -29,7 +29,7 @@ void init_region_vector(struct region_vector *vect) {
 }
 
 enum status checked region_alloc(struct region_vector *vect, size_t size,
-        union address *out) {
+                                 union address *out) {
     do {
         for (size_t i = 0; i < vect->regions_used && i < regions_count; ++i) {
             if (vect->regions[i].size > size) {
@@ -53,9 +53,9 @@ enum status checked region_alloc(struct region_vector *vect, size_t size,
     return Error_No_Memory;
 }
 
-static struct region_vector *extend_vector(void) {
+static struct region_vector*extend_vector(void) {
     struct region_vector *new = slab_alloc(1, slab_small, slab_kernel_memory,
-            page_none);
+                                           page_none);
     if (new == NULL) {
         return NULL;
     }
@@ -65,7 +65,7 @@ static struct region_vector *extend_vector(void) {
 }
 
 void region_free(struct region_vector *vect, union address address,
-        size_t size) {
+                 size_t size) {
     struct region_vector *prev = vect;
     struct region_vector *cur = vect;
     do {

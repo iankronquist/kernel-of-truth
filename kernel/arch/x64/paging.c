@@ -1,6 +1,5 @@
 #include <arch/x64/paging.h>
 #include <truth/physical_allocator.h>
-#include <truth/log.h>
 #include <truth/types.h>
 
 #define pl4_count 512
@@ -59,26 +58,25 @@ static inline phys_addr table_phys_address(struct page_table *page_table) {
     return (phys_addr)(uintptr_t)page_table;
 }
 
-static struct page_table *current_page_table(void) {
+static struct page_table*current_page_table(void) {
     return (struct page_table *)0xfffffffffffff000;
 }
 
-static pl3 *get_pl3(void *address) {
-    return (pl3*)(0xffffffffffe00000 + 0x1000 * pl3_index(address));
+static pl3*get_pl3(void *address) {
+    return (pl3 *)(0xffffffffffe00000 + 0x1000 * pl3_index(address));
 }
 
-static pl2 *get_pl2(void *address) {
-    return (pl2*)(0xffffffffc0000000 + 0x200000 * pl3_index(address) + 0x1000 *
-            pl2_index(address));
+static pl2*get_pl2(void *address) {
+    return (pl2 *)(0xffffffffc0000000 + 0x200000 * pl3_index(address) + 0x1000 *
+                   pl2_index(address));
 }
 
-static pl1 *get_pl1(void *address) {
-    return (pl1*)(0xffffff8000000000 + 0x40000000 * pl3_index(address) +
-            0x200000 * pl2_index(address));
+static pl1*get_pl1(void *address) {
+    return (pl1 *)(0xffffff8000000000 + 0x40000000 * pl3_index(address) +
+                   0x200000 * pl2_index(address));
 }
 
 static inline bool is_pl3_present(struct page_table *page_table, void *address) {
-    logf("%x %x %x %x %x\n", page_table->entries[0], page_table->entries[1], page_table->entries[2], page_table->entries[3], pl4_index(address));
     return page_table->entries[pl4_index(address)] & page_present;
 }
 
@@ -95,51 +93,39 @@ static inline bool is_page_present(pl1 *level_one, void *address) {
 }
 
 enum status checked map_page(void *virtual_address, phys_addr phys_address,
-        enum page_attributes permissions) {
+                             enum page_attributes permissions) {
 
     struct page_table *page_table = current_page_table();
-    log("0");
     if (!is_pl3_present(page_table, virtual_address)) {
-        log("here!");
         phys_addr phys_address = physical_alloc(1);
-    log("1.5");
         page_table->entries[pl4_index(virtual_address)] =
             (phys_address | permissions | page_user_access |
-                    page_present);
+             page_present);
     }
 
-    log("1");
     pl3 *level_three = get_pl3(virtual_address);
     if (!is_pl2_present(level_three, virtual_address)) {
-    log("2.5");
         phys_addr phys_address = physical_alloc(1);
         (*level_three)[pl3_index(virtual_address)] =
             (phys_address | permissions | page_user_access |
-                    page_present);
+             page_present);
     }
 
-    log("2");
     pl2 *level_two = get_pl2(virtual_address);
     if (!is_pl1_present(level_two, virtual_address)) {
-    log("3.5");
         phys_addr phys_address = physical_alloc(1);
         (*level_two)[pl2_index(virtual_address)] =
             (phys_address | permissions | page_user_access |
-                    page_present);
+             page_present);
     }
 
-    log("3");
     pl1 *level_one = get_pl1(virtual_address);
     if (is_page_present(level_one, virtual_address)) {
-    log("4.5");
         return Error_Present;
     }
 
-    log("4");
     (*level_one)[pl1_index(virtual_address)] = (phys_address |
-            permissions);
-    log("5");
-    logf(">>%p\n", &(*level_one)[pl1_index(virtual_address)]);
+                                                permissions);
     return Ok;
 }
 
@@ -158,8 +144,8 @@ void unmap_page(void *address, bool free_physical_memory) {
 }
 
 enum status map_external_page(struct page_table *page_table,
-        void *virtual_address, phys_addr phys_address, enum page_attributes
-        permissions) {
+                              void *virtual_address, phys_addr phys_address, enum page_attributes
+                              permissions) {
     phys_addr original_paging = read_cr3();
     write_cr3(table_phys_address(page_table));
     enum status status = map_page(virtual_address, phys_address, permissions);
@@ -168,7 +154,7 @@ enum status map_external_page(struct page_table *page_table,
 }
 
 void unmap_external_page(struct page_table *page_table, void *virtual_address,
-        bool free_physical_memory) {
+                         bool free_physical_memory) {
     phys_addr original_paging = read_cr3();
     write_cr3(table_phys_address(page_table));
     unmap_page(virtual_address, free_physical_memory);
@@ -180,7 +166,7 @@ void switch_page_table(struct page_table *page_table) {
 }
 
 /*
-void init_page_table(struct page_table *page_table) {
+   void init_page_table(struct page_table *page_table) {
     assert(0);
-}
-*/
+   }
+ */

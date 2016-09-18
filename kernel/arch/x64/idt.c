@@ -29,7 +29,7 @@ struct cpu_state {
  * The Interrupt Descriptor Table, or IDT, describes the code called when an
  * interrupt occurs.
  * It has a few important fields:
- * 
+ *
  * @base_lo: The lower half of a pointer to the code which will be called when
  * the interrupt is triggered.
  * @base_hi: The higher half of that same pointer.
@@ -43,9 +43,9 @@ struct cpu_state {
  */
 static struct idt_entry {
     uint16_t base_low;
-    uint16_t sel; // Kernel segment goes here.
+    uint16_t sel;     // Kernel segment goes here.
     uint8_t always0;
-    uint8_t flags; // Set using the table.
+    uint8_t flags;     // Set using the table.
     uint16_t base_high;
     uint32_t base_highest;
     uint32_t reserved;
@@ -61,7 +61,7 @@ struct idt_ptr {
 
 
 // Protects the idt_dispatch_table.
-//static spinlock_t idt_dispatch_table_lock = SPINLOCK_INIT;
+// static spinlock_t idt_dispatch_table_lock = SPINLOCK_INIT;
 
 // The jump table of functions which are called when an interrupt is triggered.
 static isr_f *Interrupt_Dispatch[IDT_SIZE] = {0};
@@ -69,7 +69,7 @@ static isr_f *Interrupt_Dispatch[IDT_SIZE] = {0};
 /* A wrapper around lidt.
  * Load the provided idt_ptr onto the CPU.
  */
-extern void idt_load(struct idt_ptr*);
+extern void idt_load(struct idt_ptr *);
 
 extern void _service_interrupt(void);
 
@@ -112,7 +112,7 @@ extern void isr34(void);
 /* Set an entry in the idt.
  */
 static void idt_set_gate(uint8_t num, uintptr_t base, uint16_t sel,
-        uint8_t flags) {
+                         uint8_t flags) {
     Idt[num].base_low = base & 0xffff;
     Idt[num].base_high = (base >> 16) & 0xffff;
     Idt[num].base_highest = base >> 32;
@@ -122,12 +122,12 @@ static void idt_set_gate(uint8_t num, uintptr_t base, uint16_t sel,
 }
 
 int install_interrupt(uint8_t num, isr_f function) {
-    //acquire_spinlock(&idt_dispatch_table_lock);
+    // acquire_spinlock(&idt_dispatch_table_lock);
     if (Interrupt_Dispatch[num] != NULL) {
         return -1;
     }
     Interrupt_Dispatch[num] = function;
-    //release_spinlock(&idt_dispatch_table_lock);
+    // release_spinlock(&idt_dispatch_table_lock);
     return 0;
 }
 
@@ -202,21 +202,21 @@ void init_interrupts(void) {
     struct idt_ptr idtp;
     idtp.limit = (sizeof(struct idt_entry) * IDT_SIZE) - 1;
     idtp.base = (uintptr_t)&Idt;
-    __asm__ volatile ("lidt (%0)" : : "r"(&idtp));
+    __asm__ volatile ("lidt (%0)" : : "r" (&idtp));
 }
 
 /* Dispatch event handler or, if none exists, log information and kernel panic. */
 void common_interrupt_handler(struct cpu_state r) {
-    //assert(r.int_no > IDT_SIZE);
+    // assert(r.int_no > IDT_SIZE);
     if (Interrupt_Dispatch[r.int_no] != NULL) {
         Interrupt_Dispatch[r.int_no](&r);
     } else {
         /*
-        log("Unhandled Interrupt Triggered!\nRegisters:");
-        logf("ds: %p edi: %p esi: %p ebp: %p esp: %p ebx: %p edx: %p ecx: %p "
+           log("Unhandled Interrupt Triggered!\nRegisters:");
+           logf("ds: %p edi: %p esi: %p ebp: %p esp: %p ebx: %p edx: %p ecx: %p "
               "eax: %p int_no: %p err_code: %p eip: %p cs: %p eflags: %p "
               "useresp: %p ss: %p", r);
-        panic();
-        */
+           panic();
+         */
     }
 }

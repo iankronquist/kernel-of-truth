@@ -9,7 +9,7 @@ typedef uint8_t byte;
 typedef char *string;
 
 #define str(x) x
-#define str_to_bytes(s) ((byte*)s)
+#define str_to_bytes(s) ((byte *)s)
 
 typedef uint64_t phys_addr;
 
@@ -39,16 +39,16 @@ enum status {
 };
 
 #define bubble(condition, message) { \
-    enum status error = condition; \
-    if (error != Ok) { \
-        log(message); \
-    } \
+        enum status error = condition; \
+        if (error != Ok) { \
+            log(message); \
+        } \
 }
 
 #define container_of(child, parent_type, parent_entry) \
     (child - ((parent_type)NULL)->parent_entry)
 
-//#define format(x, y) __attribute__((printf(x, y)))
+// #define format(x, y) __attribute__((printf(x, y)))
 #define checked __attribute__((warn_unused_result))
 #define no_return __attribute__((no_return))
 #define pack __attribute__((packed))

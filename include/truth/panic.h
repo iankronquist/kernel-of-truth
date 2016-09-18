@@ -6,7 +6,7 @@
 #define assert(x) \
     if (!(x)) { \
         logf("Assertion failed: (%s) function %s, file %s, line %d.", \
-                (#x), __func__, __FILE__, __LINE__); \
+             (#x), __func__, __FILE__, __LINE__); \
         panic(); \
     }
 
