@@ -93,6 +93,17 @@ static inline bool is_page_present(pl1 *level_one, void *address) {
     return (*level_one)[pl1_index(address)] & page_present;
 }
 
+void debug_paging(void) {
+    struct page_table *page_table = current_page_table();
+    for (size_t i = 0; i < pl4_count; ++i) {
+        if (page_table->entries[i] * page_present) {
+            logf("%i has %p\n", i, page_table->entries[i]);
+        }
+    }
+    logf("kernel start: %p\n", &__kernel_start);
+    logf("kernel end: %p\n", &__kernel_end);
+}
+
 enum status checked map_page(void *virtual_address, phys_addr phys_address,
                              enum page_attributes permissions) {
 

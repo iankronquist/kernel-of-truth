@@ -27,3 +27,5 @@ void unmap_external_page(struct page_table *page_table, void *virtual_address,
 void init_page_table(struct page_table *page_table);
 
 void switch_page_table(struct page_table *page_table);
+
+void debug_paging(void);
