@@ -3,7 +3,7 @@
 /* The Global Descriptor Table and its entries.
  * x86 uses a backward, antiquated segmented memory model for compatibility
  * with computers which were around in the late Cretaceous. The Global
- * Descriptor Table, or Gdt, can control whether or not certain sections of
+ * Descriptor Table, or GDT, can control whether or not certain sections of
  * memory can run with elevated privileges (ring 0), as well as whether they
  * are used for code or data. Additionally, one 'gate', or entry in the GDT
  * called the Task Struct Segment or TSS, can be used to set up hardware
@@ -24,7 +24,7 @@
  * 5. A user mode data segment (not yet created).
  * 6. A TSS entry (not yet created).
  *
- * This structure represents a single entry in the Gdt. See figure 3-8,
+ * This structure represents a single entry in the GDT. See figure 3-8,
  * Chapter 3, Volume 3 of the Intel Manual and the rest of the chapter for more
  * information.
  */
@@ -102,7 +102,7 @@ struct tss_entry Tss = {
       0, \
     } \
 
-struct gdt_entry Gdt[] = {
+struct gdt_entry GDT[] = {
     // NULL segment
     gdt_entry(0, 0, 0, 0),
 
@@ -122,4 +122,4 @@ struct gdt_entry Gdt[] = {
     gdt_entry64(0ull, sizeof(Tss) - 1, 0xe9, 0x00),
 };
 
-uint16_t Gdt_Size = sizeof(Gdt) - 1;
+uint16_t GDT_Size = sizeof(GDT) - 1;

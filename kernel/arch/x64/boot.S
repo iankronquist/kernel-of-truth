@@ -52,12 +52,12 @@ _start:
 
 	# Finish installing the TSS into the GDT
 	movl $Tss, %ecx
-	movw %cx, Gdt + TSS_Segment + 2
+	movw %cx, GDT + TSS_Segment + 2
 	shrl $16, %ecx
-	movb %cl, Gdt + TSS_Segment + 4
+	movb %cl, GDT + TSS_Segment + 4
 	shrl $8, %ecx
-	movb %cl, Gdt + TSS_Segment + 7
-	movl $0, Gdt + TSS_Segment + 8
+	movb %cl, GDT + TSS_Segment + 7
+	movl $0, GDT + TSS_Segment + 8
 
 	# We got our multiboot information in various registers.
 	pushl $0
@@ -110,9 +110,9 @@ paging:
 
 	# Load the Global Descriptor Table pointer register.
 	subl $6, %esp
-	movw (Gdt_Size - 1), %cx
+	movw (GDT_Size - 1), %cx
 	movw %cx, 0(%esp)
-	movl $Gdt, %ecx
+	movl $GDT, %ecx
 	movl %ecx, 2(%esp)
 	lgdt 0(%esp)
 	addl $6, %esp

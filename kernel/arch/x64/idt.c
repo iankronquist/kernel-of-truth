@@ -17,13 +17,13 @@ struct cpu_state {
 // Definitions of locations of the PIC ports.
 // The Programmable Interrupt Controller, or PIC, has two parts, the master and
 // the slave.
-#define PIC_MASTER_CONTROL 0x20
-#define PIC_MASTER_MASK 0x21
-#define PIC_SLAVE_CONTROL 0xa0
-#define PIC_SLAVE_MASK 0xa1
+#define PIC_Master_Control 0x20
+#define PIC_Master_Mask 0x21
+#define PIC_Slave_Control 0xa0
+#define PIC_Slave_Mask 0xa1
 
-#define IDT_GATE_PRESENT (17)
-#define IDT_SIZE 256
+#define IDT_Gate_Present (17)
+#define IDT_Size 256
 
 /* The Interrupt Descriptor Table and its entries.
  * The Interrupt Descriptor Table, or IDT, describes the code called when an
@@ -49,7 +49,7 @@ static struct idt_entry {
     uint16_t base_high;
     uint32_t base_highest;
     uint32_t reserved;
-} pack Idt[IDT_SIZE] = {{0}};
+} pack IDT[IDT_Size] = {{0}};
 
 /*
  * Similar to the gdt_ptr, this is a special pointer to the idt.
@@ -64,7 +64,7 @@ struct idt_ptr {
 // static spinlock_t idt_dispatch_table_lock = SPINLOCK_INIT;
 
 // The jump table of functions which are called when an interrupt is triggered.
-static isr_f *Interrupt_Dispatch[IDT_SIZE] = {0};
+static isr_f *Interrupt_Dispatch[IDT_Size] = {0};
 
 /* A wrapper around lidt.
  * Load the provided idt_ptr onto the CPU.
@@ -113,12 +113,12 @@ extern void isr34(void);
  */
 static void idt_set_gate(uint8_t num, uintptr_t base, uint16_t sel,
                          uint8_t flags) {
-    Idt[num].base_low = base & 0xffff;
-    Idt[num].base_high = (base >> 16) & 0xffff;
-    Idt[num].base_highest = base >> 32;
-    Idt[num].always0 = 0;
-    Idt[num].sel = sel;
-    Idt[num].flags = flags;
+    IDT[num].base_low = base & 0xffff;
+    IDT[num].base_high = (base >> 16) & 0xffff;
+    IDT[num].base_highest = base >> 32;
+    IDT[num].always0 = 0;
+    IDT[num].sel = sel;
+    IDT[num].flags = flags;
 }
 
 int install_interrupt(uint8_t num, isr_f function) {
@@ -180,35 +180,35 @@ void init_interrupts(void) {
     idt_set_gate(34, (uintptr_t)isr34, 0x08, 0x8e);
 
     // ICW1 - begin initialization
-    write_port(PIC_MASTER_CONTROL, 0x11);
-    write_port(PIC_SLAVE_CONTROL, 0x11);
+    write_port(PIC_Master_Control, 0x11);
+    write_port(PIC_Slave_Control, 0x11);
 
     // Remap interrupts beyond 0x20 because the first 32 are cpu exceptions
-    write_port(PIC_MASTER_MASK, 0x21);
-    write_port(PIC_SLAVE_MASK, 0x28);
+    write_port(PIC_Master_Mask, 0x21);
+    write_port(PIC_Slave_Mask, 0x28);
 
     // ICW3 - setup cascading
-    write_port(PIC_MASTER_MASK, 0x00);
-    write_port(PIC_SLAVE_MASK, 0x00);
+    write_port(PIC_Master_Mask, 0x00);
+    write_port(PIC_Slave_Mask, 0x00);
 
     // ICW4 - environment info
-    write_port(PIC_MASTER_MASK, 0x01);
-    write_port(PIC_SLAVE_MASK, 0x01);
+    write_port(PIC_Master_Mask, 0x01);
+    write_port(PIC_Slave_Mask, 0x01);
 
     // mask interrupts
-    write_port(PIC_MASTER_MASK, 0xff);
-    write_port(PIC_SLAVE_MASK, 0xff);
+    write_port(PIC_Master_Mask, 0xff);
+    write_port(PIC_Slave_Mask, 0xff);
 
     struct idt_ptr idtp;
-    idtp.limit = (sizeof(struct idt_entry) * IDT_SIZE) - 1;
-    idtp.base = (uintptr_t)&Idt;
+    idtp.limit = (sizeof(struct idt_entry) * IDT_Size) - 1;
+    idtp.base = (uintptr_t)&IDT;
     __asm__ volatile ("lidt (%0)" : : "r" (&idtp));
 }
 
 /* Dispatch event handler or, if none exists, log information and kernel panic.
  */
 void common_interrupt_handler(struct cpu_state r) {
-    assert(r.int_no > IDT_SIZE);
+    assert(r.int_no > IDT_Size);
     if (Interrupt_Dispatch[r.int_no] != NULL) {
         Interrupt_Dispatch[r.int_no](&r);
     } else {
