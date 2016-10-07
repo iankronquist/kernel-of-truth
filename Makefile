@@ -72,7 +72,7 @@ start-log: $(KERNEL)
 start-debug:
 	$(QEMU) -S -s -monitor stdio -kernel $(KERNEL) $(QEMU_FLAGS)
 
-tags: $(OBJ)
+tags: kernel/arch/$(ARCH)/*.c kernel/*/*.c kernel/arch/$(ARCH)/*.S include/*/*.h
 	ctags -R kernel include
 
 iso: $(BUILD_DIR)/truth.iso
