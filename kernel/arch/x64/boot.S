@@ -10,23 +10,19 @@
 
 .section .bss, "aw", @nobits
 	.align SMALL_PAGE
+.global init_pl4
 init_pl4:
 	.skip SMALL_PAGE
+.global init_pl3
 init_pl3:
 	.skip SMALL_PAGE
+.global init_pl2
 init_pl2:
 	.skip SMALL_PAGE
+.global init_pl1_a
 init_pl1_a:
 	.skip SMALL_PAGE
 init_pl1_b:
-	.skip SMALL_PAGE
-frac_pl3:
-	.skip SMALL_PAGE
-frac_pl2:
-	.skip SMALL_PAGE
-frac_pl1:
-	.skip SMALL_PAGE
-physpml3:
 	.skip SMALL_PAGE
 .global slab_higher_half
 slab_higher_half:
@@ -94,12 +90,6 @@ _start:
 
 	# Fractal mapping.
 	movl $(init_pl4 + (PAGE_WRITE | PAGE_PRESENT)), init_pl4 + 511 * 8
-	movl $(frac_pl3 + (PAGE_WRITE | PAGE_PRESENT)), init_pl4 + 510 * 8
-	movl $(init_pl4 + (PAGE_WRITE | PAGE_PRESENT)), frac_pl3 + 511 * 8
-	movl $(frac_pl2 + (PAGE_WRITE | PAGE_PRESENT)), frac_pl3 + 510 * 8
-	movl $(init_pl4 + (PAGE_WRITE | PAGE_PRESENT)), frac_pl2 + 511 * 8
-	movl $(frac_pl1 + (PAGE_WRITE | PAGE_PRESENT)), frac_pl2 + 510 * 8
-	movl $(init_pl4 + (PAGE_WRITE | PAGE_PRESENT)), frac_pl1 + 511 * 8
 
 	# Enable PAE.
 	movl %cr4, %eax
