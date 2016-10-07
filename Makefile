@@ -60,7 +60,7 @@ $(BUILD_DIR)/%.S.o: kernel/arch/$(ARCH)/%.S
 
 docs: $(BUILD_DIR)/docs/index.html
 
-$(BUILD_DIR)/docs/index.html: $(OBJ)
+$(BUILD_DIR)/docs/index.html: $(FULL_OBJ)
 	cldoc generate -I ./include -Wno-pragma-once-outside-header -ffreestanding $(MACROS) -- --output $(BUILD_DIR)/docs include/truth/*.h include/arch/*/*.h kernel/*/*.c kernel/arch/*/*.c --language c --report
 
 start: $(KERNEL)
@@ -89,6 +89,6 @@ start-bochs: $(BUILD_DIR)/truth.iso
 clean:
 	rm -rf build/*
 
--include $(OBJ:.o=.d)
+-include $(FULL_OBJ:.o=.d)
 
 .PHONY: all clean docs iso start start-debug start-log
