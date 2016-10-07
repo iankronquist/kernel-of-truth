@@ -11,3 +11,10 @@ write_cr3:
 read_cr3:
 	mov %cr3, %rax
 	ret
+
+.global invalidate_tlb
+.type invalidate_tlb, @function
+invalidate_tlb:
+	mov %cr3, %rax
+	mov %rax, %cr3
+	ret
