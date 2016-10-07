@@ -1,11 +1,15 @@
 #include <arch/x64/paging.h>
+#include <truth/panic.h>
 #include <truth/slab.h>
 #include <truth/types.h>
 #include <truth/physical_allocator.h>
 #include <truth/region_vector.h>
 
 // The highest lower half canonical address.
-#define lower_half_end ((void *)0xffffffffffff)
+#define lower_half_end     ((void *)0x00007fffffffffff)
+#define higher_half_start  ((void *)0xffff800000000000)
+#define lower_half_size               (0x1000000000000)
+#define higher_half_size (~0ul - (uintptr_t)higher_half_start)
 
 extern struct region_vector slab_lower_half;
 extern struct region_vector slab_higher_half;
@@ -15,8 +19,13 @@ static inline bool in_lower_half(void *address) {
 }
 
 void init_slab(void) {
+    union address address;
     init_region_vector(&slab_higher_half);
     init_region_vector(&slab_lower_half);
+    address.virtual = (void *)(4 * MB);
+    region_free(&slab_lower_half, address, lower_half_size - (4 * MB));
+    address.virtual = higher_half_start;
+    region_free(&slab_higher_half, address, higher_half_size);
 }
 
 void *slab_alloc(size_t count, enum slab_type type,
@@ -37,11 +46,14 @@ void *slab_alloc(size_t count, enum slab_type type,
     }
     phys_address.physical = physical_alloc(count * type);
     if (phys_address.physical == invalid_phys_addr) {
+        assert(0);
         goto out;
     }
     if (map_page(virt_address.virtual, phys_address.physical,
                  page_attributes) != Ok) {
-        physical_free(count * type, phys_address.physical);
+        physical_free(phys_address.physical, count);
+        logf("Failed to map slab page: %p, %lx\n", virt_address.virtual, phys_address.physical);
+        assert(0);
         goto out;
     }
     return virt_address.virtual;
