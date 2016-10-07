@@ -8,13 +8,13 @@ KERNEL_MINOR := 0
 KERNEL_PATCH := 0
 VCS_VERSION := $(shell git rev-parse HEAD)
 WEBSITE := https://github.com/iankronquist/kernel-of-truth
-MACROS := -D project_website='"$(WEBSITE)"' -D kernel_major=$(KERNEL_MAJOR) -D kernel_minor=$(KERNEL_MINOR) -D kernel_patch=$(KERNEL_PATCH) -D vcs_version='"$(VCS_VERSION)"'
+MACROS := -dD -D project_website='"$(WEBSITE)"' -D kernel_major=$(KERNEL_MAJOR) -D kernel_minor=$(KERNEL_MINOR) -D kernel_patch=$(KERNEL_PATCH) -D vcs_version='"$(VCS_VERSION)"'
 
 # Build tools & flags
 CC := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
-CFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Werror -Wextra -Wpedantic -g -I ./include $(MACROS)
+CFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Werror -Wextra -g -I ./include $(MACROS) -D __C__
 AS := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
-ASFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Werror -Wextra -Wpedantic -g -I ./include $(MACROS)
+ASFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Werror -Wextra -g -I ./include $(MACROS) -D __ASM__
 LD := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
 LDFLAGS := -nostdlib -ffreestanding -O2
 OBJCOPY := objcopy

@@ -18,7 +18,7 @@ struct region_vector {
 };
 
 #define regions_count ( \
-        (SMALL_PAGE - sizeof(struct region_vector)) / \
+        (Page_Small - sizeof(struct region_vector)) / \
         sizeof(struct region) \
         )
 
@@ -63,8 +63,8 @@ enum status checked region_alloc(struct region_vector *vect, size_t size,
 }
 
 static struct region_vector *extend_vector(void) {
-    struct region_vector *new = slab_alloc(1, slab_small, slab_kernel_memory,
-                                           page_none);
+    struct region_vector *new = slab_alloc(1, Page_Small,
+                                           Memory_No_Attributes);
     if (new == NULL) {
         return NULL;
     }
@@ -86,7 +86,7 @@ size_t region_find_size_and_free(struct region_vector *vect,
                     cur->regions[i] = cur->regions[cur->regions_used];
                 } else if (prev != NULL) {
                     prev->next = cur->next;
-                    slab_free(1, slab_small, cur);
+                    slab_free(1, Page_Small, cur);
                 }
                 return size;
             }

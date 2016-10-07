@@ -8,8 +8,8 @@
 // The highest lower half canonical address.
 #define lower_half_end     ((void *)0x00007fffffffffff)
 #define higher_half_start  ((void *)0xffff800000000000)
-#define lower_half_size               (0x1000000000000)
-#define higher_half_size (~0ul - (uintptr_t)higher_half_start)
+#define lower_half_               (0x1000000000000)
+#define higher_half_ (~0ul - (uintptr_t)higher_half_start)
 
 extern struct region_vector slab_lower_half;
 extern struct region_vector slab_higher_half;
@@ -23,23 +23,20 @@ void init_slab(void) {
     init_region_vector(&slab_higher_half);
     init_region_vector(&slab_lower_half);
     address.virtual = (void *)(4 * MB);
-    region_free(&slab_lower_half, address, lower_half_size - (4 * MB));
+    region_free(&slab_lower_half, address, lower_half_ - (4 * MB));
     address.virtual = higher_half_start;
-    region_free(&slab_higher_half, address, higher_half_size);
+    region_free(&slab_higher_half, address, higher_half_);
 }
 
-void *slab_alloc(size_t count, enum slab_type type,
-                 enum slab_attributes attrs,
-                 enum page_attributes page_attributes) {
+void *slab_alloc(size_t count, enum page_size type,
+                 enum memory_attributes page_attributes) {
     union address virt_address;
     union address phys_address;
     struct region_vector *vect;
-    if (attrs == slab_kernel_memory) {
+    if (page_attributes & Memory_User_Access) {
         vect = &slab_lower_half;
-        page_attributes = page_attributes | page_user_access;
     } else {
         vect = &slab_higher_half;
-        page_attributes = page_attributes;
     }
     if (region_alloc(vect, count * type, &virt_address) != Ok) {
         return NULL;
@@ -52,7 +49,8 @@ void *slab_alloc(size_t count, enum slab_type type,
     if (map_page(virt_address.virtual, phys_address.physical,
                  page_attributes) != Ok) {
         physical_free(phys_address.physical, count);
-        logf("Failed to map slab page: %p, %lx\n", virt_address.virtual, phys_address.physical);
+        logf("Failed to map slab page: %p, %lx\n", virt_address.virtual,
+             phys_address.physical);
         assert(0);
         goto out;
     }
@@ -62,7 +60,7 @@ out:
     return NULL;
 }
 
-void slab_free(size_t count, enum slab_type type, void *address) {
+void slab_free(size_t count, enum page_size type, void *address) {
     union address virt_address;
     struct region_vector *vect;
     virt_address.virtual = address;

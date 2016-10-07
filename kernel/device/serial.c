@@ -78,7 +78,7 @@ struct file id##_File = { \
     .parent = NULL, \
     .children = NULL, \
     .references = 0, \
-    .permissions = perm_write, \
+    .permissions = Perm_Write, \
 }; \
 static enum status checked serial_init_##id(string file_name) { \
     id##_File.name = file_name; \

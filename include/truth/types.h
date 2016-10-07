@@ -27,9 +27,9 @@ enum order {
 };
 
 enum permissions {
-    perm_read = 1,
-    perm_write = 2,
-    perm_execute = 3,
+    Perm_Read = 1,
+    Perm_Write = 2,
+    Perm_Execute = 3,
 };
 
 enum status {
@@ -38,6 +38,7 @@ enum status {
     Error_Invalid,
     Error_Permissions,
     Error_Present,
+    Error_Absent,
 };
 
 #define bubble(condition, message) { \
@@ -51,7 +52,8 @@ enum status {
 extern byte __kernel_start;
 extern byte __kernel_end;
 
-#define kernel_image_size     ((uintptr_t)((byte *)&__kernel_end - (byte *)&__kernel_start))
+#define kernel_image_size     ((uintptr_t)((byte *)&__kernel_end - \
+                                           (byte *)&__kernel_start))
 #define kernel_physical_start ((byte *)&__kernel_start)
 #define kernel_physical_end   ((byte *)&__kernel_end)
 

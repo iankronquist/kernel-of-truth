@@ -7,10 +7,10 @@
 extern void invalidate_tlb(void);
 extern uint64_t invalidate_page(void *);
 
-#define pl1_count 512
-#define pl2_count 512
-#define pl3_count 512
-#define pl4_count 512
+#define pl1_Count 512
+#define pl2_Count 512
+#define pl3_Count 512
+#define pl4_Count 512
 
 #define pl1_offset 12
 #define pl1_mask   0x1ff
@@ -31,10 +31,10 @@ typedef uint64_t pl3_entry;
 typedef uint64_t pl2_entry;
 typedef uint64_t pl1_entry;
 
-typedef pl4_entry pl4[pl4_count];
-typedef pl3_entry pl3[pl3_count];
-typedef pl2_entry pl2[pl2_count];
-typedef pl1_entry pl1[pl1_count];
+typedef pl4_entry pl4[pl4_Count];
+typedef pl3_entry pl3[pl3_Count];
+typedef pl2_entry pl2[pl2_Count];
+typedef pl1_entry pl1[pl1_Count];
 
 struct page_table {
     pl4 entries;
@@ -69,7 +69,7 @@ static struct page_table *current_page_table(void) {
 
 #define fractal_region 0xffffff8000000000
 
-#define page_size 4 * KB
+#define page_size (KB * 4)
 
 static pl3 *get_pl3(void *address) {
     return (pl2 *)(0xffffffffffe00000 | page_size * pl4_index(address));
@@ -77,38 +77,38 @@ static pl3 *get_pl3(void *address) {
 
 static pl2 *get_pl2(void *address) {
     return (pl2 *)(0xffffffffc0000000 |
-                   pl3_count * page_size * pl4_index(address) |
+                   pl3_Count * page_size * pl4_index(address) |
                    page_size * pl3_index(address));
 }
 
 static pl1 *get_pl1(void *address) {
     return (pl1 *)(0xffffff8000000000 |
-                   pl3_count * pl2_count * page_size * pl4_index(address) |
-                   pl2_count * page_size * pl3_index(address) |
+                   pl3_Count * pl2_Count * page_size * pl4_index(address) |
+                   pl2_Count * page_size * pl3_index(address) |
                    page_size * pl2_index(address));
 }
 
 static inline bool is_pl3_present(struct page_table *page_table,
                                   void *address) {
-    return page_table->entries[pl4_index(address)] & page_present;
+    return page_table->entries[pl4_index(address)] & Memory_Present;
 }
 
 static inline bool is_pl2_present(pl3 *level_three, void *address) {
-    return (*level_three)[pl3_index(address)] & page_present;
+    return (*level_three)[pl3_index(address)] & Memory_Present;
 }
 
 static inline bool is_pl1_present(pl2 *level_two, void *address) {
-    return (*level_two)[pl2_index(address)] & page_present;
+    return (*level_two)[pl2_index(address)] & Memory_Present;
 }
 
-static inline bool is_page_present(pl1 *level_one, void *address) {
-    return (*level_one)[pl1_index(address)] & page_present;
+static inline bool is_Memory_Present(pl1 *level_one, void *address) {
+    return (*level_one)[pl1_index(address)] & Memory_Present;
 }
 
 void debug_paging(void) {
     struct page_table *page_table = current_page_table();
-    for (size_t i = 0; i < pl4_count; ++i) {
-        if (page_table->entries[i] * page_present) {
+    for (size_t i = 0; i < pl4_Count; ++i) {
+        if (page_table->entries[i] * Memory_Present) {
             logf("%i has %p\n", i, page_table->entries[i]);
         }
     }
@@ -117,15 +117,15 @@ void debug_paging(void) {
 }
 
 enum status checked map_page(void *virtual_address, phys_addr phys_address,
-                             enum page_attributes permissions) {
+                             enum memory_attributes permissions) {
 
     struct page_table *page_table = current_page_table();
     logf("Mapping: %p -> %p\n", virtual_address, phys_address);
     if (!is_pl3_present(page_table, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
         page_table->entries[pl4_index(virtual_address)] =
-            (phys_address | permissions | page_user_access |
-             page_present);
+            (phys_address | permissions | Memory_User_Access |
+             Memory_Present);
         invalidate_tlb();
     }
 
@@ -133,8 +133,8 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     if (!is_pl2_present(level_three, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
         (*level_three)[pl3_index(virtual_address)] =
-            (phys_address | permissions | page_user_access |
-             page_present);
+            (phys_address | permissions | Memory_User_Access |
+             Memory_Present);
         invalidate_tlb();
     }
 
@@ -142,18 +142,19 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     if (!is_pl1_present(level_two, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
         (*level_two)[pl2_index(virtual_address)] =
-            (phys_address | permissions | page_user_access |
-             page_present);
+            (phys_address | permissions | Memory_User_Access |
+             Memory_Present);
         invalidate_tlb();
     }
 
     pl1 *level_one = get_pl1(virtual_address);
-    if (is_page_present(level_one, virtual_address)) {
+    if (is_Memory_Present(level_one, virtual_address)) {
         logf("The virtual address %p is already present\n", virtual_address);
         return Error_Present;
     }
 
-    (*level_one)[pl1_index(virtual_address)] = (phys_address | permissions | page_present);
+    (*level_one)[pl1_index(virtual_address)] =
+        (phys_address | permissions | Memory_Present);
     invalidate_tlb();
 
     int *test = virtual_address;
@@ -179,8 +180,8 @@ void unmap_page(void *address, bool free_physical_memory) {
 }
 
 enum status map_external_page(struct page_table *page_table,
-                              void *virtual_address, phys_addr phys_address, enum page_attributes
-                              permissions) {
+                              void *virtual_address, phys_addr phys_address,
+                              enum memory_attributes permissions) {
     phys_addr original_paging = read_cr3();
     write_cr3(table_phys_address(page_table));
     enum status status = map_page(virtual_address, phys_address, permissions);

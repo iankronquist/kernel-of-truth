@@ -14,33 +14,31 @@ byte *heap = NULL;
 enum status checked init_heap(void) {
     union address heap_address;
     heap_address.virtual = heap;
-    heap_metadata_used = slab_alloc(1, slab_small, slab_kernel_memory,
-                                    page_writable);
+    heap_metadata_used = slab_alloc(1, Page_Small, Memory_Writable);
     if (heap_metadata_used == NULL) {
         assert(0);
         return Error_No_Memory;
     }
-    heap_metadata_free = slab_alloc(1, slab_small, slab_kernel_memory,
-                                    page_writable);
+    heap_metadata_free = slab_alloc(1, Page_Small, Memory_Writable);
     if (heap_metadata_free == NULL) {
-        slab_free(1, slab_small, heap_metadata_used);
+        slab_free(1, Page_Small, heap_metadata_used);
         assert(0);
         return Error_No_Memory;
     }
-    heap = slab_alloc(1, slab_small, slab_kernel_memory, page_writable);
+    heap = slab_alloc(1, Page_Small, Memory_Writable);
     if (heap == NULL) {
-        slab_free(1, slab_small, heap_metadata_used);
-        slab_free(1, slab_small, heap_metadata_free);
+        slab_free(1, Page_Small, heap_metadata_used);
+        slab_free(1, Page_Small, heap_metadata_free);
         assert(0);
         return Error_No_Memory;
     }
 
-    heap_metadata_used = slab_alloc(1, slab_small, slab_user_memory, page_writable);
+    heap_metadata_used = slab_alloc(1, Page_Small, Memory_Writable);
     init_region_vector(heap_metadata_used);
-    heap_metadata_free = slab_alloc(1, slab_small, slab_user_memory, page_writable);
+    heap_metadata_free = slab_alloc(1, Page_Small, Memory_Writable);
     init_region_vector(heap_metadata_free);
-    region_free(heap_metadata_free, heap_address, SMALL_PAGE);
-    memset(heap, heap_redzone_fill, SMALL_PAGE);
+    region_free(heap_metadata_free, heap_address, Page_Small);
+    memset(heap, heap_redzone_fill, Page_Small);
     return Ok;
 }
 

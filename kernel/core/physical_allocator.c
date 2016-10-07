@@ -21,17 +21,17 @@ static void insert_regions(struct multiboot_info *multiboot_tables) {
                 if (Boot_Map_Start > mmap[i].addr) {
                     size_t prefix_length = Boot_Map_Start - mmap[i].addr;
                     log("Prefix");
-                    physical_free(mmap[i].addr, prefix_length / SMALL_PAGE);
+                    physical_free(mmap[i].addr, prefix_length / Page_Small);
                 }
                 if (Boot_Map_End < mmap[i].addr + mmap[i].len) {
                     size_t postfix_length = mmap[i].addr + mmap[i].len -
                                             Boot_Map_End;
                     log("Postfix");
-                    physical_free(Boot_Map_End, postfix_length / SMALL_PAGE);
+                    physical_free(Boot_Map_End, postfix_length / Page_Small);
                 }
             } else {
                 log("Non-kernel Block");
-                physical_free(mmap[i].addr, mmap[i].len / SMALL_PAGE);
+                physical_free(mmap[i].addr, mmap[i].len / Page_Small);
             }
         }
     }
@@ -46,7 +46,7 @@ void init_physical_allocator(struct multiboot_info *multiboot_tables) {
 
 phys_addr physical_alloc(size_t pages) {
     union address address;
-    size_t size = pages * SMALL_PAGE;
+    size_t size = pages * Page_Small;
     struct region_vector *vect = &init_physical_allocator_vector;
     if (region_alloc(vect, size, &address) != Ok) {
         return invalid_phys_addr;
@@ -57,7 +57,7 @@ phys_addr physical_alloc(size_t pages) {
 
 void physical_free(phys_addr address, size_t pages) {
     union address in;
-    size_t size = pages * SMALL_PAGE;
+    size_t size = pages * Page_Small;
     in.physical = address;
     struct region_vector *vect = &init_physical_allocator_vector;
     region_free(vect, in, size);
