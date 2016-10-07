@@ -5,6 +5,7 @@
 #include <truth/types.h>
 
 extern void invalidate_tlb(void);
+extern uint64_t invalidate_page(void *);
 
 #define pl1_count 512
 #define pl2_count 512
@@ -168,10 +169,12 @@ void unmap_page(void *address, bool free_physical_memory) {
         is_pl1_present(get_pl2(address), address)) {
         pl1 *level_one = get_pl1(address);
 
+
         if (free_physical_memory) {
             physical_free(align_page(*level_one[pl1_index(address)]), 1);
         }
         *level_one[pl1_index(address)] = free_page_entry;
+        invalidate_page(address);
     }
 }
 
