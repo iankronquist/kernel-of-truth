@@ -22,6 +22,15 @@ struct region_vector {
         sizeof(struct region) \
         )
 
+void debug_region_vector(struct region_vector *cur) {
+    do {
+        for (size_t i = 0; i < cur->regions_used && i < regions_count; ++i) {
+            logf("Region starts at %p and has size %x\n",
+                 cur->regions[i].address.virtual, cur->regions[i].size);
+        }
+        cur = cur->next;
+    } while (cur != NULL);
+}
 
 void init_region_vector(struct region_vector *vect) {
     vect->next = NULL;
@@ -62,6 +71,30 @@ static struct region_vector *extend_vector(void) {
     new->regions_used = 0;
     new->next = NULL;
     return new;
+}
+
+size_t region_find_size_and_free(struct region_vector *vect,
+                                 union address address) {
+    struct region_vector *prev = NULL;
+    struct region_vector *cur = vect;
+    do {
+        for (size_t i = 0; i < cur->regions_used && i < regions_count; ++i) {
+            if (cur->regions[i].address.virtual == address.virtual) {
+                cur->regions_used--;
+                size_t size = cur->regions[i].size;
+                if (cur->regions_used != 0) {
+                    cur->regions[i] = cur->regions[cur->regions_used];
+                } else if (prev != NULL) {
+                    prev->next = cur->next;
+                    slab_free(1, slab_small, cur);
+                }
+                return size;
+            }
+        }
+        prev = cur;
+        cur = cur->next;
+    } while (cur != NULL);
+    return 0;
 }
 
 void region_free(struct region_vector *vect, union address address,
