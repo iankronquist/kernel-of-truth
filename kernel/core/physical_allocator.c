@@ -7,14 +7,36 @@
 
 extern struct region_vector init_physical_allocator_vector;
 
+#define Boot_Map_Start (phys_addr)0x001000
+#define Boot_Map_End   (phys_addr)0x400000
+
 static void insert_regions(struct multiboot_info *multiboot_tables) {
     struct multiboot_mmap_entry *mmap =
         (struct multiboot_mmap_entry *)(uintptr_t)multiboot_tables->mmap_addr;
     for (size_t i = 0; i < multiboot_tables->mmap_length; ++i) {
         if (mmap[i].type == MULTIBOOT_MEMORY_AVAILABLE) {
-            physical_free(mmap[i].addr, mmap[i].len);
+            if (mmap[i].addr + mmap[i].len > Boot_Map_Start &&
+                mmap[i].addr < Boot_Map_End) {
+
+                if (Boot_Map_Start > mmap[i].addr) {
+                    size_t prefix_length = Boot_Map_Start - mmap[i].addr;
+                    log("Prefix");
+                    physical_free(mmap[i].addr, prefix_length / SMALL_PAGE);
+                }
+                if (Boot_Map_End < mmap[i].addr + mmap[i].len) {
+                    size_t postfix_length = mmap[i].addr + mmap[i].len -
+                                            Boot_Map_End;
+                    log("Postfix");
+                    physical_free(Boot_Map_End, postfix_length / SMALL_PAGE);
+                }
+            } else {
+                log("Non-kernel Block");
+                physical_free(mmap[i].addr, mmap[i].len / SMALL_PAGE);
+            }
         }
     }
+    log("Contents of physical allocator vector:");
+    debug_region_vector(&init_physical_allocator_vector);
 }
 
 void init_physical_allocator(struct multiboot_info *multiboot_tables) {
