@@ -47,6 +47,14 @@ enum status {
         } \
 }
 
+
+extern byte __kernel_start;
+extern byte __kernel_end;
+
+#define kernel_image_size     ((uintptr_t)((byte *)&__kernel_end - (byte *)&__kernel_start))
+#define kernel_physical_start ((byte *)&__kernel_start)
+#define kernel_physical_end   ((byte *)&__kernel_end)
+
 #define container_of(child, parent_type, parent_entry) \
     (child - ((parent_type)NULL)->parent_entry)
 
