@@ -65,4 +65,4 @@ extern byte __kernel_end;
 #define checked __attribute__((warn_unused_result))
 #define no_return __attribute__((no_return))
 #define pack __attribute__((packed))
-#define unused __attribute__((unused))
+#define unused(x) x __attribute__((unused))
