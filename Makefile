@@ -12,9 +12,9 @@ MACROS := -dD -D project_website='"$(WEBSITE)"' -D kernel_major=$(KERNEL_MAJOR) 
 
 # Build tools & flags
 CC := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
-CFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Werror -Wextra -g -I ./include $(MACROS) -D __C__
+CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Werror -Wextra -g -I ./include $(MACROS) -D __C__
 AS := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
-ASFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Werror -Wextra -g -I ./include $(MACROS) -D __ASM__
+ASFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Werror -Wextra -I ./include $(MACROS) -D __ASM__
 LD := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
 LDFLAGS := -nostdlib -ffreestanding -O2
 OBJCOPY := objcopy
@@ -39,6 +39,13 @@ include $(patsubst %,%/component.$(ARCH).mk,$(COMPONENTS))
 
 
 all: $(KERNEL)
+
+debug: CFLAGS += -g -fsanitize=undefined
+debug: ASFLAGS += -g
+debug: all
+
+release: all
+	strip --strip-all $(KERNEL)
 
 $(KERNEL): $(KERNEL)64
 	$(OBJCOPY) $< -O elf32-i386 $@
@@ -91,4 +98,4 @@ clean:
 
 -include $(FULL_OBJ:.o=.d)
 
-.PHONY: all clean docs iso start start-debug start-log
+.PHONY: all clean debug docs iso release start start-debug start-log
