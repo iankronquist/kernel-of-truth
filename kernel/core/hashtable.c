@@ -27,7 +27,7 @@ size_t hash_str(void *str) {
 
 enum partial hash_str_comp(void *key_a, void *key_b) {
     // Strings should not be longer than pages. That is nonsense.
-    if (!strncmp(key_a, key_b, SMALL_PAGE)) {
+    if (strncmp(key_a, key_b, Page_Small) != Order_Equal) {
         return Partial_Not_Equal;
     } else {
         return Partial_Equal;
