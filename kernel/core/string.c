@@ -1,3 +1,4 @@
+#include <truth/types.h>
 #include <truth/string.h>
 
 int memcmp(const void *a, const void *b, size_t size)
@@ -48,6 +49,19 @@ void *memmove(void *destination, const void *source, size_t size)
         }
     }
     return destination;
+}
+
+enum order strncmp(const string s1, const string s2, size_t n) {
+    for (size_t i = 0; i < n; ++i) {
+        if (s1[i] != s2[i]) {
+            if (s1[i] > s2[i]) {
+                return Order_Greater;
+            } else {
+                return Order_Less;
+            }
+        }
+    }
+    return Order_Equal;
 }
 
 size_t strlen(const char *str) {
