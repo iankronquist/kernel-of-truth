@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TARGET=x86_64-none-elf
+TARGET=x86_64-elf
 PREFIX=$(pwd)/compiler/$TARGET
 PATH=$PATH:$PREFIX/bin
 CFLAGS=" -g -O2"
