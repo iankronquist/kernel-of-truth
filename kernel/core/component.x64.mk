@@ -8,3 +8,5 @@ OBJ += region_vector.c.o
 OBJ += slab.c.o
 OBJ += sorted_list.c.o
 OBJ += string.c.o
+# FIXME: Only include in debug builds.
+OBJ += ubsan.c.o
