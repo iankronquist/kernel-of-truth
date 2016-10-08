@@ -5,7 +5,7 @@
 // Function used for hashing an object. Should return a good hash in the range
 // [0, SIZE_T_MAX].
 typedef size_t (*hash_f)(void *);
-// Compare to objects when fetching from a hash table.
+// Compare two objects when fetching from a hash table.
 typedef enum partial (*partial_comp_f)(void *, void *);
 
 // A structure for holding key value pairs for the hash table.
