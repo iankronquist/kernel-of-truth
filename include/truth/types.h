@@ -59,6 +59,7 @@ extern byte __kernel_end;
 
 #define container_of(child, parent_type, parent_entry) \
     (child - ((parent_type)NULL)->parent_entry)
+#define is_aligned(value, alignment) (value & (alignment - 1))
 
 // #define format(x, y) __attribute__((printf(x, y)))
 #define checked __attribute__((warn_unused_result))
