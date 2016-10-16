@@ -45,6 +45,7 @@ enum status {
         enum status error = condition; \
         if (error != Ok) { \
             log(message); \
+            return error; \
         } \
 }
 
