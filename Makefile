@@ -68,7 +68,7 @@ $(BUILD_DIR)/%.S.o: kernel/arch/$(ARCH)/%.S
 docs: $(BUILD_DIR)/docs/index.html
 
 $(BUILD_DIR)/docs/index.html: include/truth/*.h include/arch/*/*.h kernel/*/*.c kernel/arch/*/*.c
-	cldoc generate -I ./include -Wno-pragma-once-outside-header -ffreestanding $(MACROS) -- --output $(BUILD_DIR)/docs include/truth/*.h include/arch/*/*.h kernel/*/*.c kernel/arch/*/*.c --language c --report
+	cldoc generate -D __C__ -I ./include -Wno-pragma-once-outside-header -ffreestanding $(MACROS) -- --output $(BUILD_DIR)/docs include/truth/*.h include/arch/*/*.h kernel/*/*.c kernel/arch/*/*.c --language c --report
 
 start: $(KERNEL)
 	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio -serial file:$(BUILD_DIR)/qemu-serial.txt
