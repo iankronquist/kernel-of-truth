@@ -12,9 +12,9 @@ MACROS := -dD -D project_website='"$(WEBSITE)"' -D kernel_major=$(KERNEL_MAJOR) 
 
 # Build tools & flags
 CC := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
-CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Werror -Wextra -g -I ./include $(MACROS) -D __C__
+CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra -g -I ./include $(MACROS) -D __C__
 AS := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
-ASFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Werror -Wextra -I ./include $(MACROS) -D __ASM__
+ASFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Wextra -I ./include $(MACROS) -D __ASM__
 LD := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
 LDFLAGS := -nostdlib -ffreestanding -O2
 OBJCOPY := objcopy
@@ -44,7 +44,9 @@ debug: CFLAGS += -g -fsanitize=undefined
 debug: ASFLAGS += -g
 debug: all
 
-release: all
+release: CFLAGS += -Werror
+release: AFLAGS += -Werror
+release: $(KERNEL)
 	strip --strip-all $(KERNEL)
 
 $(KERNEL): $(KERNEL)64
@@ -70,7 +72,7 @@ docs: $(BUILD_DIR)/docs/index.html
 $(BUILD_DIR)/docs/index.html: include/truth/*.h include/arch/*/*.h kernel/*/*.c kernel/arch/*/*.c
 	cldoc generate -D __C__ -I ./include -Wno-pragma-once-outside-header -ffreestanding $(MACROS) -- --output $(BUILD_DIR)/docs include/truth/*.h include/arch/*/*.h kernel/*/*.c kernel/arch/*/*.c --language c --report
 
-start: $(KERNEL)
+start: debug
 	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio -serial file:$(BUILD_DIR)/qemu-serial.txt
 
 start-log: $(KERNEL)
