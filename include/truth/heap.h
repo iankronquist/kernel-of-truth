@@ -2,7 +2,7 @@
 
 #include <truth/types.h>
 
-void *kmalloc(size_t bytes);
-void *kcalloc(size_t count, size_t size);
-void kfree(void *address);
+void *malloc(size_t bytes, int tag);
+void *calloc(size_t count, size_t size, int tag);
+void free(void *address, int tag);
 enum status checked init_heap(void);

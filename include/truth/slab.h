@@ -4,6 +4,5 @@
 
 void init_slab(void);
 
-void *slab_alloc(size_t count, enum page_size size,
-                 enum memory_attributes attrs);
-void slab_free(size_t count, enum page_size size, void *address);
+void *slab_alloc(size_t size, enum memory_attributes attrs, int tag);
+void slab_free(size_t size, void *address, int tag);
