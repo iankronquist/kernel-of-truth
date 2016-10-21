@@ -14,3 +14,4 @@ phys_addr physical_alloc(size_t pages, int tag);
 
 void physical_free(phys_addr address, int tag);
 
+bool physical_tag_leak(int tag);
