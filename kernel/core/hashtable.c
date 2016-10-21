@@ -75,7 +75,7 @@ static struct hashdata *hashtable_seek(struct hashtable *ht, void *key) {
         }
     }
     // The hash table is full. Should never be reached.
-    assert(not_reached);
+    assert(Not_Reached);
     return NULL;
 }
 
@@ -93,7 +93,7 @@ static struct hashdata *hashtable_seek_empty(struct hashtable *ht, void *key) {
         }
     }
     // The hash table is full. Should never be reached.
-    assert(not_reached);
+    assert(Not_Reached);
     return NULL;
 }
 

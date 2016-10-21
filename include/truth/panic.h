@@ -4,7 +4,7 @@
 #include <truth/types.h>
 #include <truth/log.h>
 
-#define not_reached false
+#define Not_Reached false
 
 #define assert(x) \
     if (!(x)) { \
