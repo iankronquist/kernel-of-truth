@@ -39,7 +39,24 @@ enum status {
     Error_Permissions,
     Error_Present,
     Error_Absent,
+    // Not an error message, but rather the number of error messages.
+    Error_Count,
 };
+
+static inline const char *status_message(enum status status) {
+    const char *messages[Error_Count] = {
+        "Ok",
+        "Not enough memory",
+        "Invalid",
+        "Permissions",
+        "Already present",
+        "Absent",
+    };
+    if (status >= Error_Count) {
+        return "Bad error";
+    }
+    return messages[status];
+}
 
 #define bubble(condition, message) { \
         enum status error = condition; \
