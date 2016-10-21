@@ -26,27 +26,30 @@ struct out_of_bounds_info {
     struct type_descriptor right_type;
 };
 
-void __ubsan_handle_negate_overflow(struct source_location *location) {
-    logf("Negation overflow\n\tfile: %s\n\tline: %i\n\tcolumn: %i\n",
+static inline void log_location(struct source_location *location) {
+    logf("\tfile: %s\n\tline: %i\n\tcolumn: %i\n",
          location->file, location->line, location->column);
+}
+
+void __ubsan_handle_negate_overflow(struct source_location *location) {
+    log("Negation overflow");
+    log_location(location);
     panic();
 }
 
 void __ubsan_handle_type_mismatch(struct type_mismatch_info *type_mismatch,
                                   uintptr_t pointer) {
-    char *violation;
     struct source_location *location = &type_mismatch->location;
     if (pointer == 0) {
-        violation = "Null pointer access";
+        log("Null pointer access");
     } else if (type_mismatch->alignment != 0 &&
                is_aligned(pointer, type_mismatch->alignment)) {
-        violation = "Unaligned memory access";
+        log("Unaligned memory access");
     } else {
-        violation = "Type mismatch";
+        log("Type mismatch");
         logf("Type: %s\n", type_mismatch->type->name);
     }
-    logf("%s\n\tfile: %s\n\tline: %i\n\tcolumn: %i\n", violation,
-         location->file, location->line, location->column);
+    log_location(location);
     panic();
 }
 
@@ -58,16 +61,27 @@ void __ubsan_handle_divrem_overflow(struct source_location *location,
 }
 
 void __ubsan_handle_out_of_bounds(struct out_of_bounds_info *out_of_bounds) {
-    struct source_location *location = &out_of_bounds->location;
-    logf("Out of bounds\n\tfile: %s\n\tline: %i\n\tcolumn: %i\n",
-         location->file, location->line, location->column);
+    log("Out of bounds");
+    log_location(&out_of_bounds->location);
     panic();
 }
 
 void __ubsan_handle_shift_out_of_bounds(struct out_of_bounds_info
                                         *out_of_bounds) {
-    struct source_location *location = &out_of_bounds->location;
-    logf("Shift out of bounds\n\tfile: %s\n\tline: %i\n\tcolumn: %i\n",
-         location->file, location->line, location->column);
+    log("Shift out of bounds\n");
+    log_location(&out_of_bounds->location);
+    panic();
+}
+
+void __ubsan_handle_mul_overflow(struct source_location *location,
+                                 void *unused(left), void *unused(right)) {
+    log("Multiplication overflow");
+    log_location(location);
+    panic();
+}
+void __ubsan_handle_sub_overflow(struct source_location *location,
+                                 void *unused(left), void *unused(right)) {
+    log("Subtraction overflow");
+    log_location(location);
     panic();
 }
