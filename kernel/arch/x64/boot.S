@@ -152,3 +152,11 @@ halt:
 	cli
 	hlt
 	jmp halt
+
+.global cpu_time
+.type cpu_time, @function
+cpu_time:
+    rdtsc
+    shlq $32, %rdx
+    orq %rax, %rdx
+    ret

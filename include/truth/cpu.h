@@ -20,11 +20,14 @@ int install_interrupt(uint8_t num, isr_f function);
 
 void init_interrupts(void);
 
-/* Disable interrupts */
+// Disable interrupts
 extern void disable_interrupts(void);
 
-/* Enable interrupts */
+// Enable interrupts
 extern void enable_interrupts(void);
 
-/* Halt CPU */
+// Halt CPU
 extern void halt(void);
+
+// Get's the CPU time step counter value
+extern uint64_t cpu_time(void);
