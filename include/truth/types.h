@@ -66,7 +66,6 @@ static inline const char *status_message(enum status status) {
         } \
 }
 
-
 extern byte __kernel_start;
 extern byte __kernel_end;
 
@@ -77,10 +76,13 @@ extern byte __kernel_end;
 #define Kernel_Virtual_Start ((void *)&__kernel_start)
 #define Kernel_Virtual_End   ((void *)&__kernel_end)
 
+#define phys_to_virt(a) ((void *)a)
 
 #define container_of(child, parent_type, parent_entry) \
     (child - ((parent_type)NULL)->parent_entry)
 #define is_aligned(value, alignment) (value & (alignment - 1))
+#define round_next(x, y) (((x) + (y - 1)) & ~(y - 1))
+#define static_array_count(x) (sizeof(x) / sizeof(x)[0])
 
 // #define format(x, y) __attribute__((printf(x, y)))
 #define checked __attribute__((warn_unused_result))
