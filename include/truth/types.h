@@ -53,10 +53,13 @@ enum status {
 extern byte __kernel_start;
 extern byte __kernel_end;
 
-#define kernel_image_size     ((uintptr_t)((byte *)&__kernel_end - \
+#define Kernel_Image_Size     ((uintptr_t)((byte *)&__kernel_end - \
                                            (byte *)&__kernel_start))
-#define kernel_physical_start ((byte *)&__kernel_start)
-#define kernel_physical_end   ((byte *)&__kernel_end)
+#define Kernel_Physical_Start ((void *)&__kernel_start)
+#define Kernel_Physical_End   ((void *)&__kernel_end)
+#define Kernel_Virtual_Start ((void *)&__kernel_start)
+#define Kernel_Virtual_End   ((void *)&__kernel_end)
+
 
 #define container_of(child, parent_type, parent_entry) \
     (child - ((parent_type)NULL)->parent_entry)
