@@ -15,7 +15,6 @@ byte *heap = NULL;
 
 enum status checked init_heap(void) {
     union address heap_address;
-    heap_address.virtual = heap;
     heap_metadata_used = slab_alloc(1, Page_Small, Memory_Writable);
     if (heap_metadata_used == NULL) {
         assert(0);
@@ -66,6 +65,9 @@ void *kmalloc(size_t bytes) {
 
 void *kcalloc(size_t count, size_t size) {
     void *address = kmalloc(count * size);
+    if (address == NULL) {
+        return NULL;
+    }
     memset(address, 0, count * size);
     return address;
 }
