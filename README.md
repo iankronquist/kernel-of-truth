@@ -64,6 +64,52 @@ $ gdb
 (gdb) continue
 ```
 
+Code Style
+----------
+
+When in Rome, do as the Romans.
+
+Most of the style is enforced via the uncrustify linter. Run it on your code
+and call it mostly good. However, it doesn't enforce certain variable naming
+conventions.
+
+Use typedefs extremely sparingly. Prefer native C types instead. Always use the
+most descriptive type available.
+Do not use `ifdef` style header guards, use `#pragma once` instead.
+Alphabetize `include` statements. They should be in paragraphs based on their
+top level directory. Local `includes` should go last.
+
+Leave a comment describing every symbol visible in a public header.
+Otherwise, comment tactically and sparingly.
+
+```
+#include <external/a.h>
+#include <external/b.h>
+#include <external/c.h>
+
+#include <truth/a.h>
+#include <truth/b.h>
+#include <truth/c.h>
+
+#include "a.h"
+#include "b.h"
+#include "c.h"
+
+
+struct types_like_this;
+
+// Unless the type is an acronym.
+struct GDT;
+
+#define Global_Defines_Like_This 42
+struct GDT Globals_Like_This;
+
+void *functions_like_this(void *foo) {
+    size_t locals_like_this = 15;
+    return foo + locals_like_this;
+}
+```
+
 [0]:http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html
 [1]:http://wiki.osdev.org/C%2B%2B_Bare_Bones
 [2]:http://wiki.osdev.org/User:Sortie/Meaty_Skeleton
