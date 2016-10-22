@@ -12,7 +12,7 @@ MACROS := -dD -D project_website='"$(WEBSITE)"' -D kernel_major=$(KERNEL_MAJOR) 
 
 # Build tools & flags
 CC := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
-CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra -g -I ./include $(MACROS) -D __C__
+CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra -Wno-multichar -g -I ./include $(MACROS) -D __C__
 AS := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
 ASFLAGS := -std=c11 -MP -MMD -ffreestanding -fpic -O2 -Wall -Wextra -I ./include $(MACROS) -D __ASM__
 LD := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc

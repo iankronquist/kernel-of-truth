@@ -6,68 +6,85 @@
 #include <truth/region_vector.h>
 
 // The highest lower half canonical address.
-#define lower_half_end     ((void *)0x00007fffffffffff)
-#define higher_half_start  ((void *)0xffff800000000000)
-#define lower_half_               (0x1000000000000)
-#define higher_half_ (~0ul - (uintptr_t)higher_half_start)
+#define Lower_Half_End     ((void *)0x00007fffffffffff)
+#define Higher_Half_Start  ((void *)0xffff800000000000)
+#define Lower_Half_Size               (0x1000000000000)
+#define Higher_Half_Size (~0ul - (uintptr_t)Higher_Half_Start)
 
-extern struct region_vector slab_lower_half;
-extern struct region_vector slab_higher_half;
+extern struct region_vector slab_lower_half_used;
+extern struct region_vector slab_lower_half_free;
+extern struct region_vector slab_higher_half_used;
+extern struct region_vector slab_higher_half_free;
 
 static inline bool in_lower_half(void *address) {
-    return address <= lower_half_end;
+    return address <= Lower_Half_End;
 }
 
-void init_slab(void) {
-    union address address;
-    init_region_vector(&slab_higher_half);
-    init_region_vector(&slab_lower_half);
-    address.virtual = (void *)(4 * MB);
-    region_free(&slab_lower_half, address, lower_half_ - (4 * MB));
-    address.virtual = higher_half_start;
-    region_free(&slab_higher_half, address, higher_half_);
+enum status checked init_slab(void) {
+    union region_address address;
+    init_region_vector(&slab_higher_half_used);
+    init_region_vector(&slab_higher_half_free);
+    init_region_vector(&slab_lower_half_used);
+    init_region_vector(&slab_lower_half_free);
+    address.virtual = NULL;
+    size_t initial_mapping_size = 4 * MB;
+    region_put_by_address(&slab_lower_half_used, address, initial_mapping_size,
+                       'boot');
+    bubble(region_put_by_size(&slab_lower_half_free, address, Lower_Half_Size - initial_mapping_size, 'free'), "could not initialize slab lower half");
+    address.virtual = Higher_Half_Start;
+    bubble(region_put_by_size(&slab_higher_half_free, address, Higher_Half_Size, 'free'), "Could not initialize slab higher half");
+    return Ok;
 }
 
-void *slab_alloc(size_t count, enum page_size type,
-                 enum memory_attributes page_attributes) {
-    union address virt_address;
-    union address phys_address;
-    struct region_vector *vect;
-    if (page_attributes & Memory_User_Access) {
-        vect = &slab_lower_half;
-    } else {
-        vect = &slab_higher_half;
-    }
-    if (region_alloc(vect, count * type, &virt_address) != Ok) {
+void *slab_alloc(size_t bytes, enum memory_attributes page_attributes, int tag) {
+    if (!is_aligned(bytes, Page_Small)) {
         return NULL;
     }
-    phys_address.physical = physical_alloc(count * type);
+    union region_address virt_address;
+    union region_address phys_address;
+    struct region_vector *vect_free;
+    struct region_vector *vect_used;
+    if (page_attributes & Memory_User_Access) {
+        vect_free = &slab_lower_half_free;
+        vect_used = &slab_lower_half_used;
+    } else {
+        vect_free = &slab_higher_half_free;
+        vect_used = &slab_higher_half_used;
+    }
+    if (region_get_by_size(vect_free, bytes, &virt_address) != Ok) {
+        return NULL;
+    }
+    region_put_by_address(vect_used, virt_address, bytes, tag);
+    phys_address.physical = physical_alloc(bytes, tag);
     if (phys_address.physical == invalid_phys_addr) {
         assert(0);
         goto out;
     }
     if (map_page(virt_address.virtual, phys_address.physical,
                  page_attributes) != Ok) {
-        physical_free(phys_address.physical, count);
-        logf("Failed to map slab page: %p, %lx\n", virt_address.virtual,
-             phys_address.physical);
         assert(0);
+        physical_free(phys_address.physical, tag);
         goto out;
     }
     return virt_address.virtual;
 out:
-    region_free(vect, virt_address, count * type);
+    region_get_by_address(vect_used, virt_address, tag);
+    assert_ok(region_put_by_size(vect_free, virt_address, bytes, 'free'));
     return NULL;
 }
 
-void slab_free(size_t count, enum page_size type, void *address) {
-    union address virt_address;
-    struct region_vector *vect;
+void slab_free(void *address, int tag) {
+    union region_address virt_address;
+    struct region_vector *vect_free;
+    struct region_vector *vect_used;
     virt_address.virtual = address;
     if (in_lower_half(address)) {
-        vect = &slab_lower_half;
+        vect_free = &slab_lower_half_free;
+        vect_used = &slab_lower_half_used;
     } else {
-        vect = &slab_higher_half;
+        vect_free = &slab_higher_half_free;
+        vect_used = &slab_higher_half_used;
     }
-    region_free(vect, virt_address, type * count);
+    size_t size = region_get_by_address(vect_used, virt_address, tag);
+    assert_ok(region_put_by_size(vect_free, virt_address, size, 'free'));
 }

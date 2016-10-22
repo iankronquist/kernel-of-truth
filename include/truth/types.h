@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <limits.h>
 
 #include <truth/memory_sizes.h>
 

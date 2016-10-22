@@ -8,41 +8,25 @@ union region_address {
     phys_addr physical;
 };
 
-struct region {
-    int tag,
-    union region_address address;
-    size_t size;
-};
-
-struct region_vector_size_sorted {
-    size_t regions_used;
-    struct region_vector_size_sorted *next;
-    struct region regions[];
-};
-
-struct region_vector_address_sorted {
-    size_t regions_used;
-    struct region_vector_address_sorted *next;
-    struct region regions[];
-};
-
 struct region_vector;
 
-void init_region_vector_size_sorted(struct region_vector_size_sorted *vect);
-void init_region_vector_address_sorted(struct region_vector_address_sorted *v);
+void init_region_vector(struct region_vector *vect);
 
-enum status checked region_alloc_size_sorted(struct region_vector *vect,
-                                             size_t size,
-                                             union region_address *out);
+enum status checked region_alloc(struct region_vector *vect,
+                                 size_t size, union region_address *out,
+                                 int tag);
 
-void region_free_size_sorted(struct region_vector_size_sorted *vect,
-                             union region_address address, size_t size);
+enum status checked region_put_by_size(struct region_vector *vect,
+                                       union region_address address,
+                                       size_t size, int tag);
 
-enum status checked region_alloc_address_sorted(struct region_vector *vect,
-                                             size_t size,
-                                             union region_address *out);
+enum status checked region_get_by_size(struct region_vector *vect, size_t size,
+                                       union region_address *address);
 
-void region_free_address_sorted(struct region_vector_address_sorted *vect,
-                             union region_address address, size_t size);
+size_t region_get_by_address(struct region_vector *vect,
+                             union region_address address, int tag);
+
+void region_put_by_address(struct region_vector *vect,
+                           union region_address address, size_t size, int tag);
 
 void debug_region_vector(struct region_vector *cur);
