@@ -85,3 +85,9 @@ void __ubsan_handle_sub_overflow(struct source_location *location,
     log_location(location);
     panic();
 }
+
+void __ubsan_handle_load_invalid_value(struct source_location *location) {
+    log("Handle load invalid value");
+    log_location(location);
+    panic();
+}
