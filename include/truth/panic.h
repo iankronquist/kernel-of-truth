@@ -21,7 +21,6 @@
         panic(); \
     }
 
-static inline void panic(void) {
-    disable_interrupts();
-    halt();
-}
+
+void stack_trace(void);
+void panic(void);
