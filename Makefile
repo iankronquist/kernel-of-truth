@@ -47,7 +47,7 @@ debug: all
 release: CFLAGS += -Werror
 release: AFLAGS += -Werror
 release: $(KERNEL)
-	strip --strip-all $(KERNEL)
+	strip -Sx $(KERNEL)
 
 $(KERNEL): $(KERNEL)64
 	$(OBJCOPY) $< -O elf32-i386 $@
