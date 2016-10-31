@@ -73,7 +73,7 @@ $(BUILD_DIR)/docs/index.html: include/truth/*.h include/arch/*/*.h kernel/*/*.c 
 	cldoc generate -D __C__ -I ./include -Wno-pragma-once-outside-header -ffreestanding $(MACROS) -- --output $(BUILD_DIR)/docs include/truth/*.h include/arch/*/*.h kernel/*/*.c kernel/arch/*/*.c --language c --report
 
 start: debug
-	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio -serial file:$(BUILD_DIR)/qemu-serial.txt
+	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -nographic -monitor stdio -serial file:$(BUILD_DIR)/qemu-serial.txt
 
 start-log: $(KERNEL)
 	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall -D $(BUILD_DIR)/qemu.log $(QEMU_FLAGS)
