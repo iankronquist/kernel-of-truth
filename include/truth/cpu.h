@@ -31,3 +31,6 @@ extern void halt(void);
 
 // Get's the CPU time step counter value
 extern uint64_t cpu_time(void);
+
+// Get the current function base pointer
+extern uintptr_t get_base_pointer(void);

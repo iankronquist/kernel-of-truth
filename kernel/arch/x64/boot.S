@@ -160,3 +160,10 @@ cpu_time:
     shlq $32, %rdx
     orq %rax, %rdx
     ret
+
+
+.global get_base_pointer
+.type get_base_pointer, @function
+get_base_pointer:
+    mov %rbp, %rax
+    ret
