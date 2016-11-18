@@ -14,6 +14,7 @@ struct region {
 
 struct region_vector {
     size_t regions_used;
+    //struct lock lock;
     struct region_vector *next;
     struct region regions[];
 };
@@ -23,14 +24,51 @@ struct region_vector {
         sizeof(struct region) \
         )
 
+static enum order region_compare_by_size(struct region *left,
+                                         struct region *right) {
+    if (left->size < right->size) {
+        return Order_Less;
+    } else if (left->size > right->size) {
+        return Order_Greater;
+    } else {
+        return Order_Equal;
+    }
+}
+
+static enum order region_compare_by_address(struct region *left,
+                                            struct region *right) {
+    if (left->address.virtual < right->address.virtual) {
+        return Order_Less;
+    } else if (left->address.virtual > right->address.virtual) {
+        return Order_Greater;
+    } else {
+        return Order_Equal;
+    }
+}
+
+static inline union region_address virt_as_region_address(void *v) {
+    union region_address address;
+    address.virtual = v;
+    return address;
+}
+
+static inline union region_address phys_as_region_address(phys_addr p) {
+    union region_address address;
+    address.physical = p;
+    return address;
+}
+
+
 void debug_region_vector(struct region_vector *cur) {
+    logf("region vector %p [", cur);
     do {
         for (size_t i = 0; i < cur->regions_used && i < Regions_Count; ++i) {
-            logf("Region starts at %p and has size %x\n",
+            logf("{ address: %p, size: %lx },",
                  cur->regions[i].address.virtual, cur->regions[i].size);
         }
         cur = cur->next;
     } while (cur != NULL);
+    logf("]\n");
 }
 
 void init_region_vector(struct region_vector *vect) {
@@ -41,10 +79,12 @@ void init_region_vector(struct region_vector *vect) {
 static bool is_sorted_by_address(struct region_vector *v) {
     do {
         for (size_t i = 1; i < v->regions_used; ++i) {
-            if (v->regions[i].address.virtual < v->regions[i-1].address.virtual) {
+            if (v->regions[i].address.virtual >
+                v->regions[i-1].address.virtual) {
                 return false;
             }
         }
+        v = v->next;
     } while(v != NULL);
     return true;
 }
@@ -52,24 +92,56 @@ static bool is_sorted_by_address(struct region_vector *v) {
 static bool is_sorted_by_size(struct region_vector *v) {
     do {
         for (size_t i = 1; i < v->regions_used; ++i) {
-            if (v->regions[i].size < v->regions[i-1].size) {
+            if (v->regions[i].size > v->regions[i-1].size) {
                 return false;
             }
         }
+        v = v->next;
     } while(v != NULL);
     return true;
 }
 
-static struct region *closest_larger_region_by_size(struct region_vector *vect, size_t size, struct region_vector **containing) {
-    assert(vect->regions_used > 0);
-    while(vect != NULL && vect->regions[vect->regions_used-1].size < size) {
+static inline struct region *last_region(struct region_vector *vect) {
+    assert(vect->regions_used > 0 && vect->regions_used <= Regions_Count);
+    return &vect->regions[vect->regions_used-1];
+}
+
+static inline void region_swap(struct region *l, struct region *r) {
+    if (l == r) {
+        return;
+    }
+    struct region tmp = *l;
+    *l = *r;
+    *r = tmp;
+}
+
+void insertionsort(struct region_vector *vect, enum order (*comp)(struct region *left, struct region *right)) {
+    for (size_t i = 0; i < vect->regions_used; ++i) {
+        for (size_t j = i; j > 0; --j) {
+            if (comp(&vect->regions[j - 1], &vect->regions[j]) == Order_Less) {
+                region_swap(&vect->regions[j - 1], &vect->regions[j]);
+            }
+        }
+    }
+}
+
+static void region_vector_sort(struct region_vector *vect, enum order (*comp)(struct region *left, struct region *right)) {
+    if (vect->regions_used > 1) {
+        insertionsort(vect, comp);
+    }
+}
+
+static struct region *closest_larger_region_by_size(struct region_vector *vect,
+                                                    size_t size,
+                                                    struct region_vector **containing) {
+    while(vect != NULL && last_region(vect)->size < size) {
         vect = vect->next;
     }
-   if (vect == NULL) {
+    if (vect == NULL) {
         return NULL;
     }
 
-    struct region *closest_region = NULL;
+    struct region *closest_region = last_region(vect);
     int closest = INT_MAX;
     int left = 0;
     int right = vect->regions_used;
@@ -77,6 +149,7 @@ static struct region *closest_larger_region_by_size(struct region_vector *vect, 
 
     while (index > 0) {
         int difference = vect->regions[index].size - size;
+
         if (difference < 0) {
             right = index;
         } else if (difference > 0) {
@@ -92,12 +165,13 @@ static struct region *closest_larger_region_by_size(struct region_vector *vect, 
         }
         index = (right - left) / 2;
     }
+    *containing = vect;
     return closest_region;
 }
 
 static struct region *find_region_by_address(struct region_vector *vect, union region_address address, struct region_vector **containing) {
     while (vect != NULL &&
-           vect->regions[vect->regions_used-1].address.virtual >
+           last_region(vect)->address.virtual >
                address.virtual) {
         vect = vect->next;
     }
@@ -121,142 +195,26 @@ static struct region *find_region_by_address(struct region_vector *vect, union r
     return NULL;
 }
 
-static inline size_t right_child(size_t i) {
-    return 2 * i + 1;
-}
 
-static inline size_t left_child(size_t i) {
-    return 2 * i;
-}
-
-
-static void region_vector_sift_down_by_size(struct region_vector *vect,
-                                            size_t begin, size_t end) {
-    size_t root = begin;
-    while (left_child(root) < end) {
-        size_t swap = root;
-        size_t child = left_child(root);
-
-        if (child + 1 < end &&
-            vect->regions[swap].size < vect->regions[child+1].size) {
-            swap = child + 1;
-        } else if (vect->regions[swap].size < vect->regions[child].size) {
-            swap = child;
-        }
-
-        if (swap == root) {
-            return;
-        } else {
-            struct region tmp = vect->regions[root];
-            vect->regions[root] = vect->regions[swap];
-            vect->regions[swap] = tmp;
-        }
-    }
-}
-
-static void region_vector_sift_down_by_address(struct region_vector *vect,
-                                            size_t begin, size_t end) {
-    size_t root = begin;
-    while (left_child(root) < end) {
-        size_t swap = root;
-        size_t child = left_child(root);
-
-        if (child + 1 < end &&
-            vect->regions[swap].address.virtual < vect->regions[child+1].address.virtual) {
-            swap = child + 1;
-        } else if (vect->regions[swap].address.virtual < vect->regions[child].address.virtual) {
-            swap = child;
-        }
-
-        if (swap == root) {
-            return;
-        } else {
-            struct region tmp = vect->regions[root];
-            vect->regions[root] = vect->regions[swap];
-            vect->regions[swap] = tmp;
-        }
-    }
-}
-
-
-static void region_vector_heapify_by_size(struct region_vector *vect) {
-    for (size_t start = (vect->regions_used - 1) / 2; start != 0; --start) {
-        region_vector_sift_down_by_size(vect, start, vect->regions_used-1);
-    }
-    region_vector_sift_down_by_size(vect, 0, vect->regions_used-1);
-}
-
-
-static void region_vector_heapify_by_address(struct region_vector *vect) {
-    for (size_t start = (vect->regions_used - 1) / 2; start != 0; --start) {
-        region_vector_sift_down_by_address(vect, start, vect->regions_used-1);
-    }
-    region_vector_sift_down_by_address(vect, 0, vect->regions_used-1);
-}
-
-
-static void region_vector_sort_by_size(struct region_vector *vect) {
-    do {
-        if (vect->regions_used == 1) {
-            continue;
-        }
-        region_vector_heapify_by_size(vect);
-        size_t end = vect->regions_used;
-        while (end > 0) {
-            struct region tmp;
-            tmp = vect->regions[end];
-            vect->regions[end] = vect->regions[0];
-            vect->regions[0] = tmp;
-            end--;
-            region_vector_sift_down_by_size(vect, 0, end);
-        }
-        assert(is_sorted_by_size(vect));
-        if (vect->next != NULL) {
-            assert(vect->regions[vect->regions_used-1].size > vect->next->regions[0].size);
-        }
-
-    } while(vect != NULL);
-}
-
-static void region_vector_sort_by_address(struct region_vector *vect) {
-    do {
-        if (vect->regions_used == 1) {
-            continue;
-        }
-        region_vector_heapify_by_address(vect);
-        size_t end = vect->regions_used;
-        while (end > 0) {
-            struct region tmp;
-            tmp = vect->regions[end];
-            vect->regions[end] = vect->regions[0];
-            vect->regions[0] = tmp;
-            end--;
-            region_vector_sift_down_by_address(vect, 0, end);
-        }
-        assert(is_sorted_by_address(vect));
-        if (vect->next != NULL) {
-            assert(vect->regions[vect->regions_used-1].address.virtual > vect->next->regions[0].address.virtual);
-        }
-
-    } while(vect != NULL);
-}
-
-
-enum status checked region_put_by_size(struct region_vector *vect,
-                                       union region_address address,
-                                       size_t size, int tag) {
+static enum status checked region_put(struct region_vector *vect,
+                               union region_address address,
+                               size_t size, int tag,
+                               enum order (*comp)(struct region *left,
+                                                  struct region *right)) {
     if (vect == NULL) {
         return Error_Invalid;
     }
     while (true) {
+        // If there is room in the vector, place it at the end and sort it.
         if (vect->regions_used < Regions_Count) {
             vect->regions[vect->regions_used].size = size;
             vect->regions[vect->regions_used].address = address;
             vect->regions[vect->regions_used].tag = tag;
             vect->regions_used++;
-            region_vector_sort_by_size(vect);
+            region_vector_sort(vect, comp);
             return Ok;
         } else if (vect->regions[Regions_Count-1].size < size) {
+            // FIXME
             if (vect->next == NULL) {
                 vect->next = slab_alloc(Page_Small, Memory_Writable, 'regv');
                 if (vect->next == NULL) {
@@ -271,7 +229,7 @@ enum status checked region_put_by_size(struct region_vector *vect,
             size = tmp.size;
             address = tmp.address;
             tag = tmp.tag;
-            region_vector_sort_by_size(vect);
+            region_vector_sort(vect, comp);
         } else if (vect->next == NULL) {
             vect->next = slab_alloc(Page_Small, Memory_Writable, 'regv');
             if (vect->next == NULL) {
@@ -283,17 +241,18 @@ enum status checked region_put_by_size(struct region_vector *vect,
     return Ok;
 }
 
-static void region_remove_by_size(struct region_vector *vect,
-                                  struct region *region) {
+static void region_remove(struct region_vector *vect, struct region *region,
+                          enum order (*comp)(struct region *left,
+                                             struct region *right)) {
     assert(vect->regions_used != 0);
     if (vect->regions_used != Regions_Count) {
-        *region = vect->regions[vect->regions_used-1];
+        *region = *last_region(vect);
         vect->regions_used--;
-        region_vector_sort_by_size(vect);
+        region_vector_sort(vect, comp);
     } else if (vect->next != NULL && vect->next->regions_used > 0) {
         *region = vect->next->regions[0];
-        region_vector_sort_by_size(vect);
-        region_remove_by_size(vect->next, &vect->next->regions[0]);
+        region_vector_sort(vect, comp);
+        region_remove(vect->next, &vect->next->regions[0], comp);
         if (vect->next->regions_used == 0) {
             slab_free(vect->next, 'regv');
             vect->next = NULL;
@@ -302,28 +261,6 @@ static void region_remove_by_size(struct region_vector *vect,
         vect->regions_used--;
     }
 }
-
-static void region_remove_by_address(struct region_vector *vect,
-                                  struct region *region) {
-    assert(vect->regions_used != 0);
-    if (vect->regions_used != Regions_Count) {
-        *region = vect->regions[vect->regions_used-1];
-        vect->regions_used--;
-        region_vector_sort_by_address(vect);
-    } else if (vect->next != NULL && vect->next->regions_used > 0) {
-        *region = vect->next->regions[0];
-        region_vector_sort_by_address(vect);
-        region_remove_by_address(vect->next, &vect->next->regions[0]);
-        if (vect->next->regions_used == 0) {
-            slab_free(vect->next, 'regv');
-            vect->next = NULL;
-        }
-    } else {
-        vect->regions_used--;
-    }
-}
-
-
 
 enum status checked region_get_by_size(struct region_vector *vect, size_t size,
                                        union region_address *address) {
@@ -332,16 +269,19 @@ enum status checked region_get_by_size(struct region_vector *vect, size_t size,
     struct region *closest = closest_larger_region_by_size(vect, size,
                                                            &containing);
     if (closest == NULL) {
+        log("a");
         return Error_No_Memory;
     }
     suffix_size = size - closest->size;
     *address = closest->address;
-    region_remove_by_size(containing, closest);
+    region_remove(containing, closest, region_compare_by_size);
     if (suffix_size != 0) {
-        union region_address insertion;
-        insertion.virtual = address->virtual + suffix_size;
-        assert_ok(region_put_by_size(vect, insertion, suffix_size, 'free'));
+        assert_ok(region_put(vect,
+                             virt_as_region_address(address->virtual +
+                                                    suffix_size),
+                             suffix_size, 'free', region_compare_by_size));
     }
+    assert(is_sorted_by_size(vect));
     return Ok;
 }
 
@@ -355,7 +295,27 @@ size_t region_get_by_address(struct region_vector *vect,
     }
     assert(closest->tag == tag);
     size_t size = closest->size;
-    region_remove_by_address(containing, closest);
+    region_remove(containing, closest, region_compare_by_address);
     assert(is_sorted_by_address(vect));
     return size;
 }
+
+enum status checked region_put_by_size(struct region_vector *vect,
+                                       union region_address address,
+                                       size_t size, int tag) {
+    assert(is_sorted_by_size(vect));
+    enum status status =  region_put(vect, address, size, tag, region_compare_by_size);
+    assert(is_sorted_by_size(vect));
+    return status;
+}
+
+enum status checked region_put_by_address(struct region_vector *vect,
+                                          union region_address address,
+                                          size_t size, int tag) {
+    assert(is_sorted_by_address(vect));
+    enum status status = region_put(vect, address, size, tag, region_compare_by_address);
+    assert(is_sorted_by_address(vect));
+    return status;
+}
+
+

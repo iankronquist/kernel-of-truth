@@ -21,20 +21,27 @@ static inline bool in_lower_half(void *address) {
 }
 
 enum status checked init_slab(void) {
+    log("~ 0");
     union region_address address;
+    log("~ 1");
     init_region_vector(&slab_higher_half_used);
     init_region_vector(&slab_higher_half_free);
     init_region_vector(&slab_lower_half_used);
     init_region_vector(&slab_lower_half_free);
+    log("~ 2");
     address.virtual = NULL;
     size_t initial_mapping_size = 4 * MB;
-    region_put_by_address(&slab_lower_half_used, address, initial_mapping_size,
-                       'boot');
-    bubble(region_put_by_size(&slab_lower_half_free, address, Lower_Half_Size - initial_mapping_size, 'free'), "could not initialize slab lower half");
+    bubble(region_put_by_address(&slab_lower_half_used, address, initial_mapping_size, 'boot'), "initialize slab boot memory");
+    log("~ 3");
+    bubble(region_put_by_size(&slab_lower_half_free, address, Lower_Half_Size - initial_mapping_size, 'free'), "initialize slab lower half");
+    log("~ 4");
     address.virtual = Higher_Half_Start;
-    bubble(region_put_by_size(&slab_higher_half_free, address, Higher_Half_Size, 'free'), "Could not initialize slab higher half");
+    bubble(region_put_by_size(&slab_higher_half_free, address, Higher_Half_Size, 'free'), "initialize slab higher half");
+    log("~ 5");
+    address.virtual = Higher_Half_Start;
     return Ok;
 }
+
 
 void *slab_alloc(size_t bytes, enum memory_attributes page_attributes, int tag) {
     if (!is_aligned(bytes, Page_Small)) {
@@ -54,9 +61,10 @@ void *slab_alloc(size_t bytes, enum memory_attributes page_attributes, int tag) 
     if (region_get_by_size(vect_free, bytes, &virt_address) != Ok) {
         return NULL;
     }
-    region_put_by_address(vect_used, virt_address, bytes, tag);
-    phys_address.physical = physical_alloc(bytes, tag);
+    assert_ok(region_put_by_address(vect_used, virt_address, bytes, tag));
+    phys_address.physical = physical_alloc(bytes / Page_Small, tag);
     if (phys_address.physical == invalid_phys_addr) {
+        logf("%lx\n", bytes);
         assert(0);
         goto out;
     }

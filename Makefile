@@ -40,7 +40,7 @@ include $(patsubst %,%/component.$(ARCH).mk,$(COMPONENTS))
 
 all: $(KERNEL)
 
-debug: CFLAGS += -g -fsanitize=undefined
+#debug: CFLAGS += -g -fsanitize=undefined
 debug: ASFLAGS += -g
 debug: all
 

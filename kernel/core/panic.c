@@ -3,7 +3,9 @@
 
 static bool Panic = false;
 
-void stack_trace(void) {
+// Disable undefined behavior sanitation because we use ugly undefined casts
+// to walk the up the callstack by repeatedly dereferencing the base pointer
+void no_ubsan stack_trace(void) {
     uintptr_t **base_pointer = (uintptr_t **)get_base_pointer();
     while (base_pointer != 0) {
         uintptr_t **next_base_pointer = (uintptr_t **)base_pointer[0];

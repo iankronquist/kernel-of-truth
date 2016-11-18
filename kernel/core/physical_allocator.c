@@ -8,7 +8,7 @@
 extern struct region_vector init_physical_allocator_vector;
 extern struct region_vector init_physical_used_vector;
 
-#define Boot_Map_Start (phys_addr)0x001000
+#define Boot_Map_Start (phys_addr)0x000000
 #define Boot_Map_End   (phys_addr)0x400000
 
 static enum status checked insert_regions(struct multiboot_info *multiboot_tables) {
@@ -37,8 +37,8 @@ static enum status checked insert_regions(struct multiboot_info *multiboot_table
             }
         }
     }
-    log("Contents of physical allocator vector:");
-    debug_region_vector(&init_physical_allocator_vector);
+    //log("Contents of physical allocator vector:");
+    //debug_region_vector(&init_physical_allocator_vector);
     return Ok;
 }
 
@@ -54,11 +54,11 @@ phys_addr physical_alloc(size_t pages, int tag) {
     union region_address address;
     size_t size = pages * Page_Small;
     enum status status = region_get_by_size(&init_physical_allocator_vector,
-                                            size * Page_Small, &address);
+                                            size, &address);
     if (status != Ok) {
         return invalid_phys_addr;
     }
-    region_put_by_address(&init_physical_used_vector, address, size, tag);
+    assert_ok(region_put_by_address(&init_physical_used_vector, address, size, tag));
     return address.physical;
 }
 

@@ -14,22 +14,22 @@ struct region_vector *heap_metadata_free;
 byte *heap = NULL;
 
 enum status checked init_heap(void) {
-    union address heap_address;
-    heap_metadata_used = slab_alloc(1, Page_Small, Memory_Writable);
+    union region_address heap_address;
+    heap_metadata_used = slab_alloc(Page_Small, Memory_Writable, 'heap');
     if (heap_metadata_used == NULL) {
         assert(0);
         return Error_No_Memory;
     }
-    heap_metadata_free = slab_alloc(1, Page_Small, Memory_Writable);
+    heap_metadata_free = slab_alloc(Page_Small, Memory_Writable, 'heap');
     if (heap_metadata_free == NULL) {
-        slab_free(1, Page_Small, heap_metadata_used);
+        slab_free(heap_metadata_used, 'heap');
         assert(0);
         return Error_No_Memory;
     }
     heap = slab_alloc(Heap_Size, Page_Small, Memory_Writable);
     if (heap == NULL) {
-        slab_free(1, Page_Small, heap_metadata_used);
-        slab_free(1, Page_Small, heap_metadata_free);
+        slab_free(heap_metadata_used, 'heap');
+        slab_free(heap_metadata_free, 'heap');
         assert(0);
         return Error_No_Memory;
     }
@@ -39,13 +39,14 @@ enum status checked init_heap(void) {
     heap_metadata_free = slab_alloc(1, Page_Small, Memory_Writable);
     init_region_vector(heap_metadata_free);
     heap_address.virtual = heap;
-    region_free(heap_metadata_free, heap_address, 16 * Page_Small);
+    bubble(region_put_by_address(heap_metadata_free, heap_address, Heap_Size * Page_Small, 'free'), "initializing heap");
     memset(heap, (int)Heap_Red_Zone_Fill, Page_Small);
     return Ok;
 }
 
-void *kmalloc(size_t bytes) {
-    union address address;
+/*
+void *malloc(size_t bytes, int tag) {
+    union region_address address;
     size_t allocation_size = bytes + 2 * Heap_Red_Zone_Size;
 
     debug_region_vector(heap_metadata_free);
@@ -63,7 +64,7 @@ void *kmalloc(size_t bytes) {
     return address.bytes + Heap_Red_Zone_Size;
 }
 
-void *kcalloc(size_t count, size_t size) {
+void *calloc(size_t count, size_t size, int tag) {
     void *address = kmalloc(count * size);
     if (address == NULL) {
         return NULL;
@@ -72,9 +73,10 @@ void *kcalloc(size_t count, size_t size) {
     return address;
 }
 
-void kfree(void *address) {
-    union address addr;
+void free(void *address, int tag) {
+    union region_address addr;
     addr.virtual = address;
     size_t size = region_find_size_and_free(heap_metadata_used, addr);
     region_free(heap_metadata_free, addr, size);
 }
+*/

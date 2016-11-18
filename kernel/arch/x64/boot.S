@@ -24,14 +24,23 @@ init_pl1_a:
 	.skip Page_Small
 init_pl1_b:
 	.skip Page_Small
-.global slab_higher_half
-slab_higher_half:
+.global slab_higher_half_used
+slab_higher_half_used:
 	.skip Page_Small
-.global slab_lower_half
-slab_lower_half:
+.global slab_higher_half_free
+slab_higher_half_free:
+	.skip Page_Small
+.global slab_lower_half_used
+slab_lower_half_used:
+	.skip Page_Small
+.global slab_lower_half_free
+slab_lower_half_free:
 	.skip Page_Small
 .global init_physical_allocator_vector
 init_physical_allocator_vector:
+	.skip Page_Small
+.global init_physical_used_vector
+init_physical_used_vector:
 	.skip Page_Small
 init_stack:
 	.skip (16 * KB)

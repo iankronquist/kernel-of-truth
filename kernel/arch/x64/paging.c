@@ -2,6 +2,7 @@
 #include <truth/log.h>
 #include <truth/physical_allocator.h>
 #include <truth/panic.h>
+#include <truth/string.h>
 #include <truth/types.h>
 
 extern void invalidate_tlb(void);
@@ -44,7 +45,7 @@ extern void write_cr3(phys_addr value);
 extern uint64_t read_cr3(void);
 
 static inline size_t pl4_index(void *address) {
-    return (uintptr_t)address >> pl4_offset & pl4_mask;
+    return ((uintptr_t)address >> pl4_offset) & pl4_mask;
 }
 
 static inline size_t pl3_index(void *address) {
@@ -82,9 +83,9 @@ static pl2 *get_pl2(void *address) {
 }
 
 static pl1 *get_pl1(void *address) {
-    return (pl1 *)(0xffffff8000000000 |
-                   pl3_Count * pl2_Count * page_size * pl4_index(address) |
-                   pl2_Count * page_size * pl3_index(address) |
+    return (pl1 *)(0xffffff8000000000 +
+                   pl3_Count * pl2_Count * page_size * pl4_index(address) +
+                   pl2_Count * page_size * pl3_index(address) +
                    page_size * pl2_index(address));
 }
 
@@ -122,32 +123,40 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     struct page_table *page_table = current_page_table();
     logf("Mapping: %p -> %p\n", virtual_address, phys_address);
     if (!is_pl3_present(page_table, virtual_address)) {
-        phys_addr phys_address = physical_alloc(1);
+        phys_addr phys_address = physical_alloc(Page_Small, 'page');
+        logf("p4 new %p -> %p\n", page_table->entries, phys_address);
         page_table->entries[pl4_index(virtual_address)] =
             (phys_address | permissions | Memory_User_Access |
              Memory_Present);
         invalidate_tlb();
+        memset(get_pl3(virtual_address), 0, page_size);
     }
 
     pl3 *level_three = get_pl3(virtual_address);
     if (!is_pl2_present(level_three, virtual_address)) {
-        phys_addr phys_address = physical_alloc(1);
+        phys_addr phys_address = physical_alloc(Page_Small, 'page');
+        logf("p3 new %p -> %p\n", *level_three, phys_address);
         (*level_three)[pl3_index(virtual_address)] =
             (phys_address | permissions | Memory_User_Access |
              Memory_Present);
         invalidate_tlb();
+        memset(get_pl2(virtual_address), 0, page_size);
     }
 
     pl2 *level_two = get_pl2(virtual_address);
+    while(1);
     if (!is_pl1_present(level_two, virtual_address)) {
-        phys_addr phys_address = physical_alloc(1);
+        phys_addr phys_address = physical_alloc(Page_Small, 'page');
+        logf("p2 new %p -> %p\n", *level_two, phys_address);
         (*level_two)[pl2_index(virtual_address)] =
             (phys_address | permissions | Memory_User_Access |
-             Memory_Present);
+             Memory_Writable | Memory_Present);
         invalidate_tlb();
+        //memset(get_pl1(virtual_address), 0, page_size);
     }
 
     pl1 *level_one = get_pl1(virtual_address);
+    logf("p1 new %p -> %p\n", *level_one, phys_address);
     if (is_Memory_Present(level_one, virtual_address)) {
         logf("The virtual address %p is already present\n", virtual_address);
         return Error_Present;
@@ -155,13 +164,14 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
 
     (*level_one)[pl1_index(virtual_address)] =
         (phys_address | permissions | Memory_Present);
-    invalidate_tlb();
 
     int *test = virtual_address;
     logf("Testing: %p\n", test[0]);
 
     return Ok;
 }
+
+int pause(){return 0;}
 
 void unmap_page(void *address, bool free_physical_memory) {
     struct page_table *page_table = current_page_table();

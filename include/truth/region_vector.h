@@ -26,7 +26,8 @@ enum status checked region_get_by_size(struct region_vector *vect, size_t size,
 size_t region_get_by_address(struct region_vector *vect,
                              union region_address address, int tag);
 
-void region_put_by_address(struct region_vector *vect,
-                           union region_address address, size_t size, int tag);
+enum status checked region_put_by_address(struct region_vector *vect,
+                                          union region_address address,
+                                          size_t size, int tag);
 
 void debug_region_vector(struct region_vector *cur);
