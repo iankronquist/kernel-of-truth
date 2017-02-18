@@ -9,6 +9,7 @@ addons:
             - libmpfr-dev
             - python-virtualenv
             - libclang1-3.4
+            - clang
             - yasm
             - xorriso
             - grub2
