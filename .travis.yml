@@ -23,4 +23,8 @@ script:
     - if [[ ! -e compiler/x86_64-none-elf/bin/x86_64-elf-gcc ]]; then
         bash ./scripts/build_cross_compiler.sh;
       fi
-    - make
+    - make debug
+    - make clean
+    - make release
+    - make iso
+    - make docs
