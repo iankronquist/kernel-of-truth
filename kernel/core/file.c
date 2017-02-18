@@ -21,7 +21,7 @@ static enum status checked print_number(struct file *file, char *buf,
     }
     uint64_t number = (uint64_t)snumber;
     // Clear the buffer because we're going to need some space.
-    bubble(file->write((byte *)buf, *top), "Clearing buffer in print_number");
+    bubble(file->write((uint8_t *)buf, *top), "Clearing buffer in print_number");
 
     switch (base) {
         case 2:
@@ -56,7 +56,7 @@ static enum status checked print_string(struct file *file, char *buf,
         buf[*top] = string[i];
         (*top)++;
         if (*top == buf_size) {
-            bubble(file->write((byte *)buf, buf_size),
+            bubble(file->write((uint8_t *)buf, buf_size),
                    "Clearing buffer in print_string");
             *top = 0;
         }
@@ -234,12 +234,12 @@ enum status vfprintf(struct file *file, const char *restrict format,
 next_iteration:
         // If we have filled the buffer, flush it.
         if (top == buf_size) {
-            bubble(file->write((byte *)buf, buf_size),
+            bubble(file->write((uint8_t *)buf, buf_size),
                    "Clearing buffer in vfprintf");
         }
     }
     // Flush anything remaining in the buffer.
-    return file->write((byte *)buf, top);
+    return file->write((uint8_t *)buf, top);
 }
 
 enum status checked fprintf(struct file *file,

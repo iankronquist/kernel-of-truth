@@ -7,12 +7,6 @@
 
 #include <truth/memory_sizes.h>
 
-typedef uint8_t byte;
-typedef char *string;
-
-#define str(x) x
-#define str_to_bytes(s) ((byte *)s)
-
 typedef uint64_t phys_addr;
 
 enum partial {
@@ -66,8 +60,8 @@ static inline const char *status_message(enum status status) {
         } \
 }
 
-extern byte __kernel_start;
-extern byte __kernel_end;
+extern uint8_t __kernel_start;
+extern uint8_t __kernel_end;
 
 #define Kernel_Image_Size     ((uintptr_t)((byte *)&__kernel_end - \
                                            (byte *)&__kernel_start))

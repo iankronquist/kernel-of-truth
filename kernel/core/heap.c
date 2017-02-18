@@ -11,7 +11,7 @@
 
 struct region_vector *heap_metadata_used;
 struct region_vector *heap_metadata_free;
-byte *heap = NULL;
+uint8_t *heap = NULL;
 
 enum status checked init_heap(void) {
     union address heap_address;

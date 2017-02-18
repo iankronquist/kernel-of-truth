@@ -6,16 +6,19 @@
 #include <truth/heap.h>
 #include <truth/physical_allocator.h>
 
-string Logo = str("\n"
-                  "            _.-.\n"
-                  "        .-.  `) |  .-.\n"
-                  "    _.'`. .~./  \\.~. .`'._\n"
-                  " .-' .'.'.'.-|  |-.'.'.'. '-.\n"
-                  "  `'`'`'`'`  \\  /  `'`'`'`'`\n"
-                  "             /||\\\n"
-                  "            //||\\\\\n"
-                  "\n"
-                  "      The Kernel of Truth\n");
+const char *Logo = "\n"
+                   "            _.-.\n"
+                   "        .-.  `) |  .-.\n"
+                   "    _.'`. .~./  \\.~. .`'._\n"
+                   " .-' .'.'.'.-|  |-.'.'.'. '-.\n"
+                   "  `'`'`'`'`  \\  /  `'`'`'`'`\n"
+                   "             /||\\\n"
+                   "            //||\\\\\n"
+                   "\n"
+                   "      The Kernel of Truth\n";
+
+uintptr_t ASLR_Offset;
+void *read_rip(void);
 
 void kernel_main(void *multiboot_tables) {
     assert_ok(init_log("log"));

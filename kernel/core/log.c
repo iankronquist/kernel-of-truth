@@ -6,15 +6,15 @@
 
 extern struct file *Log_File;
 
-enum status init_log(string name) {
+enum status init_log(char *name) {
     return Log_File->init(name);
 }
 
-void log(string message) {
+void log(char *message) {
     fprintf(Log_File, "%s\n", message);
 }
 
-void logf(string message, ...) {
+void logf(char *message, ...) {
     va_list args;
     va_start(args, message);
     vfprintf(Log_File, message, args);

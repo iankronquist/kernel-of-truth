@@ -3,7 +3,7 @@
 #include <truth/types.h>
 
 union address {
-    byte *bytes;
+    uint8_t *bytes;
     void *virtual;
     phys_addr physical;
 };

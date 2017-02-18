@@ -38,7 +38,7 @@ static uint8_t read_serial_byte(enum com_port port) {
     return read_port(port);
 }
 
-static enum status checked serial_read(enum com_port port, byte *buf,
+static enum status checked serial_read(enum com_port port, uint8_t *buf,
         size_t size) {
     size_t i;
     for (i = 0; i < size; ++i) {
@@ -51,12 +51,12 @@ static inline bool is_transmit_empty(enum com_port port) {
     return read_port(port + 5) & 0x20;
 }
 
-static void write_serial_byte(enum com_port port, byte data) {
+static void write_serial_byte(enum com_port port, uint8_t data) {
     while (is_transmit_empty(port) == 0);
     write_port(data, port);
 }
 
-static enum status checked serial_write(enum com_port port, const byte *buf,
+static enum status checked serial_write(enum com_port port, const uint8_t *buf,
         size_t size) {
     size_t i;
     for (i = 0; i < size; ++i) {
@@ -66,9 +66,9 @@ static enum status checked serial_write(enum com_port port, const byte *buf,
 }
 
 #define serial_file(id) \
-static enum status checked serial_init_##id(string file_name); \
-static enum status checked serial_write_##id(const byte *data, size_t size); \
-static enum status checked serial_read_##id(byte *data, size_t size); \
+static enum status checked serial_init_##id(char *file_name); \
+static enum status checked serial_write_##id(const uint8_t *data, size_t size); \
+static enum status checked serial_read_##id(uint8_t *data, size_t size); \
 struct file id##_File = { \
     .name = NULL, \
     .init = serial_init_##id, \
@@ -80,14 +80,14 @@ struct file id##_File = { \
     .references = 0, \
     .permissions = Perm_Write, \
 }; \
-static enum status checked serial_init_##id(string file_name) { \
+static enum status checked serial_init_##id(char *file_name) { \
     id##_File.name = file_name; \
     return init_port(id); \
 } \
-static enum status checked serial_write_##id(const byte *in, size_t size) { \
+static enum status checked serial_write_##id(const uint8_t *in, size_t size) { \
     return serial_write(id, in, size); \
 } \
-static enum status checked serial_read_##id(byte *in, size_t size) { \
+static enum status checked serial_read_##id(uint8_t *in, size_t size) { \
     return serial_read(id, in, size); \
 }
 

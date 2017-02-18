@@ -15,6 +15,6 @@ void *memmove(void *, const void *, size_t);
 // Fill a region of memory with a value.
 void *memset(void *, int, size_t);
 // Get the length of a NULL terminates C string.
-size_t strnlen(const string str, size_t size);
+size_t strnlen(const char str, size_t size);
 // Compare two strings.
-enum order strncmp(const string s1, const string s2, size_t n);
+enum order strncmp(const char *s1, const char *s2, size_t n);
