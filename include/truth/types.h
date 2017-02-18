@@ -84,7 +84,7 @@ extern byte __kernel_end;
 #define round_next(x, y) (((x) + (y - 1)) & ~(y - 1))
 #define static_array_count(x) (sizeof(x) / sizeof(x)[0])
 
-// #define format(x, y) __attribute__((printf(x, y)))
+#define check_format(x, y) __attribute__((format(printf, x, y)))
 #define checked __attribute__((warn_unused_result))
 #define no_return __attribute__((no_return))
 #define pack __attribute__((packed))
