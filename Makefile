@@ -23,7 +23,7 @@ GRUB_MKRESCUE := grub-mkrescue
 
 # Emulators & flags
 QEMU := qemu-system-x86_64
-QEMU_FLAGS := -no-reboot
+QEMU_FLAGS := -no-reboot -m 256M
 BOCHS := bochs
 
 COMPONENTS := kernel/arch/$(ARCH) kernel/core kernel/device
