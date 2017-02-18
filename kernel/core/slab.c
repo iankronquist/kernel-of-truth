@@ -71,5 +71,6 @@ void slab_free(size_t count, enum page_size type, void *address) {
     } else {
         vect = &slab_higher_half;
     }
+    unmap_page(virt_address.virtual, true);
     region_free(vect, virt_address, type * count);
 }
