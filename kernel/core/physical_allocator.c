@@ -13,8 +13,13 @@ extern struct region_vector init_physical_allocator_vector;
 static void insert_regions(struct multiboot_info *multiboot_tables) {
     struct multiboot_mmap_entry *mmap =
         (struct multiboot_mmap_entry *)(uintptr_t)multiboot_tables->mmap_addr;
-    for (size_t i = 0; i < multiboot_tables->mmap_length; ++i) {
+    uint64_t total = 0;
+    for (size_t i = 0;
+            i < multiboot_tables->mmap_length /
+                    sizeof(struct multiboot_mmap_entry);
+            ++i) {
         if (mmap[i].type == MULTIBOOT_MEMORY_AVAILABLE) {
+            total += mmap[i].len;
             if (mmap[i].addr + mmap[i].len > Boot_Map_Start &&
                 mmap[i].addr < Boot_Map_End) {
 
