@@ -66,7 +66,7 @@ static enum status checked serial_write(enum com_port port, const uint8_t *buf,
 }
 
 #define serial_file(id) \
-static enum status checked serial_init_##id(char *file_name); \
+static enum status checked serial_init_##id(const char *file_name); \
 static enum status checked serial_write_##id(const uint8_t *data, size_t size); \
 static enum status checked serial_read_##id(uint8_t *data, size_t size); \
 struct file id##_File = { \
@@ -80,7 +80,7 @@ struct file id##_File = { \
     .references = 0, \
     .permissions = Perm_Write, \
 }; \
-static enum status checked serial_init_##id(char *file_name) { \
+static enum status checked serial_init_##id(const char *file_name) { \
     id##_File.name = file_name; \
     return init_port(id); \
 } \

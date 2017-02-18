@@ -2,8 +2,8 @@
 
 #include <truth/types.h>
 
-enum status init_log(char *name);
+enum status init_log(const char *name);
 
-void log(char *message);
+void log(const char *message);
 
-void logf(char *message, ...) check_format(1, 2);
+void logf(const char *message, ...) check_format(1, 2);
