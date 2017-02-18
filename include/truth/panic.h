@@ -21,7 +21,7 @@
         panic(); \
     }
 
-static inline void no_return panic() {
+static inline void panic() {
     disable_interrupts();
     halt();
 }
