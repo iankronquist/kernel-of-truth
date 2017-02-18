@@ -8,8 +8,9 @@ addons:
             - libgmp-dev
             - libmpfr-dev
             - python-virtualenv
-            - libclang1-3.4
+            - libclang1-3.9
             - yasm
+            - xorriso
             - grub2
 cache:
     directories:
