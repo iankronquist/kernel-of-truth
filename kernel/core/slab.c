@@ -6,10 +6,12 @@
 #include <truth/region_vector.h>
 
 // The highest lower half canonical address.
-#define lower_half_end     ((void *)0x00007fffffffffff)
-#define higher_half_start  ((void *)0xffff800000000000)
-#define lower_half_               (0x1000000000000)
-#define higher_half_ (~0ul - (uintptr_t)higher_half_start)
+#define lower_half_start  ((void *)0)
+#define lower_half_end    ((void *)0x00007fffffffffff)
+#define higher_half_start ((void *)0xffff800000000000)
+#define higher_half_end   ((void *)~0)
+#define lower_half_size   (lower_half_end - lower_half_start)
+#define higher_half_size  (higher_half_end - higher_half_start)
 
 extern struct region_vector slab_lower_half;
 extern struct region_vector slab_higher_half;
@@ -23,9 +25,9 @@ void init_slab(void) {
     init_region_vector(&slab_higher_half);
     init_region_vector(&slab_lower_half);
     address.virtual = (void *)(4 * MB);
-    region_free(&slab_lower_half, address, lower_half_ - (4 * MB));
+    region_free(&slab_lower_half, address, lower_half_size - (4 * MB));
     address.virtual = higher_half_start;
-    region_free(&slab_higher_half, address, higher_half_);
+    region_free(&slab_higher_half, address, higher_half_size);
 }
 
 void *slab_alloc(size_t count, enum page_size type,
