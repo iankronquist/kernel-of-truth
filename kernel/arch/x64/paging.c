@@ -13,13 +13,13 @@ extern uint64_t invalidate_page(void *);
 #define pl4_Count 512
 
 #define pl1_offset 12
-#define pl1_mask   0x1ff
+#define pl1_mask   0777
 #define pl2_offset 21
-#define pl2_mask   0x1ff
+#define pl2_mask   0777
 #define pl3_offset 30
-#define pl3_mask   0x1ff
+#define pl3_mask   0777
 #define pl4_offset 39
-#define pl4_mask   0x1ff
+#define pl4_mask   0777
 
 #define align_page(x) (x & ~0xfff)
 
@@ -64,28 +64,26 @@ static inline phys_addr table_phys_address(struct page_table *page_table) {
 }
 
 static struct page_table *current_page_table(void) {
-    return (struct page_table *)0xfffffffffffff000;
+    return (struct page_table *)01777777777777777770000;
 }
-
-#define fractal_region 0xffffff8000000000
 
 #define page_size (KB * 4)
 
 static pl3 *get_pl3(void *address) {
-    return (pl2 *)(0xffffffffffe00000 | page_size * pl4_index(address));
+    return (pl2 *)(01777777777777770000000 | (pl4_index(address) << 12));
 }
 
 static pl2 *get_pl2(void *address) {
-    return (pl2 *)(0xffffffffc0000000 |
-                   pl3_Count * page_size * pl4_index(address) |
-                   page_size * pl3_index(address));
+    return (pl2 *)(01777777777770000000000 |
+                   (pl4_index(address) << 21) |
+                   (pl3_index(address) << 12));
 }
 
 static pl1 *get_pl1(void *address) {
-    return (pl1 *)(0xffffff8000000000 |
-                   pl3_Count * pl2_Count * page_size * pl4_index(address) |
-                   pl2_Count * page_size * pl3_index(address) |
-                   page_size * pl2_index(address));
+    return (pl1 *)(01777777770000000000000 |
+                   (pl4_index(address) << 30) |
+                   (pl3_index(address) << 21) |
+                   (pl2_index(address) << 12));
 }
 
 static inline bool is_pl3_present(struct page_table *page_table,
