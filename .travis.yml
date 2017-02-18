@@ -1,6 +1,7 @@
 # Make sure we run in the docker container
 sudo: false
 language: c
+dist: trusty
 addons:
     apt:
         packages:
