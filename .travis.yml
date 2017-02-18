@@ -10,6 +10,7 @@ addons:
             - python-virtualenv
             - libclang1-3.4
             - yasm
+            - grub2
 cache:
     directories:
         - compiler/x86_64-none-elf
