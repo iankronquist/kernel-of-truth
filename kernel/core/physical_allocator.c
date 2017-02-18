@@ -25,17 +25,14 @@ static void insert_regions(struct multiboot_info *multiboot_tables) {
 
                 if (Boot_Map_Start > mmap[i].addr) {
                     size_t prefix_length = Boot_Map_Start - mmap[i].addr;
-                    log("Prefix");
                     physical_free(mmap[i].addr, prefix_length / Page_Small);
                 }
                 if (Boot_Map_End < mmap[i].addr + mmap[i].len) {
                     size_t postfix_length = mmap[i].addr + mmap[i].len -
                                             Boot_Map_End;
-                    log("Postfix");
                     physical_free(Boot_Map_End, postfix_length / Page_Small);
                 }
             } else {
-                log("Non-kernel Block");
                 physical_free(mmap[i].addr, mmap[i].len / Page_Small);
             }
         }
