@@ -43,7 +43,7 @@ void *slab_alloc(size_t count, enum page_size type,
     if (region_alloc(vect, count * type, &virt_address) != Ok) {
         return NULL;
     }
-    phys_address.physical = physical_alloc(count * type);
+    phys_address.physical = physical_alloc(count);
     if (phys_address.physical == invalid_phys_addr) {
         assert(0);
         goto out;
