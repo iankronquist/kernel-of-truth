@@ -46,7 +46,7 @@ debug: all
 
 release: CFLAGS += -Werror
 release: AFLAGS += -Werror
-release: $(KERNEL)
+release: all
 	strip --strip-all $(KERNEL)
 
 $(KERNEL): $(KERNEL)64
