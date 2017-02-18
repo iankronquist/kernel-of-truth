@@ -213,9 +213,11 @@ void common_interrupt_handler(struct cpu_state r) {
         Interrupt_Dispatch[r.int_no](&r);
     } else {
         log("Unhandled Interrupt Triggered!\nRegisters:");
-        logf("ds: %p edi: %p esi: %p ebp: %p esp: %p ebx: %p edx: %p "
-             "ecx: %p eax: %p int_no: %p err_code: %p eip: %p cs: %p "
-             "eflags: %p useresp: %p ss: %p", r);
+        logf("ds: %lx edi: %lx esi: %lx ebp: %lx esp: %lx ebx: %lx edx: %lx "
+             "ecx: %lx eax: %lx int_no: %lx err_code: %lx eip: %lx cs: %lx "
+             "eflags: %lx useresp: %lx ss: %lx", r.ds, r.rdi, r.rsi, r.rbp, r.rsp,
+             r.rbx, r.rdx, r.rcx, r.rax, r.int_no, r.err_code, r.rip, r.cs,
+             r.rflags, r.useresp, r.ss);
         panic();
     }
 }

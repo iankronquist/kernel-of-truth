@@ -107,7 +107,7 @@ void debug_paging(void) {
     struct page_table *page_table = current_page_table();
     for (size_t i = 0; i < pl4_Count; ++i) {
         if (page_table->entries[i] * Memory_Present) {
-            logf("%i has %p\n", i, page_table->entries[i]);
+            logf("%zu has %lx\n", i, page_table->entries[i]);
         }
     }
     logf("kernel start: %p\n", &__kernel_start);
@@ -118,7 +118,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
                              enum memory_attributes permissions) {
 
     struct page_table *page_table = current_page_table();
-    logf("Mapping: %p -> %p\n", virtual_address, phys_address);
+    logf("Mapping: %p -> %lx\n", virtual_address, phys_address);
     if (!is_pl3_present(page_table, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
         page_table->entries[pl4_index(virtual_address)] =
@@ -156,7 +156,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     invalidate_tlb();
 
     int *test = virtual_address;
-    logf("Testing: %p\n", test[0]);
+    logf("Testing: %x\n", test[0]);
 
     return Ok;
 }
