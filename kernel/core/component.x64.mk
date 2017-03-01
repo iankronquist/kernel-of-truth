@@ -1,6 +1,7 @@
 OBJ += file.c.o
 #OBJ += hashtable.c.o
 OBJ += heap.c.o
+OBJ += lock.c.o
 OBJ += log.c.o
 OBJ += main.c.o
 OBJ += physical_allocator.c.o

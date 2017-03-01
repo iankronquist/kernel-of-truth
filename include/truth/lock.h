@@ -2,15 +2,15 @@
 
 #include <truth/types.h>
 
-// A reader-writer spinlock.
 struct lock {
     atomic_uint readers;
-    atomic_uint writers;
+    atomic_bool writer;
 };
 
-void acquire_read_lock(struct lock *lock);
-void acquire_write_lock(struct lock *lock);
-void release_read_lock(struct lock *lock);
-void release_write_lock(struct lock *lock);
+void lock_acquire_reader(struct lock *lock);
+void lock_release_reader(struct lock *lock);
 
-#define clear_lock { 0, 0 }
+void lock_acquire_writer(struct lock *lock);
+void lock_release_writer(struct lock *lock);
+
+#define Clear_Lock { .readers = 0, .writer = false }
