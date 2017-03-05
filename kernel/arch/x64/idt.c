@@ -2,6 +2,7 @@
 #include <truth/types.h>
 #include <truth/panic.h>
 
+#include <arch/x64/pic.h>
 #include <arch/x64/port.h>
 
 #include "boot.h"
@@ -15,18 +16,8 @@ struct cpu_state {
 };
 
 
-
-
-// Definitions of locations of the PIC ports.
-// The Programmable Interrupt Controller, or PIC, has two parts, the master and
-// the slave.
-#define PIC_Master_Control 0x20
-#define PIC_Master_Mask 0x21
-#define PIC_Slave_Control 0xa0
-#define PIC_Slave_Mask 0xa1
-
-#define IDT_Gate_Present (17)
 #define IDT_Size 256
+
 
 /* The Interrupt Descriptor Table and its entries.
  * The Interrupt Descriptor Table, or IDT, describes the code called when an
@@ -182,30 +173,20 @@ void init_interrupts(void) {
     idt_set_gate(33, (uintptr_t)isr33, 0x08, 0x8e);
     idt_set_gate(34, (uintptr_t)isr34, 0x08, 0x8e);
 
-    // ICW1 - begin initialization
-    write_port(PIC_Master_Control, 0x11);
-    write_port(PIC_Slave_Control, 0x11);
 
-    // Remap interrupts beyond 0x20 because the first 32 are cpu exceptions
-    write_port(PIC_Master_Mask, 0x21);
-    write_port(PIC_Slave_Mask, 0x28);
-
-    // ICW3 - setup cascading
-    write_port(PIC_Master_Mask, 0x00);
-    write_port(PIC_Slave_Mask, 0x00);
-
-    // ICW4 - environment info
-    write_port(PIC_Master_Mask, 0x01);
-    write_port(PIC_Slave_Mask, 0x01);
-
-    // mask interrupts
-    write_port(PIC_Master_Mask, 0xff);
-    write_port(PIC_Slave_Mask, 0xff);
+    pic_init();
+    pic_enable_all();
 
     struct idt_ptr idtp;
     idtp.limit = (sizeof(struct idt_entry) * IDT_Size) - 1;
     idtp.base = (uintptr_t)&IDT;
     __asm__ volatile ("lidt (%0)" : : "r" (&idtp));
+    __asm__ volatile ("sti; nop");
+
+    int a = 1;
+    int b = 0;
+    int c = a / b;
+    logf("c: %x\n", c);
 }
 
 /* Dispatch event handler or, if none exists, log information and kernel panic.
