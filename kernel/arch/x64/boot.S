@@ -73,12 +73,13 @@ _start:
 	movl $(init_pl1_a + (Page_Write | Page_Present)), init_pl2
 	movl $(init_pl1_b + (Page_Write | Page_Present)), init_pl2 + 8
 
-	# Page Table (identity map the first 4 MiB, except NULL).
-	# TODO: This is insecure as it doesn't restrict write & execute access to
-	#       the code kernel code & variables appropriately.
+	# Page Table (identity map the first 1 MiB, except NULL).
 	movl $(init_pl1_a + 8), %edi
 	movl $(0x1000 | Page_Present | Page_Write), %esi
-	movl $1023, %ecx
+	movl $__kernel_end, %ecx
+	subl $__kernel_start, %ecx
+	shrl $12, %ecx
+	addl $0x100, %ecx
 1:
 	movl %esi, (%edi)
 	addl $Page_Small, %esi
