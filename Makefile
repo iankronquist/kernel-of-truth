@@ -10,6 +10,8 @@ VCS_VERSION := $(shell git rev-parse HEAD)
 WEBSITE := https://github.com/iankronquist/kernel-of-truth
 MACROS := -dD -D project_website='"$(WEBSITE)"' -D kernel_major=$(KERNEL_MAJOR) -D kernel_minor=$(KERNEL_MINOR) -D kernel_patch=$(KERNEL_PATCH) -D vcs_version='"$(VCS_VERSION)"'
 
+BUILD_DIR := build/$(ARCH)
+
 # Build tools & flags
 CC := compiler/$(TRIPLE)/bin/$(TRIPLE)-gcc
 CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra -I ./include $(MACROS) -D __C__
@@ -23,12 +25,12 @@ GRUB_MKRESCUE := grub-mkrescue
 
 # Emulators & flags
 QEMU := qemu-system-x86_64
-QEMU_FLAGS := -no-reboot -m 256M
+QEMU_FLAGS := -no-reboot -m 256M -monitor stdio -serial file:$(BUILD_DIR)/qemu-serial.txt
+
 BOCHS := bochs
 
 COMPONENTS := kernel/arch/$(ARCH) kernel/core kernel/device
 
-BUILD_DIR := build/$(ARCH)
 
 OBJ :=
 FULL_OBJ = $(patsubst %,$(BUILD_DIR)/%,$(OBJ))
@@ -73,7 +75,7 @@ $(BUILD_DIR)/docs/index.html: include/truth/*.h include/arch/*/*.h kernel/*/*.c 
 	cldoc generate -D __C__ -std=c11 -I ./include -Wno-pragma-once-outside-header -ffreestanding $(MACROS) -- --output $(BUILD_DIR)/docs include/truth/*.h include/arch/*/*.h kernel/*/*.c kernel/arch/*/*.c --language c --report
 
 start: debug
-	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio -serial file:$(BUILD_DIR)/qemu-serial.txt
+	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS)
 
 start-log: $(KERNEL)
 	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall -D $(BUILD_DIR)/qemu.log $(QEMU_FLAGS)
