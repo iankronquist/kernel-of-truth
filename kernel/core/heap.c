@@ -1,3 +1,4 @@
+#include <truth/memory.h>
 #include <truth/panic.h>
 #include <truth/region_vector.h>
 #include <truth/slab.h>

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <truth/types.h>
+#include <truth/memory.h>
 
 struct page_table;
 

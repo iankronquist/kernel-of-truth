@@ -5,8 +5,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include <truth/memory_sizes.h>
-
 typedef uint64_t phys_addr;
 
 enum partial {

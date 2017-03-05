@@ -3,7 +3,7 @@
 #include <truth/panic.h>
 #include <truth/physical_allocator.h>
 #include <truth/region_vector.h>
-#include <truth/memory_sizes.h>
+#include <truth/memory.h>
 
 extern struct region_vector init_physical_allocator_vector;
 
