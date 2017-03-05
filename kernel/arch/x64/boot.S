@@ -52,12 +52,12 @@ _start:
 
 	# Finish installing the TSS into the GDT
 	movl $Tss, %ecx
-	movw %cx, GDT + TSS_Segment + 2
+	movw %cx, GDT + Segment_TSS + 2
 	shrl $16, %ecx
-	movb %cl, GDT + TSS_Segment + 4
+	movb %cl, GDT + Segment_TSS + 4
 	shrl $8, %ecx
-	movb %cl, GDT + TSS_Segment + 7
-	movl $0, GDT + TSS_Segment + 8
+	movb %cl, GDT + Segment_TSS + 7
+	movl $0, GDT + Segment_TSS + 8
 
 	# We got our multiboot information in various registers.
 	pushl $0
@@ -118,7 +118,7 @@ paging:
 	addl $6, %esp
 
 	# Now use the 64-bit code segment, and we are in full 64-bit mode.
-	ljmp $Code_Segment, $long_mode
+	ljmp $Segment_Kernel_Code, $long_mode
 
 .code64
 long_mode:
@@ -126,17 +126,17 @@ long_mode:
 	mov %esp, %esp
 
 	# Load kernel data segment.
-	movw $Data_Segment, %cx
+	movw $Segment_Kernel_Data, %cx
 	movw %cx, %ds
 	movw %cx, %es
 	movw %cx, %ss
 
 	# Switch the task switch segment register to the task switch segment (0x28).
-	movw $(TSS_Segment | RPL), %cx
+	movw $(Segment_TSS | Segment_RPL), %cx
 	ltr %cx
 
 	# Switch to the thread local fs and gs segments.
-	movw $(User_Data_Segment | RPL), %cx
+	movw $(Segment_User_Data | Segment_RPL), %cx
 	movw %cx, %fs
 	movw %cx, %gs
 
