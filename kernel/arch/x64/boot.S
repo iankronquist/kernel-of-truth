@@ -66,13 +66,10 @@ _start:
 	movl $init_pl4, %edi
 	movl %edi, %cr3
 
-	# Page-Map Level 4.
 	movl $(init_pl3 + (Page_User | Page_Write | Page_Present)), init_pl4
 
-	# Page Directory Pointer Table.
 	movl $(init_pl2 + (Page_User | Page_Write | Page_Present)), init_pl3
 
-	# Page Directory (no user-space access here).
 	movl $(init_pl1_a + (Page_Write | Page_Present)), init_pl2
 	movl $(init_pl1_b + (Page_Write | Page_Present)), init_pl2 + 8
 
@@ -131,7 +128,7 @@ long_mode:
 	movw %cx, %es
 	movw %cx, %ss
 
-	# Switch the task switch segment register to the task switch segment (0x28).
+	# Switch the task switch segment register to the task switch segment.
 	movw $(Segment_TSS | Segment_RPL), %cx
 	ltr %cx
 
