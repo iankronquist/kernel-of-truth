@@ -191,7 +191,6 @@ long_mode:
 .global halt
 .type halt, @function
 halt:
-	cli
 	hlt
 	jmp halt
 
