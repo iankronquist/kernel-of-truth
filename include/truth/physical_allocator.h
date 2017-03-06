@@ -8,7 +8,7 @@
 
 struct physical_region_vector;
 
-void init_physical_allocator(struct multiboot_info *multiboot_tables);
+void physical_allocator_init(struct multiboot_info *multiboot_tables);
 
 phys_addr physical_alloc(size_t pages);
 

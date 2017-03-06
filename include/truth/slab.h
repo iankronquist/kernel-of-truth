@@ -3,7 +3,7 @@
 #include <truth/memory.h>
 #include <truth/types.h>
 
-void init_slab(void);
+void slab_init(void);
 
 void *slab_alloc(size_t count, enum page_size size,
                  enum memory_attributes attrs);

@@ -20,10 +20,10 @@ static inline bool in_lower_half(void *address) {
     return address <= lower_half_end;
 }
 
-void init_slab(void) {
+void slab_init(void) {
     union address address;
-    init_region_vector(&slab_higher_half);
-    init_region_vector(&slab_lower_half);
+    region_vector_init(&slab_higher_half);
+    region_vector_init(&slab_lower_half);
     address.virtual = (void *)(4 * MB);
     region_free(&slab_lower_half, address, lower_half_size - (4 * MB));
     address.virtual = higher_half_start;

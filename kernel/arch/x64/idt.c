@@ -100,7 +100,7 @@ int install_interrupt(uint8_t num, isr_f function) {
 }
 
 
-void init_interrupts(void) {
+void interrupts_init(void) {
 
     idt_set_gate(0, (uintptr_t)isr0, 0x08, 0x8e);
     idt_set_gate(1, (uintptr_t)isr1, 0x08, 0x8e);

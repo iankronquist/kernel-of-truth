@@ -32,7 +32,7 @@ void debug_region_vector(struct region_vector *cur) {
     } while (cur != NULL);
 }
 
-void init_region_vector(struct region_vector *vect) {
+void region_vector_init(struct region_vector *vect) {
     vect->next = NULL;
     vect->regions_used = 0;
 }

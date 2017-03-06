@@ -26,9 +26,9 @@ void kernel_main(void *multiboot_tables) {
     logf(Log_None, "\tVersion %d.%d.%d\n\tCommit %s\n\t%s\n\tCPU Time %ld\n",
          kernel_major, kernel_minor, kernel_patch, vcs_version,
          project_website, cpu_time());
-    init_interrupts();
-    init_physical_allocator(multiboot_tables);
-    init_slab();
-    assert_ok(init_heap());
+    interrupts_init();
+    physical_allocator_init(multiboot_tables);
+    slab_init();
+    assert_ok(heap_init());
     halt();
 }

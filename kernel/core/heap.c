@@ -14,7 +14,7 @@ struct region_vector *heap_metadata_used;
 struct region_vector *heap_metadata_free;
 uint8_t *heap = NULL;
 
-enum status checked init_heap(void) {
+enum status checked heap_init(void) {
     union address heap_address;
     heap_metadata_used = slab_alloc(1, Page_Small, Memory_Writable);
     if (heap_metadata_used == NULL) {
@@ -36,9 +36,9 @@ enum status checked init_heap(void) {
     }
 
     heap_metadata_used = slab_alloc(1, Page_Small, Memory_Writable);
-    init_region_vector(heap_metadata_used);
+    region_vector_init(heap_metadata_used);
     heap_metadata_free = slab_alloc(1, Page_Small, Memory_Writable);
-    init_region_vector(heap_metadata_free);
+    region_vector_init(heap_metadata_free);
     heap_address.virtual = heap;
     region_free(heap_metadata_free, heap_address, 16 * Page_Small);
     memset(heap, (int)Heap_Red_Zone_Fill, Page_Small);

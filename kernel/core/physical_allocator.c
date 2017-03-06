@@ -45,8 +45,8 @@ void debug_physical_allocator(void) {
     debug_region_vector(&init_physical_allocator_vector);
 }
 
-void init_physical_allocator(struct multiboot_info *multiboot_tables) {
-    init_region_vector(&init_physical_allocator_vector);
+void physical_allocator_init(struct multiboot_info *multiboot_tables) {
+    region_vector_init(&init_physical_allocator_vector);
     insert_regions(multiboot_tables);
 }
 
