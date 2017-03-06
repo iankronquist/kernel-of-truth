@@ -1,6 +1,6 @@
 #pragma once
 
-#include <truth/memory_sizes.h>
+#include <truth/memory.h>
 #include <arch/x64/segments.h>
 
 #define MB_Magic     0x1badb002
