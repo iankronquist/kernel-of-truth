@@ -139,7 +139,6 @@ void init_interrupts(void) {
     idt_set_gate(34, (uintptr_t)isr34, 0x08, 0x8e);
 
     pic_init();
-    pic_enable_all();
 
     struct idt_ptr idtp;
     idtp.limit = (sizeof(struct idt_entry) * IDT_Size) - 1;
