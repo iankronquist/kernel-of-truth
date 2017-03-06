@@ -163,6 +163,8 @@ void common_interrupt_handler(struct cpu_state r) {
              r.ds, r.rdi, r.rsi, r.rbp, r.rsp,
              r.rbx, r.rdx, r.rcx, r.rax, r.int_no, r.err_code, r.rip, r.cs,
              r.rflags, r.rsp, r.ss);
+
         panic();
     }
+    pic_end_of_interrupt(r.int_no);
 }
