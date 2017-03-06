@@ -13,6 +13,8 @@
 #define Memory_Writable      (1 << 1)
 #define Memory_User_Access   (1 << 2)
 #define Memory_No_Execute    (1 << 63)
+#define Memory_Execute_Mask  (0x7fffffffffffffff)
+#define Memory_Writable_Mask (0xfffffffffffffffd)
 
 
 #elif __C__
