@@ -1,13 +1,13 @@
-OBJ += file.c.o
-#OBJ += hashtable.c.o
-OBJ += heap.c.o
-OBJ += lock.c.o
-OBJ += log.c.o
-OBJ += main.c.o
-OBJ += physical_allocator.c.o
-OBJ += region_vector.c.o
-OBJ += slab.c.o
-OBJ += sorted_list.c.o
-OBJ += string.c.o
+OBJ += file.c
+#OBJ += hashtable.c
+OBJ += heap.c
+OBJ += lock.c
+OBJ += log.c
+OBJ += main.c
+OBJ += physical_allocator.c
+OBJ += region_vector.c
+OBJ += slab.c
+OBJ += sorted_list.c
+OBJ += string.c
 # FIXME: Only include in debug builds.
-OBJ += ubsan.c.o
+OBJ += ubsan.c

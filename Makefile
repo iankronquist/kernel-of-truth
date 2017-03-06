@@ -33,7 +33,7 @@ COMPONENTS := kernel/arch/$(ARCH) kernel/core kernel/device
 
 
 OBJ :=
-FULL_OBJ = $(patsubst %,$(BUILD_DIR)/%,$(OBJ))
+FULL_OBJ = $(patsubst %,$(BUILD_DIR)/%.o,$(OBJ))
 
 KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
 

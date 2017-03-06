@@ -1,7 +1,7 @@
-OBJ += boot.S.o
-OBJ += idt.S.o
-OBJ += gdt.c.o
-OBJ += idt.c.o
-OBJ += paging.c.o
-OBJ += paging.S.o
-OBJ += pic.c.o
+OBJ += boot.S
+OBJ += idt.S
+OBJ += gdt.c
+OBJ += idt.c
+OBJ += paging.c
+OBJ += paging.S
+OBJ += pic.c

@@ -1,1 +1,1 @@
-OBJ += serial.c.o
+OBJ += serial.c
