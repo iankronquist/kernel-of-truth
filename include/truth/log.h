@@ -3,10 +3,10 @@
 #include <truth/types.h>
 
 enum log_level {
-    Log_None,
     Log_Debug,
     Log_Warning,
     Log_Error,
+    Log_None,
     Log_Count,
 };
 

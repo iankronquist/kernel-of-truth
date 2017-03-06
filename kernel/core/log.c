@@ -12,10 +12,10 @@ static enum log_level Log_Global_Level = Log_None;
 
 
 char *Log_Prefix[Log_Count] = {
-    "",
     "Debug: ",
     "Warn:  ",
     "Error: ",
+    "",
 };
 
 
