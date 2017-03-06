@@ -18,7 +18,8 @@ typedef void (isr_f)(struct cpu_state *);
  */
 int install_interrupt(uint8_t num, isr_f function);
 
-void init_interrupts(void);
+// Sets up CPU interrupt tables and initializes interrupts
+void interrupts_init(void);
 
 // Disable interrupts
 extern void disable_interrupts(void);
@@ -29,5 +30,5 @@ extern void enable_interrupts(void);
 // Halt CPU
 extern void halt(void);
 
-// Get's the CPU time step counter value
+// Gets the CPU time step counter value
 extern uint64_t cpu_time(void);

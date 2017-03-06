@@ -8,7 +8,7 @@ struct device {
 
 extern struct device *log_device;
 
-enum status checked init_device(struct device *device, string name);
-enum status checked read_device(struct device *device, string in);
-enum status checked write_device(struct device *device, string out);
-void fini_device(struct device *device);
+enum status checked device_init(struct device *device, char *name);
+enum status checked read_device(struct device *device, char *in);
+enum status checked write_device(struct device *device, char *out);
+void device_fini(struct device *device);

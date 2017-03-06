@@ -1,5 +1,6 @@
 #pragma once
 
+#include <truth/memory.h>
 #include <truth/types.h>
 
 // Function used for hashing an object. Should return a good hash in the range
