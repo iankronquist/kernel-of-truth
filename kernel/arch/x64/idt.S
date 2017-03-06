@@ -78,7 +78,7 @@ _service_interrupt:
 	pop rbx
 	pop rax
 
-	add rsp, 8
+	add rsp, 16
 	sti
 	iret
 
