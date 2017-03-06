@@ -80,7 +80,7 @@ _service_interrupt:
 
 	add rsp, 16
 	sti
-	iret
+	iretq
 
 .macro interrupt number
 	.global isr\number
