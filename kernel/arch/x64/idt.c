@@ -82,7 +82,7 @@ extern void isr34(void);
 /* Set an entry in the idt.
  */
 static void idt_set_gate(uint8_t num, uintptr_t base,
-        uint16_t segment_selector, uint8_t flags) {
+                         uint16_t segment_selector, uint8_t flags) {
     IDT[num].base_low = base & 0xffff;
     IDT[num].base_high = (base >> 16) & 0xffff;
     IDT[num].base_highest = base >> 32;
