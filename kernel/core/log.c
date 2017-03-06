@@ -8,7 +8,7 @@
 extern struct file *Log_File;
 
 
-static enum log_level Global_Level = Log_None;
+static enum log_level Log_Global_Level = Log_None;
 
 
 char *Log_Prefix[Log_Count] = {
@@ -20,20 +20,20 @@ char *Log_Prefix[Log_Count] = {
 
 
 enum status log_init(enum log_level level, const char *name) {
-    Global_Level = level;
+    Log_Global_Level = level;
     return Log_File->init(name);
 }
 
 
 void log(enum log_level level, const char *message) {
-    if (level >= Global_Level) {
+    if (level >= Log_Global_Level) {
         fprintf(Log_File, "%s%s\n", Log_Prefix[level], message);
     }
 }
 
 
 void logf(enum log_level level, const char *message, ...) {
-    if (level >= Global_Level) {
+    if (level >= Log_Global_Level) {
         va_list args;
         va_start(args, message);
         fprintf(Log_File, "%s", Log_Prefix[level]);
@@ -45,5 +45,5 @@ void logf(enum log_level level, const char *message, ...) {
 
 void log_set_level(enum log_level level) {
     assert(level < Log_Count);
-    Global_Level = level;
+    Log_Global_Level = level;
 }
