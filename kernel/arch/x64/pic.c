@@ -20,30 +20,59 @@
 #define ICW4_8086_Mode 0x01
 
 
-void pic_end_of_interrupt(int interrupt_number) {
+void pic_end_of_interrupt(uint8_t interrupt_number) {
     if (interrupt_number > PIC2_First_Interrupt) {
-        write_port(PIC2_Control, PIC_End_Of_Interrupt);
+        write_port(PIC_End_Of_Interrupt, PIC2_Control);
     }
-    write_port(PIC1_Control, PIC_End_Of_Interrupt);
+    write_port(PIC_End_Of_Interrupt, PIC1_Control);
 }
 
 
 void pic_init(void) {
-    write_port(PIC1_Control, ICW1_Init | ICW1_ICW4_Disable);
-    write_port(PIC2_Control, ICW1_Init | ICW1_ICW4_Disable);
+    write_port(ICW1_Init | ICW1_ICW4_Disable, PIC1_Control);
+    write_port(ICW1_Init | ICW1_ICW4_Disable, PIC2_Control);
 
-    write_port(PIC1_Data, PIC1_Offset);
-    write_port(PIC2_Data, PIC2_Offset);
+    write_port(PIC1_Offset, PIC1_Data);
+    write_port(PIC2_Offset, PIC2_Data);
 
-    write_port(PIC1_Data, PIC1_Next_PIC);
-    write_port(PIC2_Data, PIC2_Identity);
+    write_port(PIC1_Next_PIC, PIC1_Data);
+    write_port(PIC2_Identity, PIC2_Data);
 
-    write_port(PIC1_Data, ICW4_8086_Mode);
-    write_port(PIC2_Data, ICW4_8086_Mode);
+    write_port(ICW4_8086_Mode, PIC1_Data);
+    write_port(ICW4_8086_Mode, PIC2_Data);
+
+    write_port(0, PIC1_Data);
+    write_port(0, PIC2_Data);
 }
 
 
 void pic_enable_all(void) {
-    write_port(PIC1_Data, 0xff);
-    write_port(PIC2_Data, 0xff);
+}
+
+
+void pic_enable(uint8_t interrupt_number) {
+    uint8_t pic;
+    if (interrupt_number < 8) {
+        pic = PIC1_Data;
+    } else {
+        pic = PIC2_Data;
+        interrupt_number -= 8;
+    }
+    uint8_t interrupt_mask = read_port(pic);
+    interrupt_mask |= 1 << interrupt_number;
+    write_port(interrupt_mask, pic);
+}
+
+
+void pic_disable(uint8_t interrupt_number) {
+    uint8_t pic;
+    if (interrupt_number < 8) {
+        pic = PIC1_Data;
+    } else {
+        pic = PIC2_Data;
+        interrupt_number -= 8;
+    }
+    uint8_t interrupt_mask = read_port(pic);
+    interrupt_mask &= ~(1 << interrupt_number);
+    write_port(interrupt_mask, pic);
 }
