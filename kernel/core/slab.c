@@ -51,8 +51,8 @@ void *slab_alloc(size_t count, enum page_size type,
     if (map_page(virt_address.virtual, phys_address.physical,
                  page_attributes) != Ok) {
         physical_free(phys_address.physical, count);
-        logf("Failed to map slab page: %p, %lx\n", virt_address.virtual,
-             phys_address.physical);
+        logf(Log_Warning, "Failed to map slab page: %p, %lx\n",
+             virt_address.virtual, phys_address.physical);
         assert(0);
         goto out;
     }

@@ -37,7 +37,7 @@ static void insert_regions(struct multiboot_info *multiboot_tables) {
             }
         }
     }
-    log("Contents of physical allocator vector:");
+    log(Log_Debug, "Contents of physical allocator vector:");
     debug_region_vector(&init_physical_allocator_vector);
 }
 

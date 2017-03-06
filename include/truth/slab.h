@@ -1,5 +1,6 @@
 #pragma once
 
+#include <truth/memory.h>
 #include <truth/types.h>
 
 void init_slab(void);

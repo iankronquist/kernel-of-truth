@@ -2,8 +2,18 @@
 
 #include <truth/types.h>
 
-enum status init_log(const char *name);
+enum log_level {
+    Log_None,
+    Log_Debug,
+    Log_Warning,
+    Log_Error,
+    Log_Count,
+};
 
-void log(const char *message);
+enum status log_init(enum log_level level, const char *name);
 
-void logf(const char *message, ...) check_format(1, 2);
+void log_set_level(enum log_level level);
+
+void log(enum log_level level, const char *message);
+
+void logf(enum log_level level, const char *message, ...) check_format(2, 3);

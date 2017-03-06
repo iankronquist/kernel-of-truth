@@ -53,7 +53,7 @@ static inline const char *status_message(enum status status) {
 #define bubble(condition, message) { \
         enum status error = condition; \
         if (error != Ok) { \
-            log(message); \
+            log(Log_Warning, message); \
             return error; \
         } \
 }

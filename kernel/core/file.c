@@ -1,6 +1,5 @@
 #include <truth/types.h>
 #include <truth/file.h>
-#include <truth/log.h>
 #include <truth/panic.h>
 
 // Here there be dragons. Go away.
