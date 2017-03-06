@@ -1,4 +1,4 @@
-#include "boot.h"
+#include <arch/x64/boot.h>
 
 .section .text
 
