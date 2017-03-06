@@ -154,8 +154,8 @@ void common_interrupt_handler(struct cpu_state r) {
     assert(r.int_no < IDT_Size);
     if (Interrupt_Dispatch[r.int_no] != NULL) {
         Interrupt_Dispatch[r.int_no](&r);
-    } else {
-        log("Unhandled Interrupt Triggered!");
+    } else if (r.int_no < 32) {
+        log("Unhandled Exception Triggered!");
         logf(" ds: %lx\n rdi: %lx\n rsi: %lx\n rbp: %lx\n rsp: %lx\n "
              "rbx: %lx\n rdx: %lx\n rcx: %lx\n rax: %lx\n int_no: %lx\n "
              "err_code: %lx\n rip: %lx\n cs: %lx\n eflags: %lx\n rsp: %lx\n "
