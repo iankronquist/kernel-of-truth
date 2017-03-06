@@ -1,7 +1,5 @@
 #include <arch/x64/port.h>
 
-#include <truth/log.h>
-
 #define PIC1_Control 0x20
 #define PIC1_Data (PIC1_Control + 1)
 #define PIC1_Offset 0x20
@@ -18,6 +16,8 @@
 #define ICW1_Init 0x10
 #define ICW1_ICW4_Disable 0x01
 #define ICW4_8086_Mode 0x01
+
+#define PIC_All_IRQ_Mask 0xff
 
 
 void pic_end_of_interrupt(uint8_t interrupt_number) {
@@ -41,12 +41,8 @@ void pic_init(void) {
     write_port(ICW4_8086_Mode, PIC1_Data);
     write_port(ICW4_8086_Mode, PIC2_Data);
 
-    write_port(0, PIC1_Data);
-    write_port(0, PIC2_Data);
-}
-
-
-void pic_enable_all(void) {
+    write_port(PIC_All_IRQ_Mask, PIC1_Data);
+    write_port(PIC_All_IRQ_Mask, PIC2_Data);
 }
 
 
