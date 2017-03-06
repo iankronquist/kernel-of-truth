@@ -25,7 +25,7 @@ GRUB_MKRESCUE := grub-mkrescue
 
 # Emulators & flags
 QEMU := qemu-system-x86_64
-QEMU_FLAGS := -no-reboot -m 256M -monitor stdio -serial file:$(BUILD_DIR)/qemu-serial.txt
+QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/qemu-serial.txt
 
 BOCHS := bochs
 
@@ -75,13 +75,13 @@ $(BUILD_DIR)/docs/index.html: include/truth/*.h include/arch/*/*.h kernel/*/*.c 
 	cldoc generate -D __C__ -std=c11 -I ./include -Wno-pragma-once-outside-header -ffreestanding $(MACROS) -- --output $(BUILD_DIR)/docs include/truth/*.h include/arch/*/*.h kernel/*/*.c kernel/arch/*/*.c --language c --report
 
 start: debug
-	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS)
+	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio
 
 start-log: $(KERNEL)
-	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall -D $(BUILD_DIR)/qemu.log $(QEMU_FLAGS)
+	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall -D $(BUILD_DIR)/qemu.log $(QEMU_FLAGS) -monitor stdio
 
 start-debug:
-	$(QEMU) -S -s -monitor stdio -kernel $(KERNEL) $(QEMU_FLAGS)
+	$(QEMU) -S -s -curses -kernel $(KERNEL) $(QEMU_FLAGS)
 
 tags: kernel/arch/$(ARCH)/*.c kernel/*/*.c kernel/arch/$(ARCH)/*.S include/*/*.h
 	ctags -R kernel include
