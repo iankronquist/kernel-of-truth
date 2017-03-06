@@ -6,15 +6,13 @@
 #include <arch/x64/pic.h>
 #include <arch/x64/port.h>
 
-#include "boot.h"
-
 #define IDT_Size 256
 
 struct cpu_state {
     uintptr_t ds;
     uintptr_t r15, r14, r13, r12, r11, r10, r9, r8, rdi, rsi, rbp, rdx, rcx,
               rbx, rax;
-    uintptr_t int_no, err_code;
+    uintptr_t interrupt_number, err_code;
     uintptr_t rip, cs, rflags, rsp, ss;
 };
 
@@ -151,20 +149,33 @@ void init_interrupts(void) {
 
 
 void common_interrupt_handler(struct cpu_state r) {
-    assert(r.int_no < IDT_Size);
-    if (Interrupt_Dispatch[r.int_no] != NULL) {
-        Interrupt_Dispatch[r.int_no](&r);
-    } else if (r.int_no < 32) {
-        log("Unhandled Exception Triggered!");
-        logf(" ds: %lx\n rdi: %lx\n rsi: %lx\n rbp: %lx\n rsp: %lx\n "
-             "rbx: %lx\n rdx: %lx\n rcx: %lx\n rax: %lx\n int_no: %lx\n "
-             "err_code: %lx\n rip: %lx\n cs: %lx\n eflags: %lx\n rsp: %lx\n "
+    assert(r.interrupt_number < IDT_Size);
+    if (Interrupt_Dispatch[r.interrupt_number] != NULL) {
+        Interrupt_Dispatch[r.interrupt_number](&r);
+    } else if (r.interrupt_number < 32) {
+        log(Log_Error, "Unhandled Exception Triggered!");
+        logf(Log_Error,
+             "\tds: %lx\n\t"
+             "rdi: %lx\n\t"
+             "rsi: %lx\n\t"
+             "rbp: %lx\n\t"
+             "rsp: %lx\n\t"
+             "rbx: %lx\n\t"
+             "rdx: %lx\n\t"
+             "rcx: %lx\n\t"
+             "rax: %lx\n\t"
+             "interrupt_number: %lx\n\t"
+             "err_code: %lx\n\t"
+             "rip: %lx\n\t"
+             "cs: %lx\n\t"
+             "eflags: %lx\n\t"
+             "rsp: %lx\n\t"
              "ss: %lx\n",
-             r.ds, r.rdi, r.rsi, r.rbp, r.rsp,
-             r.rbx, r.rdx, r.rcx, r.rax, r.int_no, r.err_code, r.rip, r.cs,
-             r.rflags, r.rsp, r.ss);
+             r.ds, r.rdi, r.rsi, r.rbp, r.rsp, r.rbx, r.rdx, r.rcx, r.rax,
+             r.interrupt_number, r.err_code, r.rip, r.cs, r.rflags, r.rsp,
+             r.ss);
 
         panic();
     }
-    pic_end_of_interrupt(r.int_no);
+    pic_end_of_interrupt(r.interrupt_number);
 }
