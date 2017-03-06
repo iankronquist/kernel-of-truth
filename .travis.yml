@@ -31,4 +31,3 @@ script:
     - make clean
     - make release
     - make iso
-    - make docs
