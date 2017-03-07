@@ -63,7 +63,7 @@ enum status checked region_alloc(struct region_vector *vect, size_t size,
 }
 
 static struct region_vector *extend_vector(void) {
-    struct region_vector *new = slab_alloc(1, Page_Small,
+    struct region_vector *new = slab_alloc_locked(Page_Small,
                                            Memory_No_Attributes);
     if (new == NULL) {
         return NULL;
@@ -86,7 +86,7 @@ size_t region_find_size_and_free(struct region_vector *vect,
                     cur->regions[i] = cur->regions[cur->regions_used];
                 } else if (prev != NULL) {
                     prev->next = cur->next;
-                    slab_free(1, Page_Small, cur);
+                    slab_free_locked(Page_Small, cur);
                 }
                 return size;
             }

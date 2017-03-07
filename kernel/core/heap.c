@@ -8,7 +8,7 @@
 #define Heap_Red_Zone_Size sizeof(unsigned long)
 #define Heap_Red_Zone_Fill 0xccccccccccccccccul
 
-#define Heap_Size 16
+#define Heap_Size (16 * Page_Small)
 
 struct region_vector *heap_metadata_used;
 struct region_vector *heap_metadata_free;
@@ -16,28 +16,28 @@ uint8_t *heap = NULL;
 
 enum status checked heap_init(void) {
     union address heap_address;
-    heap_metadata_used = slab_alloc(1, Page_Small, Memory_Writable);
+    heap_metadata_used = slab_alloc(Page_Small, Memory_Writable);
     if (heap_metadata_used == NULL) {
         assert(0);
         return Error_No_Memory;
     }
-    heap_metadata_free = slab_alloc(1, Page_Small, Memory_Writable);
+    heap_metadata_free = slab_alloc(Page_Small, Memory_Writable);
     if (heap_metadata_free == NULL) {
-        slab_free(1, Page_Small, heap_metadata_used);
+        slab_free(Page_Small, heap_metadata_used);
         assert(0);
         return Error_No_Memory;
     }
-    heap = slab_alloc(Heap_Size, Page_Small, Memory_Writable);
+    heap = slab_alloc(Heap_Size, Memory_Writable);
     if (heap == NULL) {
-        slab_free(1, Page_Small, heap_metadata_used);
-        slab_free(1, Page_Small, heap_metadata_free);
+        slab_free(Page_Small, heap_metadata_used);
+        slab_free(Page_Small, heap_metadata_free);
         assert(0);
         return Error_No_Memory;
     }
 
-    heap_metadata_used = slab_alloc(1, Page_Small, Memory_Writable);
+    heap_metadata_used = slab_alloc(Page_Small, Memory_Writable);
     region_vector_init(heap_metadata_used);
-    heap_metadata_free = slab_alloc(1, Page_Small, Memory_Writable);
+    heap_metadata_free = slab_alloc(Page_Small, Memory_Writable);
     region_vector_init(heap_metadata_free);
     heap_address.virtual = heap;
     region_free(heap_metadata_free, heap_address, 16 * Page_Small);

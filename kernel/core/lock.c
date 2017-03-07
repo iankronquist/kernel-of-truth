@@ -22,7 +22,7 @@ void lock_acquire_writer(struct lock *lock) {
 }
 
 void lock_release_writer(struct lock *lock) {
-    assert(atomic_load_explicit(&lock->writer, memory_order_acquire) == false);
+    assert(atomic_load_explicit(&lock->writer, memory_order_acquire) == true);
     assert(atomic_load_explicit(&lock->readers, memory_order_acquire) == 0);
     atomic_store_explicit(&lock->writer, false, memory_order_release);
 }
