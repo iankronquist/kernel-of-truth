@@ -1,4 +1,5 @@
 OBJ += boot.S
+OBJ += control_registers.S
 OBJ += idt.S
 OBJ += gdt.c
 OBJ += idt.c

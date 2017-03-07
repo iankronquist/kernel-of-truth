@@ -1,3 +1,4 @@
+#include <arch/x64/control_registers.h>
 #include <arch/x64/paging.h>
 #include <truth/log.h>
 #include <truth/physical_allocator.h>
@@ -40,8 +41,6 @@ struct page_table {
     pl4 entries;
 };
 
-extern void write_cr3(phys_addr value);
-extern uint64_t read_cr3(void);
 
 static inline size_t pl4_index(void *address) {
     return (uintptr_t)address >> pl4_offset & pl4_mask;

@@ -5,6 +5,7 @@
 
 #include <arch/x64/pic.h>
 #include <arch/x64/port.h>
+#include <arch/x64/control_registers.h>
 
 #define IDT_Size 256
 
@@ -169,10 +170,11 @@ void common_interrupt_handler(struct cpu_state r) {
              "cs: %lx\n\t"
              "eflags: %lx\n\t"
              "rsp: %lx\n\t"
-             "ss: %lx\n",
+             "ss: %lx\n\t"
+             "cr2: %p\n",
              r.ds, r.rdi, r.rsi, r.rbp, r.rsp, r.rbx, r.rdx, r.rcx, r.rax,
              r.interrupt_number, r.err_code, r.rip, r.cs, r.rflags, r.rsp,
-             r.ss);
+             r.ss, read_cr2());
 
         panic();
     }
