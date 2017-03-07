@@ -69,7 +69,7 @@ void __ubsan_handle_out_of_bounds(struct out_of_bounds_info *out_of_bounds) {
 
 void __ubsan_handle_shift_out_of_bounds(struct out_of_bounds_info
                                         *out_of_bounds) {
-    log(Log_Error, "Shift out of bounds\n");
+    log(Log_Error, "Shift out of bounds");
     log_location(&out_of_bounds->location);
     panic();
 }
@@ -80,9 +80,16 @@ void __ubsan_handle_mul_overflow(struct source_location *location,
     log_location(location);
     panic();
 }
+
 void __ubsan_handle_sub_overflow(struct source_location *location,
                                  void *unused(left), void *unused(right)) {
     log(Log_Error, "Subtraction overflow");
+    log_location(location);
+    panic();
+}
+
+void __ubsan_handle_load_invalid_value(struct source_location *location) {
+    log(Log_Error, "Load invalid value");
     log_location(location);
     panic();
 }
