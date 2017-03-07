@@ -1,14 +1,17 @@
 #include <external/multiboot.h>
 #include <truth/types.h>
 #include <truth/panic.h>
+#include <truth/lock.h>
 #include <truth/physical_allocator.h>
 #include <truth/region_vector.h>
 #include <truth/memory.h>
 
+
+static struct lock physical_allocator_lock = Lock_Clear;
 extern struct region_vector init_physical_allocator_vector;
 
 #define Boot_Map_Start (phys_addr)0x001000
-#define Boot_Map_End   (phys_addr)0x400000
+#define Boot_Map_End   (phys_addr)Kernel_Physical_End
 
 static void insert_regions(struct multiboot_info *multiboot_tables) {
     struct multiboot_mmap_entry *mmap =
@@ -53,18 +56,21 @@ void physical_allocator_init(struct multiboot_info *multiboot_tables) {
 phys_addr physical_alloc(size_t pages) {
     union address address;
     size_t size = pages * Page_Small;
+    lock_acquire_writer(&physical_allocator_lock);
     struct region_vector *vect = &init_physical_allocator_vector;
     if (region_alloc(vect, size, &address) != Ok) {
-        return invalid_phys_addr;
-    } else {
-        return address.physical;
+        address.physical = invalid_phys_addr;
     }
+    lock_release_writer(&physical_allocator_lock);
+    return address.physical;
 }
 
 void physical_free(phys_addr address, size_t pages) {
     union address in;
     size_t size = pages * Page_Small;
     in.physical = address;
+    lock_acquire_writer(&physical_allocator_lock);
     struct region_vector *vect = &init_physical_allocator_vector;
     region_free(vect, in, size);
+    lock_release_writer(&physical_allocator_lock);
 }
