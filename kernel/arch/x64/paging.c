@@ -3,6 +3,8 @@
 #include <truth/log.h>
 #include <truth/physical_allocator.h>
 #include <truth/panic.h>
+#include <truth/slab.h>
+#include <truth/string.h>
 #include <truth/types.h>
 
 extern void invalidate_tlb(void);
@@ -27,6 +29,8 @@ extern uint64_t invalidate_page(void *);
 // Any even number will do
 #define free_page_entry 0xccccccccccccccul
 
+#define Phys_Addr_Mask 0x000ffffffffff000
+
 typedef uint64_t pl4_entry;
 typedef uint64_t pl3_entry;
 typedef uint64_t pl2_entry;
@@ -41,6 +45,9 @@ struct page_table {
     pl4 entries;
 };
 
+phys_addr page_entry_to_phys(uint64_t entry) {
+    return entry & Phys_Addr_Mask;
+}
 
 static inline size_t pl4_index(void *address) {
     return (uintptr_t)address >> pl4_offset & pl4_mask;
@@ -199,8 +206,13 @@ void switch_page_table(struct page_table *page_table) {
     write_cr3(table_phys_address(page_table));
 }
 
-/*
-   void init_page_table(struct page_table *page_table) {
-    assert(0);
-   }
- */
+struct page_table *page_table_init(void) {
+    phys_addr pt_phys;
+    struct page_table *pt = slab_alloc_phys(&pt_phys, Memory_Writable);
+    if (pt == NULL) {
+        return NULL;
+    }
+    memset(pt->entries, 0, pl4_Count / 2);
+    memcpy(&pt->entries[Page_Small / 2], current_page_table(), pl4_Count / 2);
+    return pt;
+}
