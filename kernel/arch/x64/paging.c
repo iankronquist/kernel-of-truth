@@ -36,13 +36,8 @@ typedef uint64_t pl3_entry;
 typedef uint64_t pl2_entry;
 typedef uint64_t pl1_entry;
 
-typedef pl4_entry pl4[pl4_Count];
-typedef pl3_entry pl3[pl3_Count];
-typedef pl2_entry pl2[pl2_Count];
-typedef pl1_entry pl1[pl1_Count];
-
 struct page_table {
-    pl4 entries;
+    pl4_entry entries[pl4_Count];
 };
 
 phys_addr page_entry_to_phys(uint64_t entry) {
@@ -75,18 +70,18 @@ static struct page_table *current_page_table(void) {
 
 #define page_size (KB * 4)
 
-static pl3 *get_pl3(void *address) {
-    return (pl2 *)(01777777777777770000000 | (pl4_index(address) << 12));
+static pl3_entry *get_pl3(void *address) {
+    return (pl3_entry *)(01777777777777770000000 | (pl4_index(address) << 12));
 }
 
-static pl2 *get_pl2(void *address) {
-    return (pl2 *)(01777777777770000000000 |
+static pl2_entry *get_pl2(void *address) {
+    return (pl2_entry *)(01777777777770000000000 |
                    (pl4_index(address) << 21) |
                    (pl3_index(address) << 12));
 }
 
-static pl1 *get_pl1(void *address) {
-    return (pl1 *)(01777777770000000000000 |
+static pl1_entry *get_pl1(void *address) {
+    return (pl1_entry *)(01777777770000000000000 |
                    (pl4_index(address) << 30) |
                    (pl3_index(address) << 21) |
                    (pl2_index(address) << 12));
@@ -94,19 +89,19 @@ static pl1 *get_pl1(void *address) {
 
 static inline bool is_pl3_present(struct page_table *page_table,
                                   void *address) {
-    return page_table->entries[pl4_index(address)] & Memory_Present;
+    return (page_table->entries[pl4_index(address)] & Memory_Present) == 1;
 }
 
-static inline bool is_pl2_present(pl3 *level_three, void *address) {
-    return (*level_three)[pl3_index(address)] & Memory_Present;
+static inline bool is_pl2_present(pl3_entry *level_three, void *address) {
+    return level_three[pl3_index(address)] & Memory_Present;
 }
 
-static inline bool is_pl1_present(pl2 *level_two, void *address) {
-    return (*level_two)[pl2_index(address)] & Memory_Present;
+static inline bool is_pl1_present(pl2_entry *level_two, void *address) {
+    return level_two[pl2_index(address)] & Memory_Present;
 }
 
-static inline bool is_Memory_Present(pl1 *level_one, void *address) {
-    return (*level_one)[pl1_index(address)] & Memory_Present;
+static inline bool is_Memory_Present(pl1_entry *level_one, void *address) {
+    return level_one[pl1_index(address)] & Memory_Present;
 }
 
 void debug_paging(void) {
@@ -133,32 +128,32 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
         invalidate_tlb();
     }
 
-    pl3 *level_three = get_pl3(virtual_address);
+    pl3_entry *level_three = get_pl3(virtual_address);
     if (!is_pl2_present(level_three, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
-        (*level_three)[pl3_index(virtual_address)] =
+        level_three[pl3_index(virtual_address)] =
             (phys_address | permissions | Memory_User_Access |
              Memory_Present);
         invalidate_tlb();
     }
 
-    pl2 *level_two = get_pl2(virtual_address);
+    pl2_entry *level_two = get_pl2(virtual_address);
     if (!is_pl1_present(level_two, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
-        (*level_two)[pl2_index(virtual_address)] =
+        level_two[pl2_index(virtual_address)] =
             (phys_address | permissions | Memory_User_Access |
              Memory_Present);
         invalidate_tlb();
     }
 
-    pl1 *level_one = get_pl1(virtual_address);
+    pl1_entry *level_one = get_pl1(virtual_address);
     if (is_Memory_Present(level_one, virtual_address)) {
         logf(Log_Debug, "The virtual address %p is already present\n",
              virtual_address);
         return Error_Present;
     }
 
-    (*level_one)[pl1_index(virtual_address)] =
+    level_one[pl1_index(virtual_address)] =
         (phys_address | permissions | Memory_Present);
     invalidate_tlb();
 
@@ -173,13 +168,13 @@ void unmap_page(void *address, bool free_physical_memory) {
     if (is_pl3_present(page_table, address) &&
         is_pl2_present(get_pl3(address), address) &&
         is_pl1_present(get_pl2(address), address)) {
-        pl1 *level_one = get_pl1(address);
+        pl1_entry *level_one = get_pl1(address);
 
 
         if (free_physical_memory) {
-            physical_free(align_page(*level_one[pl1_index(address)]), 1);
+            physical_free(align_page(level_one[pl1_index(address)]), 1);
         }
-        *level_one[pl1_index(address)] = free_page_entry;
+        level_one[pl1_index(address)] = free_page_entry;
         invalidate_page(address);
     }
 }
