@@ -79,7 +79,6 @@ _service_interrupt:
 	pop rax
 
 	add rsp, 16
-	sti
 	iretq
 
 .macro interrupt number
