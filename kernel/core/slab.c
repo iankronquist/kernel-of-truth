@@ -136,3 +136,20 @@ void *slab_alloc(size_t bytes, enum memory_attributes page_attributes) {
 
     return virt;
 }
+
+
+void *slab_alloc_phys(phys_addr *phys, enum memory_attributes page_attributes) {
+    void *virt;
+    if (page_attributes & Memory_User_Access) {
+        lock_acquire_writer(&slab_lower_half_lock);
+        virt = slab_alloc_helper(Page_Small, phys, page_attributes,
+                                 &slab_lower_half);
+        lock_release_writer(&slab_lower_half_lock);
+    } else {
+        lock_acquire_writer(&slab_higher_half_lock);
+        virt = slab_alloc_helper(Page_Small, phys, page_attributes,
+                                 &slab_higher_half);
+        lock_release_writer(&slab_higher_half_lock);
+    }
+    return virt;
+}
