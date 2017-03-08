@@ -266,6 +266,7 @@ void page_table_fini(struct page_table *pt) {
 // FIXME: Implement COW
 struct page_table *page_table_clone(struct page_table *pt, phys_addr *new_phys) {
     struct page_table *pt_clone = slab_alloc_phys(new_phys, Memory_Writable | Memory_User_Access);
+    memcpy(&pt->entries[Page_Small / 2], current_page_table(), pl4_Count / 2);
     for (size_t i4 = 0; i4 < pl4_Count / 2; ++i4) {
         if (pt->entries[i4] & Memory_Present) {
 
