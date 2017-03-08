@@ -70,22 +70,36 @@ static struct page_table *current_page_table(void) {
 
 #define page_size (KB * 4)
 
+static pl3_entry *get_pl3_index(size_t pl4_index) {
+    return (pl3_entry *)(01777777777777770000000 | (pl4_index << 12));
+}
+
+static pl2_entry *get_pl2_index(size_t pl4_index, size_t pl3_index) {
+    return (pl2_entry *)(01777777777770000000000 |
+                   (pl4_index << 21) |
+                   (pl3_index << 12));
+}
+
+static pl1_entry *get_pl1_index(size_t pl4_index, size_t pl3_index,
+                          size_t pl2_index) {
+    return (pl1_entry *)(01777777770000000000000 |
+                   (pl4_index << 30) |
+                   (pl3_index << 21) |
+                   (pl2_index << 12));
+}
+
 static pl3_entry *get_pl3(void *address) {
-    return (pl3_entry *)(01777777777777770000000 | (pl4_index(address) << 12));
+    return get_pl3_index(pl4_index(address));
 }
 
 static pl2_entry *get_pl2(void *address) {
-    return (pl2_entry *)(01777777777770000000000 |
-                   (pl4_index(address) << 21) |
-                   (pl3_index(address) << 12));
+    return get_pl2_index(pl4_index(address), pl3_index(address));
 }
 
 static pl1_entry *get_pl1(void *address) {
-    return (pl1_entry *)(01777777770000000000000 |
-                   (pl4_index(address) << 30) |
-                   (pl3_index(address) << 21) |
-                   (pl2_index(address) << 12));
+    return get_pl1_index(pl4_index(address), pl3_index(address), pl2_index(address));
 }
+
 
 static inline bool is_pl3_present(struct page_table *page_table,
                                   void *address) {
