@@ -75,60 +75,73 @@ _start:
 
 	# Page Table (identity map the first 1 MiB, except NULL).
 	movl $(init_pl1_a + 8), %edi
-	movl $(0x1000 | Page_Present | Page_Write | Page_Execute_Disable), %esi
+	movl $(0x1000 | Page_Present | Page_Write), %esi
+	movl $Page_Execute_Disable_High, %edx
 	movl $0xff, %ecx
 1:
 	movl %esi, (%edi)
+	addl $4, %edi
+	movl %edx, (%edi)
 	addl $Page_Small, %esi
-	addl $8, %edi
+	addl $4, %edi
 	loop 1b
 
 
 	# Map kernel text section
-	andl $(Memory_Execute_Mask & Memory_Writable_Mask), %esi
+	andl $(Memory_Writable_Mask), %esi
+	movl $0, %edx
 	movl $__text_end, %ecx
 	subl $__text_start, %ecx
 	shrl $12, %ecx
 1:
 	movl %esi, (%edi)
+	addl $4, %edi
+	movl %edx, (%edi)
 	addl $Page_Small, %esi
-	addl $8, %edi
+	addl $4, %edi
 	loop 1b
 
 	# Map kernel data section
-	orl $(Memory_Writable | Memory_No_Execute), %esi
+	orl $(Memory_Writable), %esi
+	movl $Page_Execute_Disable_High, %edx
 	movl $__data_end, %ecx
 	subl $__data_start, %ecx
 	shrl $12, %ecx
 1:
 	movl %esi, (%edi)
+	addl $4, %edi
+	movl %edx, (%edi)
 	addl $Page_Small, %esi
-	addl $8, %edi
+	addl $4, %edi
 	loop 1b
 
 	# Map kernel rodata section
 	andl $(Memory_Writable_Mask), %esi
-	orl $(Memory_No_Execute), %esi
+	movl $Page_Execute_Disable_High, %edx
 	movl $__rodata_end, %ecx
 	subl $__rodata_start, %ecx
 	shrl $12, %ecx
 1:
 	movl %esi, (%edi)
+	addl $4, %edi
+	movl %edx, (%edi)
 	addl $Page_Small, %esi
-	addl $8, %edi
+	addl $4, %edi
 	loop 1b
 
 	# Map kernel bss section
-	orl $(Memory_Writable | Memory_No_Execute), %esi
+	orl $(Memory_Writable), %esi
+	movl $Page_Execute_Disable_High, %edx
 	movl $__bss_end, %ecx
 	subl $__bss_start, %ecx
 	shrl $12, %ecx
 1:
 	movl %esi, (%edi)
+	addl $4, %edi
+	movl %edx, (%edi)
 	addl $Page_Small, %esi
-	addl $8, %edi
+	addl $4, %edi
 	loop 1b
-
 
 	# Fractal mapping.
 	movl $(init_pl4 + (Page_Write | Page_Present)), init_pl4 + 511 * 8

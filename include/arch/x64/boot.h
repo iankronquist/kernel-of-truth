@@ -18,5 +18,6 @@
 #define Page_Write           (1 << 1)
 #define Page_User            (1 << 2)
 #define Page_Execute_Disable (1 << 63)
+#define Page_Execute_Disable_High (1 << 31)
 
 #define IA32_EFER_MSR 0xc0000080
