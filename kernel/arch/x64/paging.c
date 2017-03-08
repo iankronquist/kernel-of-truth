@@ -231,20 +231,20 @@ void page_table_fini(struct page_table *pt) {
         if (pt->entries[i4] & Memory_Present) {
             pl3_entry *level_three = get_pl3_index(i4);
             for (size_t i3 = 0; i3 < pl3_Count; ++i3) {
-                if ((uint64_t)level_three[i3] & Memory_Present) {
+                if (level_three[i3] & Memory_Present) {
                     pl2_entry *level_two = get_pl2_index(i4, i3);
                     for (size_t i2 = 0; i2 < pl2_Count; ++i2) {
-                        if ((uint64_t)level_two[i2] & Memory_Present) {
+                        if (level_two[i2] & Memory_Present) {
                             pl1_entry *level_one = get_pl1_index(i4, i3, i2);
                             for (size_t i1 = 0; i1 < pl1_Count; ++i1) {
-                                if ((uint64_t)level_one[i1] & Memory_Present) {
-                                    physical_free(page_entry_to_phys((uint64_t)level_one[i1]), 1);
+                                if (level_one[i1] & Memory_Present) {
+                                    physical_free(page_entry_to_phys(level_one[i1]), 1);
                                 }
                             }
-                            physical_free(page_entry_to_phys((uint64_t)level_two[i2]), 1);
+                            physical_free(page_entry_to_phys(level_two[i2]), 1);
                         }
                     }
-                    physical_free(page_entry_to_phys((uint64_t)level_three[i3]), 1);
+                    physical_free(page_entry_to_phys(level_three[i3]), 1);
                 }
             }
             physical_free(page_entry_to_phys(pt->entries[i4]), 1);
