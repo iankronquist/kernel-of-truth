@@ -44,6 +44,10 @@ phys_addr page_entry_to_phys(uint64_t entry) {
     return entry & Phys_Addr_Mask;
 }
 
+uint64_t page_entry_clone(phys_addr new_entry, uint64_t old_entry) {
+    return (old_entry & ~Phys_Addr_Mask) | new_entry;
+}
+
 static inline size_t pl4_index(void *address) {
     return (uintptr_t)address >> pl4_offset & pl4_mask;
 }
@@ -115,6 +119,13 @@ static inline bool is_pl1_present(pl2_entry *level_two, void *address) {
 
 static inline bool is_Memory_Present(pl1_entry *level_one, void *address) {
     return level_one[pl1_index(address)] & Memory_Present;
+}
+
+void *virt_from_indices(size_t i4, size_t i3, size_t i2, size_t i1) {
+    return (void *)((i4 << pl4_offset) |
+           (i3 << pl3_offset) |
+           (i2 << pl2_offset) |
+           (i1 << pl1_offset));
 }
 
 void debug_paging(void) {
@@ -225,7 +236,7 @@ struct page_table *page_table_init(void) {
     return pt;
 }
 
-
+// FIXME: This stinks.
 void page_table_fini(struct page_table *pt) {
     for (size_t i4 = 0; i4 < pl4_Count / 2; ++i4) {
         if (pt->entries[i4] & Memory_Present) {
@@ -250,4 +261,66 @@ void page_table_fini(struct page_table *pt) {
             physical_free(page_entry_to_phys(pt->entries[i4]), 1);
         }
     }
+}
+
+// FIXME: Implement COW
+struct page_table *page_table_clone(struct page_table *pt, phys_addr *new_phys) {
+    struct page_table *pt_clone = slab_alloc_phys(new_phys, Memory_Writable | Memory_User_Access);
+    for (size_t i4 = 0; i4 < pl4_Count / 2; ++i4) {
+        if (pt->entries[i4] & Memory_Present) {
+
+            phys_addr l3_clone_phys;
+            pl3_entry *level_three_clone = slab_alloc_phys(&l3_clone_phys, Memory_Writable | Memory_User_Access);
+            if (level_three_clone == NULL) {
+                page_table_fini(pt_clone);
+                return NULL;
+            }
+            pt_clone->entries[i4] = page_entry_clone(l3_clone_phys, pt->entries[i4]);
+            pl3_entry *level_three = get_pl3_index(i4);
+
+            for (size_t i3 = 0; i3 < pl3_Count; ++i3) {
+                if (level_three[i3] & Memory_Present) {
+
+                    phys_addr l2_clone_phys;
+                    pl2_entry *level_two_clone = slab_alloc_phys(&l2_clone_phys, Memory_Writable | Memory_User_Access);
+                    if (level_two_clone == NULL) {
+                        page_table_fini(pt_clone);
+                        return NULL;
+                    }
+
+                    level_three_clone[i3] = page_entry_clone(l2_clone_phys, level_three[i3]);
+                    pl2_entry *level_two = get_pl2_index(i4, i3);
+
+                    for (size_t i2 = 0; i2 < pl2_Count; ++i2) {
+                        if (level_two[i2] & Memory_Present) {
+
+                            phys_addr l1_clone_phys;
+                            pl1_entry *level_one_clone = slab_alloc_phys(&l1_clone_phys, Memory_Writable | Memory_User_Access);
+                            if (level_one_clone == NULL) {
+                                page_table_fini(pt_clone);
+                                return NULL;
+                            }
+                            level_two_clone[i2] = page_entry_clone(l1_clone_phys, level_two[i2]);
+                            pl1_entry *level_one = get_pl1_index(i4, i3, i2);
+
+                            for (size_t i1 = 0; i1 < pl1_Count; ++i1) {
+                                if (level_one[i1] & Memory_Present) {
+                                    phys_addr page_clone_phys;
+                                    uint64_t *page_clone = slab_alloc_phys(&page_clone_phys, Memory_Writable | Memory_User_Access);
+                                    if (page_clone == NULL) {
+                                        page_table_fini(pt_clone);
+                                        return NULL;
+                                    }
+                                    level_one_clone[i1] = page_entry_clone(page_clone_phys, level_one[i1]);
+                                    uint64_t *original_page = virt_from_indices(i4, i3, i2, i1);
+                                    memcpy(page_clone, original_page, Page_Small);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return pt_clone;
 }
