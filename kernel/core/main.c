@@ -6,6 +6,7 @@
 #include <truth/heap.h>
 #include <truth/memory.h>
 #include <truth/physical_allocator.h>
+#include <truth/timer.h>
 
 
 const char *Logo = "\n"
