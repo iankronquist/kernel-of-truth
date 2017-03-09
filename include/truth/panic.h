@@ -1,8 +1,9 @@
 #pragma once
 
 #include <truth/cpu.h>
-#include <truth/types.h>
+#include <truth/interrupts.h>
 #include <truth/log.h>
+#include <truth/types.h>
 
 #define Not_Reached false
 
@@ -24,6 +25,6 @@
     }
 
 static inline void panic() {
-    disable_interrupts();
+    interrupts_disable();
     halt();
 }
