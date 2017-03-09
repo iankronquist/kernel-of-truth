@@ -19,8 +19,6 @@ const char *Logo = "\n"
                    "\n"
                    "      The Kernel of Truth\n";
 
-uintptr_t ASLR_Offset;
-void *read_rip(void);
 
 void kernel_main(void *multiboot_tables) {
     assert_ok(log_init(Log_Warning, "log"));
