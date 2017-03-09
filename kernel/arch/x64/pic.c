@@ -18,6 +18,7 @@
 #define ICW4_8086_Mode 0x01
 
 #define PIC_All_IRQ_Mask 0xff
+#define PIC_No_IRQ_Mask 0x0
 
 
 void pic_end_of_interrupt(uint8_t interrupt_number) {
@@ -41,34 +42,40 @@ void pic_init(void) {
     write_port(ICW4_8086_Mode, PIC1_Data);
     write_port(ICW4_8086_Mode, PIC2_Data);
 
-    write_port(PIC_All_IRQ_Mask, PIC1_Data);
-    write_port(PIC_All_IRQ_Mask, PIC2_Data);
+    write_port(PIC_No_IRQ_Mask, PIC1_Data);
+    write_port(PIC_No_IRQ_Mask, PIC2_Data);
 }
 
 
-void pic_enable(uint8_t interrupt_number) {
-    uint8_t pic;
-    if (interrupt_number < 8) {
-        pic = PIC1_Data;
-    } else {
-        pic = PIC2_Data;
-        interrupt_number -= 8;
-    }
-    uint8_t interrupt_mask = read_port(pic);
-    interrupt_mask |= 1 << interrupt_number;
-    write_port(interrupt_mask, pic);
+void pic_fini(void) {
+    write_port(PIC_No_IRQ_Mask, PIC1_Data);
+    write_port(PIC_No_IRQ_Mask, PIC2_Data);
 }
 
 
-void pic_disable(uint8_t interrupt_number) {
+void pic_enable(uint8_t irq_number) {
     uint8_t pic;
-    if (interrupt_number < 8) {
+    if (irq_number < 8) {
         pic = PIC1_Data;
     } else {
         pic = PIC2_Data;
-        interrupt_number -= 8;
+        irq_number -= 8;
     }
-    uint8_t interrupt_mask = read_port(pic);
-    interrupt_mask &= ~(1 << interrupt_number);
-    write_port(interrupt_mask, pic);
+    uint8_t irq_mask = read_port(pic);
+    irq_mask |= 1 << irq_number;
+    write_port(irq_mask, pic);
+}
+
+
+void pic_disable(uint8_t irq_number) {
+    uint8_t pic;
+    if (irq_number < 8) {
+        pic = PIC1_Data;
+    } else {
+        pic = PIC2_Data;
+        irq_number -= 8;
+    }
+    uint8_t irq_mask = read_port(pic);
+    irq_mask &= ~(1 << irq_number);
+    write_port(irq_mask, pic);
 }

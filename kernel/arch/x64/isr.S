@@ -2,7 +2,7 @@
 
 .text
 
-.extern common_interrupt_handler
+.extern interrupts_dispatcher
 
 .global _service_interrupt
 .type _service_interrupt, @function
@@ -28,7 +28,7 @@ _service_interrupt:
 	mov fs, ax
 	mov gs, ax
 
-	call common_interrupt_handler
+	call interrupts_dispatcher
 
 	pop rax
 
