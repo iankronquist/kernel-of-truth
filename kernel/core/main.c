@@ -31,5 +31,6 @@ void kernel_main(void *multiboot_tables) {
     physical_allocator_init(multiboot_tables);
     slab_init();
     assert_ok(heap_init());
+    timer_init();
     halt();
 }
