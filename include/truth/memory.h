@@ -31,4 +31,6 @@ enum memory_attributes {
     Memory_User_Access   = (1ul << 2),
     Memory_No_Execute    = (1ul << 63),
 };
+
+void memory_init(void);
 #endif

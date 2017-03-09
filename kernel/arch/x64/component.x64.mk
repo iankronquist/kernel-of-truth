@@ -6,3 +6,4 @@ OBJ += idt.c
 OBJ += paging.c
 OBJ += paging.S
 OBJ += pic.c
+OBJ += memory.c

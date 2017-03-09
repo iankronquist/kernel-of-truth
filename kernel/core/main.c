@@ -4,7 +4,9 @@
 #include <truth/log.h>
 #include <truth/slab.h>
 #include <truth/heap.h>
+#include <truth/memory.h>
 #include <truth/physical_allocator.h>
+
 
 const char *Logo = "\n"
                    "            _.-.\n"
@@ -26,6 +28,7 @@ void kernel_main(void *multiboot_tables) {
     logf(Log_None, "\tVersion %d.%d.%d\n\tCommit %s\n\t%s\n\tCPU Time %ld\n",
          kernel_major, kernel_minor, kernel_patch, vcs_version,
          project_website, cpu_time());
+    memory_init();
     interrupts_init();
     physical_allocator_init(multiboot_tables);
     slab_init();

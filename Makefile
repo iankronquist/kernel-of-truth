@@ -25,7 +25,7 @@ GRUB_MKRESCUE := grub-mkrescue
 
 # Emulators & flags
 QEMU := qemu-system-x86_64
-QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/qemu-serial.txt
+QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/qemu-serial.txt -cpu Broadwell
 
 BOCHS := bochs
 
