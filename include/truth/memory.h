@@ -33,4 +33,6 @@ enum memory_attributes {
 };
 
 void memory_init(void);
+void memory_user_access_enable(void);
+void memory_user_access_disable(void);
 #endif

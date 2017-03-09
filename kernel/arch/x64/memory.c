@@ -21,3 +21,11 @@ void supervisor_memory_protection_init(void) {
 void memory_init(void) {
     supervisor_memory_protection_init();
 }
+
+void memory_user_access_enable(void) {
+    cpu_flags_set_ac();
+}
+
+void memory_user_access_disable(void) {
+    cpu_flags_clear_ac();
+}
