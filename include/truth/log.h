@@ -4,6 +4,7 @@
 
 enum log_level {
     Log_Debug,
+    Log_Info,
     Log_Warning,
     Log_Error,
     Log_None,
