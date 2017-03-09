@@ -4,6 +4,7 @@ OBJ += heap.c
 OBJ += lock.c
 OBJ += log.c
 OBJ += main.c
+OBJ += object.c
 OBJ += physical_allocator.c
 OBJ += region_vector.c
 OBJ += slab.c
