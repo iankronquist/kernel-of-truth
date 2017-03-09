@@ -76,7 +76,7 @@ enum status interrupt_register_handler(int interrupt_number, interrupt_handler_f
     lock_acquire_writer(&dispatch_table_lock);
     for (size_t i = 0; i < Interrupt_Handlers_Count; ++i) {
         if (Interrupt_Dispatch[interrupt_number][i] == NULL) {
-            Interrupt_Dispatch[interrupt_number][i] = function;
+            Interrupt_Dispatch[interrupt_number][i] = handler;
             status = Ok;
             goto out;
         }
@@ -92,7 +92,7 @@ enum status interrupt_unregister_handler(int interrupt_number, interrupt_handler
     enum status status;
     lock_acquire_writer(&dispatch_table_lock);
     for (size_t i = 0; i < Interrupt_Handlers_Count; ++i) {
-        if (Interrupt_Dispatch[interrupt_number][i] == function) {
+        if (Interrupt_Dispatch[interrupt_number][i] == handler) {
             Interrupt_Dispatch[interrupt_number][i] = NULL;
             status = Ok;
             goto out;
