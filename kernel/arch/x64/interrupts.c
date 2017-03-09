@@ -1,39 +1,55 @@
 #include <truth/interrupts.h>
-#include <arch/x86/idt.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/pic.h>
+#include <truth/lock.h>
+#include <truth/panic.h>
+#include <arch/x64/idt.h>
+#include <arch/x64/interrupts.h>
+#include <arch/x64/pic.h>
+#include <arch/x64/control_registers.h>
 
 #define Interrupt_Handlers_Count 10
 static struct lock dispatch_table_lock = Lock_Clear;
 
-static isr_f *Interrupt_Dispatch[IDT_Size][Interrupt_Handlers_Count] = {{0}};
+static interrupt_handler_f *Interrupt_Dispatch[IDT_Size][Interrupt_Handlers_Count] = {{0}};
 
 
-void interrupts_dispatcher(struct cpu_state r) {
+void interrupts_dispatcher(struct interrupt_cpu_state r) {
     assert(r.interrupt_number < IDT_Size);
-    if (Interrupt_Dispatch[r.interrupt_number] != NULL) {
-        Interrupt_Dispatch[r.interrupt_number](&r);
-    } else if (r.interrupt_number < 32) {
+    bool handled = false;
+    for (size_t i = 0; i < Interrupt_Handlers_Count; ++i) {
+        if (Interrupt_Dispatch[r.interrupt_number][i] != NULL) {
+            Interrupt_Dispatch[r.interrupt_number][i](&r);
+            handled = true;
+        }
+    }
+    if (r.interrupt_number < 32 && handled) {
         log(Log_Error, "Unhandled Exception Triggered!");
         logf(Log_Error,
              "\tds: %lx\n\t"
+             "r15: %lx\n\t"
+             "r14: %lx\n\t"
+             "r13: %lx\n\t"
+             "r12: %lx\n\t"
+             "r11: %lx\n\t"
+             "r10: %lx\n\t"
+             "r9: %lx\n\t"
+             "r8: %lx\n\t"
              "rdi: %lx\n\t"
              "rsi: %lx\n\t"
              "rbp: %lx\n\t"
-             "rsp: %lx\n\t"
-             "rbx: %lx\n\t"
              "rdx: %lx\n\t"
              "rcx: %lx\n\t"
+             "rbx: %lx\n\t"
              "rax: %lx\n\t"
              "interrupt_number: %lx\n\t"
              "err_code: %lx\n\t"
              "rip: %lx\n\t"
              "cs: %lx\n\t"
-             "eflags: %lx\n\t"
+             "rflags: %lx\n\t"
              "rsp: %lx\n\t"
              "ss: %lx\n\t"
              "cr2: %p\n",
-             r.ds, r.rdi, r.rsi, r.rbp, r.rsp, r.rbx, r.rdx, r.rcx, r.rax,
+             r.ds, r.r15, r.r14, r.r13, r.r12, r.r11, r.r10, r.r9, r.r8,
+             r.rdi, r.rsi, r.rbp, r.rdx, r.rcx, r.rbx, r.rax,
              r.interrupt_number, r.err_code, r.rip, r.cs, r.rflags, r.rsp,
              r.ss, read_cr2());
 
