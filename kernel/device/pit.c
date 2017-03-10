@@ -4,7 +4,7 @@
 #include <truth/interrupts.h>
 #include <truth/log.h>
 
-#define Timer_IRQ_Number 33
+#define Timer_IRQ_Number 0x20
 
 #define Timer_Magic_Number 1193180
 
@@ -27,6 +27,7 @@ void timer_set_phase(uint8_t hertz) {
     write_port(Timer_Command_Reg, RW_Oneshot_Square);
     write_port(Timer_Chan_0, divisor & 0xff);
     write_port(Timer_Chan_0, divisor >> 8);
+    pic_enable(Timer_IRQ_Number);
 }
 
 void timer_fini(void) {
