@@ -5,6 +5,7 @@ OBJ += isr.S
 OBJ += gdt.c
 OBJ += idt.c
 OBJ += interrupts.c
+OBJ += interrupts.S
 OBJ += paging.c
 OBJ += paging.S
 OBJ += pic.c
