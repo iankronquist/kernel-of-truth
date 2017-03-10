@@ -3,15 +3,12 @@
 #include <truth/panic.h>
 #include <truth/types.h>
 
-#include <arch/x64/control_registers.h>
+#include <arch/x64/idt.h>
 #include <arch/x64/isr.h>
 #include <arch/x64/segments.h>
 #include <arch/x64/pic.h>
 #include <arch/x64/port.h>
 
-#define IDT_Size 256
-
-extern void idt_load(struct idt_ptr *);
 
 static struct idt_entry {
     uint16_t base_low;
@@ -27,6 +24,8 @@ struct idt_ptr {
     uint16_t limit;
     uint32_t base;
 } pack;
+
+extern void idt_load(struct idt_ptr *);
 
 /* Set an entry in the idt.  */
 static void idt_set_gate(uint8_t num, uintptr_t base,
