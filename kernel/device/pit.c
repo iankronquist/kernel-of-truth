@@ -15,7 +15,7 @@
 #define RW_Oneshot_Square 0x36
 
 static void timer_interrupt_handler(struct interrupt_cpu_state *unused(r)) {
-    log(Log_Error, "tick");
+    log(Log_Info, "tick");
 }
 
 void timer_init(void) {
