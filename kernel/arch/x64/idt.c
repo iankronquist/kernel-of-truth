@@ -80,7 +80,6 @@ void idt_init(void) {
     idtp.limit = (sizeof(struct idt_entry) * IDT_Size) - 1;
     idtp.base = (uintptr_t)&IDT;
     idt_load(&idtp);
-    interrupts_enable();
 }
 
 void idt_fini(void) {

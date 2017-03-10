@@ -62,6 +62,7 @@ void interrupts_dispatcher(struct interrupt_cpu_state r) {
 void interrupts_init(void) {
     idt_init();
     pic_init();
+    interrupts_enable();
 }
 
 
