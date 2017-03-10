@@ -4,11 +4,15 @@
 #include <truth/string.h>
 #include <truth/types.h>
 
-#define tombstone ((void *)0x1)
-#define empty NULL
+enum hashdata_state {
+    Hashdata_Empty,
+    Hashdata_Tombstone,
+    Hashdata_Full,
+};
 
 struct hashdata {
-    void *key;
+    enum hashdata_state state;
+    union hashtable_key key;
     void *value;
 };
 
@@ -25,9 +29,10 @@ size_t hash_str(void *str) {
     return hash;
 }
 
-enum partial hash_str_comp(void *key_a, void *key_b) {
+enum partial hash_str_comp(union hashtable_key key_a,
+                           union hashtable_key key_b) {
     // Strings should not be longer than pages. That is nonsense.
-    if (strncmp(key_a, key_b, Page_Small) != Order_Equal) {
+    if (strncmp(key_a.ptr, key_b.ptr, Page_Small) != Order_Equal) {
         return Partial_Not_Equal;
     } else {
         return Partial_Equal;
@@ -56,9 +61,10 @@ void hashtable_destroy(struct hashtable *ht) {
     kfree(ht);
 }
 
-static struct hashdata *hashtable_seek(struct hashtable *ht, void *key) {
+static struct hashdata *hashtable_seek(struct hashtable *ht,
+                                       union hashtable_key key) {
     size_t hash = ht->hash(key) % ht->size;
-    if (ht->data[hash].key > tombstone &&
+    if (ht->data[hash].state == Hashdata_Full &&
         ht->comp(key, ht->data[hash].key) == Partial_Not_Equal) {
         return &ht->data[hash];
     }
@@ -66,9 +72,9 @@ static struct hashdata *hashtable_seek(struct hashtable *ht, void *key) {
     for (size_t s = (hash + 1) % ht->size; s != hash; s = (s + 1) % ht->size) {
         // If the item is empty, it would have been inserted here. Since it's
         // not here it's not in the hash table.
-        if (ht->data[s].key == empty) {
+        if (ht->data[s].state == Hashdata_Empty) {
             return NULL;
-        } else if (ht->data[s].key == tombstone) {
+        } else if (ht->data[s].state == Hashdata_Tombstone) {
             continue;
         } else if (ht->comp(key, ht->data[s].key)) {
             return &ht->data[s];
@@ -79,16 +85,18 @@ static struct hashdata *hashtable_seek(struct hashtable *ht, void *key) {
     return NULL;
 }
 
-static struct hashdata *hashtable_seek_empty(struct hashtable *ht, void *key) {
+static struct hashdata *hashtable_seek_empty(struct hashtable *ht,
+                                             union hashtable_key key) {
     size_t hash = ht->hash(key) % ht->size;
-    if (ht->data[hash].key == empty) {
+    if (ht->data[hash].state == Hashdata_Empty) {
         return &ht->data[hash];
     }
     // There was a collision, probe the hash table.
     for (size_t s = (hash + 1) % ht->size; s != hash; s = (s + 1) % ht->size) {
         // If the item is empty, it would have been inserted here. Since it's
         // not here it's not in the hash table.
-        if (ht->data[s].key == empty) {
+        if (ht->data[s].state == Hashdata_Empty) {
+            ht->data[s].state = Hashdata_Full;
             return &ht->data[s];
         }
     }
@@ -125,7 +133,8 @@ static enum status checked hashtable_rebalance(struct hashtable *ht,
     }
     memset(new.data, 0, new.size * sizeof(struct hashdata));
     for (size_t s = 0; s < ht->size; ++s) {
-        if (ht->data[s].key != empty && ht->data[s].key !=  tombstone) {
+        if (ht->data[s].state != Hashdata_Empty && ht->data[s].state !=
+                Hashdata_Tombstone) {
             bubble(hashtable_put(&new, ht->data[s].key, ht->data[s].value),
                    "Rebuilding hashtable");
         }
@@ -139,9 +148,10 @@ static enum status checked hashtable_rebalance(struct hashtable *ht,
     return Ok;
 }
 
-enum status checked hashtable_remove(struct hashtable *ht, void *key) {
+enum status checked hashtable_remove(struct hashtable *ht,
+                                     union hashtable_key key) {
     struct hashdata *hd = hashtable_seek(ht, key);
-    hd->key = tombstone;
+    hd->state = Hashdata_Tombstone;
     ht->used -= 1;
     if (should_shrink(ht->size, ht->used)) {
         return hashtable_rebalance(ht, ht->size / 2);
@@ -149,7 +159,7 @@ enum status checked hashtable_remove(struct hashtable *ht, void *key) {
     return Ok;
 }
 
-void *hashtable_get(struct hashtable *ht, void *key) {
+void *hashtable_get(struct hashtable *ht, union hashtable_key key) {
     struct hashdata *hd = hashtable_seek(ht, key);
     if (hd != NULL) {
         return hd->value;
@@ -158,8 +168,8 @@ void *hashtable_get(struct hashtable *ht, void *key) {
     }
 }
 
-enum status checked hashtable_put(struct hashtable *ht, void *key,
-                                  void *value) {
+enum status checked hashtable_put(struct hashtable *ht,
+                                  union hashtable_key key, void *value) {
     struct hashdata *hd = hashtable_seek_empty(ht, key);
     hd->key = key;
     hd->value = value;
