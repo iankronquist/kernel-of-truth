@@ -135,7 +135,6 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
                              enum memory_attributes permissions) {
 
     pl4_entry *pl4 = get_pl4();
-    logf(Log_Debug, "Mapping: %p -> %lx\n", virtual_address, phys_address);
     if (!is_pl3_present(pl4, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
         pl4[pl4_index(virtual_address)] =
@@ -172,9 +171,6 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     level_one[pl1_index(virtual_address)] =
         (phys_address | permissions | Memory_Present);
     invalidate_tlb();
-
-    int *test = virtual_address;
-    logf(Log_Debug, "Testing: %x\n", test[0]);
 
     return Ok;
 }
