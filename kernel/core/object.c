@@ -11,7 +11,7 @@ void object_retain(struct object *obj) {
 void object_release(struct object *obj) {
     assert(obj != NULL);
     if (atomic_fetch_sub_explicit(&obj->ref_count, 1, memory_order_release) ==
-            0 && obj->free == NULL) {
+            1 && obj->free == NULL) {
         obj->free(obj);
     }
 }
