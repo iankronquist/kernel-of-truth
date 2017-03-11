@@ -32,7 +32,7 @@ struct hashtable {
 };
 
 // Hash a string.
-size_t hash_str(void *str);
+size_t hash_str(union hashtable_key str);
 
 // Compare two strings.
 enum partial hash_str_comp(union hashtable_key key_a,

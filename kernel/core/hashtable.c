@@ -20,8 +20,8 @@ struct hashdata {
 
 // http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.40.1573&rep=rep1&type=pdf
 // Performance and Practice of String Hashing Functions
-size_t hash_str(void *str) {
-    char *cstr = str;
+size_t hash_str(union hashtable_key str) {
+    char *cstr = str.ptr;
     size_t hash = negative_golden_ratio;
     for (size_t i = 0; cstr[i] != '\0'; ++i) {
         hash ^= cstr[i] + (hash << 5) + (hash >> 2);
