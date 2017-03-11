@@ -88,7 +88,6 @@ void *kcalloc(size_t count, size_t size) {
 
 void kfree(void *address) {
     union address addr;
-    addr.virtual = address;
     addr.virtual = address - Heap_Red_Zone_Size;
     size_t size = region_find_size_and_free(heap_metadata_used, addr);
     unsigned long *redzone_prefix = addr.virtual;
