@@ -10,5 +10,6 @@ OBJ += region_vector.c
 OBJ += slab.c
 OBJ += sorted_list.c
 OBJ += string.c
+OBJ += scheduler.c
 # FIXME: Only include in debug builds.
-OBJ += ubsan.c
+#OBJ += ubsan.c

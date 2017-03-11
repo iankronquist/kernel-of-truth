@@ -9,4 +9,6 @@ OBJ += interrupts.S
 OBJ += paging.c
 OBJ += paging.S
 OBJ += pic.c
+OBJ += process.c
+OBJ += process.S
 OBJ += memory.c

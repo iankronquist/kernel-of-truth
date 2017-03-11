@@ -3,6 +3,7 @@
 #include <arch/x64/port.h>
 #include <truth/interrupts.h>
 #include <truth/log.h>
+#include <truth/scheduler.h>
 
 #define Timer_IRQ_Number 0x20
 
@@ -15,7 +16,8 @@
 #define RW_Oneshot_Square 0x36
 
 static void timer_interrupt_handler(struct interrupt_cpu_state *unused(r)) {
-    log(Log_Info, "tick");
+    log(Log_Error, "tick");
+    scheduler_yield();
 }
 
 void timer_init(void) {
