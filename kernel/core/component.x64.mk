@@ -1,5 +1,5 @@
 OBJ += file.c
-#OBJ += hashtable.c
+OBJ += hashtable.c
 OBJ += heap.c
 OBJ += lock.c
 OBJ += log.c
