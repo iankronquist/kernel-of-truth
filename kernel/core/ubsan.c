@@ -26,6 +26,20 @@ struct out_of_bounds_info {
     struct type_descriptor right_type;
 };
 
+const char *Type_Check_Kinds[] = {
+    "load of",
+    "store to",
+    "reference binding to",
+    "member access within",
+    "member call on",
+    "constructor call on",
+    "downcast of",
+    "downcast of",
+    "upcast of",
+    "cast to virtual base of",
+};
+
+
 static inline void log_location(struct source_location *location) {
     logf(Log_Error, "\tfile: %s\n\tline: %i\n\tcolumn: %i\n",
          location->file, location->line, location->column);
@@ -46,8 +60,11 @@ void __ubsan_handle_type_mismatch(struct type_mismatch_info *type_mismatch,
                is_aligned(pointer, type_mismatch->alignment)) {
         log(Log_Error, "Unaligned memory access");
     } else {
-        log(Log_Error, "Type mismatch");
-        logf(Log_Error, "Type: %s\n", type_mismatch->type->name);
+        log(Log_Error, "Insufficient size");
+        logf(Log_Error,
+             "%s address %p with insufficient space for object of type %s\n",
+             Type_Check_Kinds[type_mismatch->type_check_kind], (void *)pointer,
+             type_mismatch->type->name);
     }
     log_location(location);
     panic();
