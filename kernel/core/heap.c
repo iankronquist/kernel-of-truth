@@ -87,11 +87,15 @@ void *kcalloc(size_t count, size_t size) {
 }
 
 void kfree(void *address) {
+    if (address == NULL) {
+        return;
+    }
     union address addr;
     addr.virtual = address - Heap_Red_Zone_Size;
     size_t size = region_find_size_and_free(heap_metadata_used, addr);
     unsigned long *redzone_prefix = addr.virtual;
     unsigned long *redzone_suffix = addr.virtual + size - Heap_Red_Zone_Fill;
+    logf(Log_Debug, "%lx %lx %lx\n", *redzone_prefix, *redzone_suffix, *(unsigned long *)addr.virtual);
     assert(*redzone_prefix == Heap_Red_Zone_Fill);
     assert(*redzone_suffix == Heap_Red_Zone_Fill);
     assert(addr.bytes >= heap);
