@@ -18,3 +18,4 @@ struct object {
 void object_retain(struct object *obj);
 void object_release(struct object *obj);
 void object_set_free(struct object *obj, object_free_f free_func);
+void object_clear(struct object *obj, object_free_f free_func);
