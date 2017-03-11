@@ -37,10 +37,11 @@ enum status checked heap_init(void) {
 
     region_vector_init(heap_metadata_used);
     region_vector_init(heap_metadata_free);
+    region_free(heap_metadata_free, (union address)heap, Heap_Size);
 
-    memset(heap, (int)Heap_Red_Zone_Fill, Page_Small);
+    memset(heap, (int)Heap_Red_Zone_Fill, Heap_Size);
 
-    logf(Log_Info, "Heap rooted at %p with size 0x%x\n", heap, Heap_Size);
+    logf(Log_Info, "Heap rooted at 0x%p with size 0x%x\n", heap, Heap_Size);
     return Ok;
 }
 
