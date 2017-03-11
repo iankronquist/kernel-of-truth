@@ -1,5 +1,6 @@
 #include <arch/x64/control_registers.h>
 #include <arch/x64/paging.h>
+#include <truth/heap.h>
 #include <truth/log.h>
 #include <truth/physical_allocator.h>
 #include <truth/panic.h>
@@ -36,9 +37,6 @@ typedef uint64_t pl3_entry;
 typedef uint64_t pl2_entry;
 typedef uint64_t pl1_entry;
 
-struct page_table {
-    pl4_entry entries[pl4_Count];
-};
 
 phys_addr page_entry_to_phys(uint64_t entry) {
     return entry & Phys_Addr_Mask;
@@ -64,15 +62,9 @@ static inline size_t pl1_index(void *address) {
     return ((uintptr_t)address >> pl1_offset) & pl1_mask;
 }
 
-static inline phys_addr table_phys_address(struct page_table *page_table) {
-    return (phys_addr)(uintptr_t)page_table;
+static pl4_entry *get_pl4(void) {
+    return (pl4_entry *)01777777777777777770000;
 }
-
-static struct page_table *current_page_table(void) {
-    return (struct page_table *)01777777777777777770000;
-}
-
-#define page_size (KB * 4)
 
 static pl3_entry *get_pl3_index(size_t pl4_index) {
     return (pl3_entry *)(01777777777777770000000 | (pl4_index << 12));
@@ -104,9 +96,9 @@ static pl1_entry *get_pl1(void *address) {
     return get_pl1_index(pl4_index(address), pl3_index(address), pl2_index(address));
 }
 
-static inline bool is_pl3_present(struct page_table *page_table,
+static inline bool is_pl3_present(pl4_entry *pl4,
                                   void *address) {
-    return (page_table->entries[pl4_index(address)] & Memory_Present) == 1;
+    return (pl4[pl4_index(address)] & Memory_Present) == 1;
 }
 
 static inline bool is_pl2_present(pl3_entry *level_three, void *address) {
@@ -129,24 +121,24 @@ void *virt_from_indices(size_t i4, size_t i3, size_t i2, size_t i1) {
 }
 
 void debug_paging(void) {
-    struct page_table *page_table = current_page_table();
+    pl4_entry *pl4 = get_pl4();
     for (size_t i = 0; i < pl4_Count; ++i) {
-        if (page_table->entries[i] * Memory_Present) {
-            logf(Log_Debug, "%zu has %lx\n", i, page_table->entries[i]);
+        if (pl4[i] * Memory_Present) {
+            logf(Log_Debug, "%zu has %lx\n", i, pl4[i]);
         }
     }
-    logf(Log_Debug, "kernel start: %p\n", &__kernel_start);
-    logf(Log_Debug, "kernel end: %p\n", &__kernel_end);
+    logf(Log_Debug, "kernel start: %p\n", Kernel_Virtual_Start);
+    logf(Log_Debug, "kernel end: %p\n", Kernel_Virtual_End);
 }
 
 enum status checked map_page(void *virtual_address, phys_addr phys_address,
                              enum memory_attributes permissions) {
 
-    struct page_table *page_table = current_page_table();
+    pl4_entry *pl4 = get_pl4();
     logf(Log_Debug, "Mapping: %p -> %lx\n", virtual_address, phys_address);
-    if (!is_pl3_present(page_table, virtual_address)) {
+    if (!is_pl3_present(pl4, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
-        page_table->entries[pl4_index(virtual_address)] =
+        pl4[pl4_index(virtual_address)] =
             (phys_address | permissions | Memory_User_Access |
              Memory_Present);
         invalidate_tlb();
@@ -188,8 +180,8 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
 }
 
 void unmap_page(void *address, bool free_physical_memory) {
-    struct page_table *page_table = current_page_table();
-    if (is_pl3_present(page_table, address) &&
+    pl4_entry *pl4 = get_pl4();
+    if (is_pl3_present(pl4, address) &&
         is_pl2_present(get_pl3(address), address) &&
         is_pl1_present(get_pl2(address), address)) {
         pl1_entry *level_one = get_pl1(address);
@@ -207,7 +199,7 @@ enum status map_external_page(struct page_table *page_table,
                               void *virtual_address, phys_addr phys_address,
                               enum memory_attributes permissions) {
     phys_addr original_paging = read_cr3();
-    write_cr3(table_phys_address(page_table));
+    write_cr3(page_table->physical_address);
     enum status status = map_page(virtual_address, phys_address, permissions);
     write_cr3(original_paging);
     return status;
@@ -216,30 +208,54 @@ enum status map_external_page(struct page_table *page_table,
 void unmap_external_page(struct page_table *page_table, void *virtual_address,
                          bool free_physical_memory) {
     phys_addr original_paging = read_cr3();
-    write_cr3(table_phys_address(page_table));
+    write_cr3(page_table->physical_address);
     unmap_page(virtual_address, free_physical_memory);
     write_cr3(original_paging);
 }
 
-void switch_page_table(struct page_table *page_table) {
-    write_cr3(table_phys_address(page_table));
+void page_table_switch(phys_addr physical_address) {
+    write_cr3(physical_address);
+}
+
+enum status paging_init(void) {
+    pl4_entry *pl4 = get_pl4();
+    for (size_t i = pl4_Count / 2; i < pl4_Count; ++i) {
+        if (!(pl4[i] & Memory_Present)) {
+            phys_addr new_phys;
+            void *virt = slab_alloc_phys(&new_phys, Memory_Writable);
+            if (virt == NULL) {
+                return Error_No_Memory;
+            }
+            memset(virt, 0, Page_Small);
+            slab_free_virt(Page_Small, virt);
+            pl4[i] = new_phys | Memory_Present | Memory_Writable;
+            invalidate_tlb();
+        }
+    }
+    return Ok;
 }
 
 struct page_table *page_table_init(void) {
-    phys_addr pt_phys;
-    struct page_table *pt = slab_alloc_phys(&pt_phys, Memory_Writable);
-    if (pt == NULL) {
+    struct page_table *pt = kmalloc(sizeof(struct page_table));
+    pl4_entry *pl4 = slab_alloc_phys(&pt->physical_address,
+            Memory_Writable);
+    if (pl4 == NULL) {
         return NULL;
     }
-    memset(pt->entries, 0, pl4_Count / 2);
-    memcpy(&pt->entries[Page_Small / 2], current_page_table(), pl4_Count / 2);
+    memset(pl4, 0, pl4_Count / 2);
+    memcpy(&pl4[Page_Small / 2], get_pl4(), pl4_Count / 2);
+    slab_free_virt(Page_Small, pl4);
     return pt;
 }
 
-// FIXME: This stinks.
+// Don't bother freeing virtual addresses -- the address space is going away
+// too.
 void page_table_fini(struct page_table *pt) {
+    phys_addr original_pt = read_cr3();
+    page_table_switch(pt->physical_address);
     for (size_t i4 = 0; i4 < pl4_Count / 2; ++i4) {
-        if (pt->entries[i4] & Memory_Present) {
+        pl4_entry *level_four = get_pl4();
+        if (level_four[i4] & Memory_Present) {
             pl3_entry *level_three = get_pl3_index(i4);
             for (size_t i3 = 0; i3 < pl3_Count; ++i3) {
                 if (level_three[i3] & Memory_Present) {
@@ -258,25 +274,43 @@ void page_table_fini(struct page_table *pt) {
                     physical_free(page_entry_to_phys(level_three[i3]), 1);
                 }
             }
-            physical_free(page_entry_to_phys(pt->entries[i4]), 1);
+            physical_free(page_entry_to_phys(level_four[i4]), 1);
         }
     }
+    page_table_switch(original_pt);
+    physical_free(pt->physical_address, 1);
+    kfree(pt);
 }
+
 
 // FIXME: Implement COW
 struct page_table *page_table_clone(struct page_table *pt, phys_addr *new_phys) {
-    struct page_table *pt_clone = slab_alloc_phys(new_phys, Memory_Writable | Memory_User_Access);
-    memcpy(&pt->entries[Page_Small / 2], current_page_table(), pl4_Count / 2);
+    pl4_entry *level_four_clone = NULL;
+    pl3_entry *level_three_clone = NULL;
+    pl2_entry *level_two_clone = NULL;
+    pl1_entry *level_one_clone = NULL;
+    uint64_t *original_page;
+    phys_addr original_phys = read_cr3();
+    page_table_switch(pt->physical_address);
+    struct page_table *pt_clone = kmalloc(sizeof(struct page_table));
+    if (pt_clone == NULL) {
+        goto err;
+    }
+    level_four_clone = slab_alloc_phys(new_phys, Memory_Writable | Memory_User_Access);
+    if (level_four_clone == NULL) {
+        goto err;
+    }
+    pl4_entry *level_four = get_pl4();
+    memcpy(&level_four_clone[Page_Small / 2], get_pl4(), pl4_Count / 2);
     for (size_t i4 = 0; i4 < pl4_Count / 2; ++i4) {
-        if (pt->entries[i4] & Memory_Present) {
+        if (level_four_clone[i4] & Memory_Present) {
 
             phys_addr l3_clone_phys;
             pl3_entry *level_three_clone = slab_alloc_phys(&l3_clone_phys, Memory_Writable | Memory_User_Access);
             if (level_three_clone == NULL) {
-                page_table_fini(pt_clone);
-                return NULL;
+                goto err;
             }
-            pt_clone->entries[i4] = page_entry_clone(l3_clone_phys, pt->entries[i4]);
+            level_four_clone[i4] = page_entry_clone(l3_clone_phys, level_four[i4]);
             pl3_entry *level_three = get_pl3_index(i4);
 
             for (size_t i3 = 0; i3 < pl3_Count; ++i3) {
@@ -285,8 +319,7 @@ struct page_table *page_table_clone(struct page_table *pt, phys_addr *new_phys) 
                     phys_addr l2_clone_phys;
                     pl2_entry *level_two_clone = slab_alloc_phys(&l2_clone_phys, Memory_Writable | Memory_User_Access);
                     if (level_two_clone == NULL) {
-                        page_table_fini(pt_clone);
-                        return NULL;
+                        goto err;
                     }
 
                     level_three_clone[i3] = page_entry_clone(l2_clone_phys, level_three[i3]);
@@ -298,8 +331,7 @@ struct page_table *page_table_clone(struct page_table *pt, phys_addr *new_phys) 
                             phys_addr l1_clone_phys;
                             pl1_entry *level_one_clone = slab_alloc_phys(&l1_clone_phys, Memory_Writable | Memory_User_Access);
                             if (level_one_clone == NULL) {
-                                page_table_fini(pt_clone);
-                                return NULL;
+                                goto err;
                             }
                             level_two_clone[i2] = page_entry_clone(l1_clone_phys, level_two[i2]);
                             pl1_entry *level_one = get_pl1_index(i4, i3, i2);
@@ -309,19 +341,39 @@ struct page_table *page_table_clone(struct page_table *pt, phys_addr *new_phys) 
                                     phys_addr page_clone_phys;
                                     uint64_t *page_clone = slab_alloc_phys(&page_clone_phys, Memory_Writable | Memory_User_Access);
                                     if (page_clone == NULL) {
-                                        page_table_fini(pt_clone);
-                                        return NULL;
+                                        goto err;
                                     }
                                     level_one_clone[i1] = page_entry_clone(page_clone_phys, level_one[i1]);
-                                    uint64_t *original_page = virt_from_indices(i4, i3, i2, i1);
+                                    original_page = virt_from_indices(i4, i3, i2, i1);
                                     memcpy(page_clone, original_page, Page_Small);
+                                    slab_free_virt(Page_Small, page_clone);
+                                    original_page = NULL;
                                 }
                             }
+                            slab_free_virt(Page_Small, level_one_clone);
+                            level_two_clone = NULL;
                         }
                     }
+                    slab_free_virt(Page_Small, level_two_clone);
+                    level_two_clone = NULL;
                 }
             }
+            slab_free_virt(Page_Small, level_three_clone);
+            level_three_clone = NULL;
         }
     }
+    slab_free_virt(Page_Small, level_four_clone);
+    page_table_switch(original_phys);
     return pt_clone;
+
+err:
+    page_table_switch(original_phys);
+    page_table_fini(pt_clone);
+
+    slab_free_virt(Page_Small, level_four_clone);
+    slab_free_virt(Page_Small, level_three_clone);
+    slab_free_virt(Page_Small, level_two_clone);
+    slab_free_virt(Page_Small, level_one_clone);
+
+    return NULL;
 }
