@@ -37,6 +37,25 @@ void region_vector_init(struct region_vector *vect) {
     vect->regions_used = 0;
 }
 
+void region_vector_fini(struct region_vector *vect) {
+    struct region_vector *prev = vect;
+    while (vect != NULL) {
+        vect = prev->next;
+        slab_free(Page_Small, prev);
+    }
+}
+
+struct region_vector *region_vector_new(union address addr, size_t size) {
+    struct region_vector *vect = slab_alloc(Page_Small, Memory_Writable);
+    if (vect == NULL) {
+        return NULL;
+    }
+
+    region_vector_init(vect);
+    region_free(vect, addr, size);
+    return vect;
+}
+
 enum status checked region_alloc(struct region_vector *vect, size_t size,
                                  union address *out) {
     do {
@@ -112,6 +131,7 @@ void region_free(struct region_vector *vect, union address address,
         cur = cur->next;
     } while (cur != NULL);
     struct region_vector *new = extend_vector();
+    logf(Log_Debug,"Region vector extended %p\n", new);
     assert(new != NULL);
     prev->next = new;
     new->regions_used = 1;
