@@ -208,6 +208,13 @@ halt:
 	hlt
 	jmp halt
 
+.global cpu_sleep_state
+.type cpu_sleep_state, @function
+cpu_sleep_state:
+	hlt
+    ret
+
+
 .global cpu_time
 .type cpu_time, @function
 cpu_time:
