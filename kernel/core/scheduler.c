@@ -49,6 +49,20 @@ void scheduler_yield(void) {
 }
 
 
+struct process *scheduler_get_current_process(void) {
+    struct process *process;
+    lock_acquire_reader(&Current_Thread_Lock);
+    if (Current_Thread != NULL) {
+        process = Current_Thread->process;
+        object_retain(&process->obj);
+    } else {
+        process = NULL;
+    }
+    lock_release_reader(&Current_Thread_Lock);
+    return process;
+}
+
+
 struct thread *scheduler_get_current_thread(void) {
     lock_acquire_reader(&Current_Thread_Lock);
     struct thread *thread = Current_Thread;
