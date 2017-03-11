@@ -49,7 +49,6 @@ void *kmalloc(size_t bytes) {
     union address address;
     size_t allocation_size = bytes + 2 * Heap_Red_Zone_Size;
 
-    debug_region_vector(heap_metadata_free);
     enum status status = region_alloc(heap_metadata_free,
                                       allocation_size, &address);
     if (status != Ok) {
@@ -58,7 +57,7 @@ void *kmalloc(size_t bytes) {
     region_free(heap_metadata_used, address, allocation_size);
 
     for (size_t i = 0; i < allocation_size / sizeof(Heap_Red_Zone_Fill); ++i) {
-        assert(address.bytes[i] == Heap_Red_Zone_Fill);
+        assert(address.ulong[i] == Heap_Red_Zone_Fill);
     }
 
     assert(address.bytes < heap + Heap_Size);
