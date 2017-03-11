@@ -15,6 +15,12 @@ struct region_vector *heap_metadata_used;
 struct region_vector *heap_metadata_free;
 uint8_t *heap = NULL;
 
+size_t Used;
+
+size_t heap_get_usage(void) {
+    return Used;
+}
+
 enum status checked heap_init(void) {
     heap_metadata_used = slab_alloc(Page_Small, Memory_Writable);
     if (heap_metadata_used == NULL) {
@@ -64,6 +70,7 @@ void *kmalloc(size_t bytes) {
     assert(address.bytes >= heap);
     assert(address.bytes + bytes > heap);
     assert(address.bytes + bytes <= heap + Heap_Size);
+    Used += allocation_size;
     return address.bytes + Heap_Red_Zone_Size;
 }
 
@@ -104,5 +111,6 @@ void kfree(void *address) {
     assert(addr.bytes + size <= heap + Heap_Size);
 
     memset(heap, (int)Heap_Red_Zone_Fill, Page_Small);
+    Used -= size;
     region_free(heap_metadata_free, addr, size);
 }

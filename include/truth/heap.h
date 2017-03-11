@@ -7,3 +7,4 @@ void *krealloc(void *ptr, size_t bytes);
 void *kcalloc(size_t count, size_t size);
 void kfree(void *address);
 enum status checked heap_init(void);
+size_t heap_get_usage(void);
