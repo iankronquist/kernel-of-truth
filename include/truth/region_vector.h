@@ -4,6 +4,7 @@
 
 union address {
     uint8_t *bytes;
+    unsigned long *ulong;
     void *virtual;
     phys_addr physical;
 };
