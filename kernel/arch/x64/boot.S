@@ -197,10 +197,6 @@ long_mode:
 	movw %cx, %fs
 	movw %cx, %gs
 
-#l:
-#	hlt
-#	pause
-#	jmp l
 	movq $Higher_Half_High, %rcx
 	shlq $32, %rcx
 	orq %rcx, %rsp
