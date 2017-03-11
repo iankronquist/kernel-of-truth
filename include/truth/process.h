@@ -42,7 +42,7 @@ struct process {
     struct process *parent;
     struct thread **threads;
     struct page_table *page_table;
-    struct region_allocator *address_space;
+    struct region_vector *address_space;
     struct object obj;
 };
 
