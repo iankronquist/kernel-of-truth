@@ -35,6 +35,7 @@ init_physical_allocator_vector:
 	.skip Page_Small
 init_stack:
 	.skip (16 * KB)
+.global _init_stack_top
 _init_stack_top:
 
 .section .text
