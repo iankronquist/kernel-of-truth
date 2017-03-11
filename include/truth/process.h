@@ -16,13 +16,14 @@ enum thread_state {
 
 
 struct thread {
+    bool user_space;
     unsigned int id;
     int exit_code;
     enum thread_state state;
     size_t user_stack_size;
     size_t kernel_stack_size;
     uint64_t *user_stack;
-    uint64_t *user_stack_pointer;
+    uint64_t *current_stack_pointer;
     uint64_t *kernel_stack;
     struct thread *next;
     struct thread *prev;
