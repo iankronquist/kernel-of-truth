@@ -40,7 +40,7 @@ struct process {
     size_t child_capacity;
     struct process *children;
     struct process *parent;
-    struct thread *threads;
+    struct thread **threads;
     struct page_table *page_table;
     struct region_allocator *address_space;
     struct object obj;
