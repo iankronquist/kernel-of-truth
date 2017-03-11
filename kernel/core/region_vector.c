@@ -84,7 +84,7 @@ enum status checked region_alloc(struct region_vector *vect, size_t size,
 
 static struct region_vector *extend_vector(void) {
     struct region_vector *new = slab_alloc_locked(Page_Small,
-                                           Memory_No_Attributes);
+                                           Memory_Writable);
     if (new == NULL) {
         return NULL;
     }
