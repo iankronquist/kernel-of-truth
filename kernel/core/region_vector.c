@@ -24,6 +24,7 @@ struct region_vector {
 
 void debug_region_vector(struct region_vector *cur) {
     do {
+        logf(Log_Debug, "Region used %ld regions count %ld\n", cur->regions_used, regions_count);
         for (size_t i = 0; i < cur->regions_used && i < regions_count; ++i) {
             logf(Log_Debug, "Region starts at %p and has size %zu\n",
                  cur->regions[i].address.virtual, cur->regions[i].size);
