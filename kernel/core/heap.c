@@ -29,7 +29,6 @@ enum status checked heap_init(void) {
         return Error_No_Memory;
     }
     heap = slab_alloc(Heap_Size, Memory_Writable | Memory_No_Execute);
-    logf(Log_Info, "Heap rooted at %p with size 0x%x\n", heap, Heap_Size);
     if (heap == NULL) {
         slab_free(Page_Small, heap_metadata_used);
         slab_free(Page_Small, heap_metadata_free);
@@ -44,6 +43,7 @@ enum status checked heap_init(void) {
     heap_address.virtual = heap;
     region_free(heap_metadata_free, heap_address, Heap_Size);
     memset(heap, (int)Heap_Red_Zone_Fill, Page_Small);
+    logf(Log_Info, "Heap rooted at %p with size 0x%x\n", heap, Heap_Size);
     return Ok;
 }
 
