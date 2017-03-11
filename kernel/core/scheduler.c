@@ -39,7 +39,7 @@ void scheduler_yield(void) {
     } else if (Current_Thread != Current_Thread->next) {
         logf(Log_Debug, "Switching from process %d:%d to %d:%d\n",
             Current_Thread->process->id, Current_Thread->id,
-            Current_Thread->next->id, Current_Thread->next->process->id);
+            Current_Thread->next->process->id, Current_Thread->next->id);
         lock_acquire_writer(&Current_Thread_Lock);
         struct thread *prev = Current_Thread;
         Current_Thread = Current_Thread->next;
@@ -73,6 +73,7 @@ struct thread *scheduler_get_current_thread(void) {
 
 
 void scheduler_add_thread(struct thread *thread) {
+    logf(Log_Debug, "Scheduling thread %p\n", thread);
     assert(thread != NULL);
     lock_acquire_writer(&Current_Thread_Lock);
     if (Current_Thread != NULL) {
