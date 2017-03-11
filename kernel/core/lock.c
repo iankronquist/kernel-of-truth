@@ -1,6 +1,11 @@
 #include <truth/panic.h>
 #include <truth/lock.h>
 
+void lock_clear(struct lock *lock) {
+    lock->writer = ATOMIC_BOOL_LOCK_FREE;
+    lock->readers = ATOMIC_INT_LOCK_FREE;
+}
+
 void lock_acquire_reader(struct lock *lock) {
     atomic_bool expected = false;
     while (!atomic_compare_exchange_weak(&lock->writer, &expected, true));

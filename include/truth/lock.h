@@ -7,6 +7,8 @@ struct lock {
     atomic_bool writer;
 };
 
+void lock_clear(struct lock *lock);
+
 void lock_acquire_reader(struct lock *lock);
 void lock_release_reader(struct lock *lock);
 
