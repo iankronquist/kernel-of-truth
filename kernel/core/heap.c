@@ -16,7 +16,6 @@ struct region_vector *heap_metadata_free;
 uint8_t *heap = NULL;
 
 enum status checked heap_init(void) {
-    union address heap_address;
     heap_metadata_used = slab_alloc(Page_Small, Memory_Writable);
     if (heap_metadata_used == NULL) {
         assert(0);
@@ -36,13 +35,11 @@ enum status checked heap_init(void) {
         return Error_No_Memory;
     }
 
-    heap_metadata_used = slab_alloc(Page_Small, Memory_Writable);
     region_vector_init(heap_metadata_used);
-    heap_metadata_free = slab_alloc(Page_Small, Memory_Writable);
     region_vector_init(heap_metadata_free);
-    heap_address.virtual = heap;
-    region_free(heap_metadata_free, heap_address, Heap_Size);
+
     memset(heap, (int)Heap_Red_Zone_Fill, Page_Small);
+
     logf(Log_Info, "Heap rooted at %p with size 0x%x\n", heap, Heap_Size);
     return Ok;
 }
