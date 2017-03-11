@@ -6,6 +6,7 @@
 // A hashtable key. May be a pointer or unsigned integer.
 union hashtable_key {
     unsigned long data;
+    unsigned int integer;
     void *ptr;
 };
 
