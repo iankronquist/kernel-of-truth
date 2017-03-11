@@ -1,3 +1,4 @@
+#include <truth/heap.h>
 #include <truth/memory.h>
 #include <truth/panic.h>
 #include <truth/region_vector.h>
@@ -62,6 +63,16 @@ void *kmalloc(size_t bytes) {
     assert(*redzone_prefix == Heap_Red_Zone_Fill &&
            *redzone_suffix == Heap_Red_Zone_Fill);
     return address.bytes + Heap_Red_Zone_Size;
+}
+
+void *krealloc(void *ptr, size_t size) {
+    uint8_t *old_mem = ptr;
+    uint8_t *new_mem = kmalloc(size);
+    if (new_mem == NULL) {
+        return NULL;
+    }
+    memcpy(new_mem, old_mem, size);
+    return new_mem;
 }
 
 void *kcalloc(size_t count, size_t size) {
