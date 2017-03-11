@@ -21,7 +21,8 @@ void interrupts_dispatcher(struct interrupt_cpu_state r) {
             handled = true;
         }
     }
-    if (r.interrupt_number < 32 && handled) {
+    if (r.interrupt_number < 32 && !handled) {
+        interrupts_disable();
         log(Log_Error, "Unhandled Exception Triggered!");
         logf(Log_Error,
              "\tds: %lx\n\t"
