@@ -31,19 +31,22 @@ static void *slab_alloc_helper(size_t bytes, phys_addr *phys,
     if (region_alloc(vect, bytes, &virt_address) != Ok) {
         return NULL;
     }
-    phys_address.physical = physical_alloc(bytes / Page_Small);
-    *phys = phys_address.physical;
-    if (phys_address.physical == invalid_phys_addr) {
-        assert(0);
-        goto out;
-    }
-    if (map_page(virt_address.virtual, phys_address.physical,
-                 page_attributes) != Ok) {
-        physical_free(phys_address.physical, bytes / Page_Small);
-        logf(Log_Warning, "Failed to map slab page: %p, %lx\n",
-             virt_address.virtual, phys_address.physical);
-        assert(0);
-        goto out;
+    for (size_t i = 0; i < bytes / Page_Small; ++i) {
+        phys_address.physical = physical_alloc(bytes / Page_Small);
+        *phys = phys_address.physical;
+        if (phys_address.physical == invalid_phys_addr) {
+            assert(0);
+            goto out;
+        }
+        if (map_page(virt_address.virtual, phys_address.physical,
+                     page_attributes) != Ok) {
+            physical_free(phys_address.physical, bytes / Page_Small);
+            logf(Log_Warning, "Failed to map slab page: %p, %lx\n",
+                 virt_address.virtual, phys_address.physical);
+            assert(0);
+            goto out;
+        }
+        virt_address.virtual += Page_Small;
     }
     return virt_address.virtual;
 out:
