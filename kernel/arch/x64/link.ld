@@ -1,13 +1,16 @@
 ENTRY(_start)
 
 SECTIONS {
-	. = 1M;
-	__kernel_start = .;
-	.multiboot BLOCK(4K) : ALIGN(4K) {
-		*(.multiboot)
-	}
+	/*. = 1M;*/
 
-	.text BLOCK(4K) : ALIGN(4K) {
+	. = 0xffff800000000000 + 1M;
+	/*. = 0xffffffff80000000 + 0x00200000;*/
+	/*. = %KERNEL_BASE% + %KERNEL_LOAD_OFFSET%;*/
+
+	/*.text : AT(%MEMBASE% + %KERNEL_LOAD_OFFSET%) {*/
+	/*.text : AT(0 + 0x00200000) {*/
+	.text : AT(1M) {
+		__kernel_start = .;
 		__text_start = .;
 		*(.text)
 	}

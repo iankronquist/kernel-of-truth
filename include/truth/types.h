@@ -62,10 +62,10 @@ static inline const char *status_message(enum status status) {
 extern uint8_t __kernel_start;
 extern uint8_t __kernel_end;
 
-#define Kernel_Image_Size     ((uintptr_t)((byte *)&__kernel_end - \
-                                           (byte *)&__kernel_start))
-#define Kernel_Physical_Start ((void *)&__kernel_start)
-#define Kernel_Physical_End   ((void *)&__kernel_end)
+#define Kernel_Image_Size     ((uintptr_t)((uint8_t *)&__kernel_end - \
+                                           (uint8_t *)&__kernel_start))
+#define Kernel_Physical_Start ((uintptr_t)(1 * MB))
+#define Kernel_Physical_End   ((uintptr_t)(Kernel_Physical_Start + Kernel_Image_Size))
 #define Kernel_Virtual_Start ((void *)&__kernel_start)
 #define Kernel_Virtual_End   ((void *)&__kernel_end)
 

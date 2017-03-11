@@ -75,8 +75,8 @@ void slab_init(void) {
     region_vector_init(&slab_lower_half);
     address.virtual = (void *)(4 * MB);
     region_free(&slab_lower_half, address, Lower_Half_Size - (4 * MB));
-    address.virtual = Higher_Half_Start;
-    region_free(&slab_higher_half, address, Higher_Half_Size);
+    address.virtual = Kernel_Virtual_End;
+    region_free(&slab_higher_half, address, Higher_Half_Size - Kernel_Image_Size - (4 * MB));
 }
 
 

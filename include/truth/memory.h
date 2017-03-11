@@ -16,6 +16,18 @@
 #define Memory_Execute_Mask  (0x7fffffffffffffff)
 #define Memory_Writable_Mask (0xfffffffffffffffd)
 
+#define Lower_Half_Start  (Page_Small)
+#define Lower_Half_End    (0x00007fffffffffff)
+#define Higher_Half_Start (0xffff800000000000)
+#define Higher_Half_High  (0xffff8000)
+#define Higher_Half_End   (~0)
+#define Lower_Half_Size   (Lower_Half_End - Lower_Half_Start)
+#define Higher_Half_Size  (Higher_Half_End - Higher_Half_Start)
+
+#define virt_to_phys(x) (x - Higher_Half_Start)
+#define phys_to_virt(x) (x + Higher_Half_Start)
+
+
 
 #elif __C__
 enum page_size {

@@ -45,37 +45,38 @@ _init_stack_top:
 .code32
 _start:
 	# Initialize stack pointer.
-	movl $_init_stack_top, %esp
+	movl $virt_to_phys(_init_stack_top), %esp
 
 	# Finish installing the kernel stack into the Task Switch Segment.
-	movl %esp, Tss + 4
-	movl $0, Tss + 8
+	movl %esp, virt_to_phys(Tss) + 4
+	movl $0, virt_to_phys(Tss) + 8
 
 	# Finish installing the TSS into the GDT
-	movl $Tss, %ecx
-	movw %cx, GDT + Segment_TSS + 2
+	movl $virt_to_phys(Tss), %ecx
+	movw %cx, virt_to_phys(GDT) + Segment_TSS + 2
 	shrl $16, %ecx
-	movb %cl, GDT + Segment_TSS + 4
+	movb %cl, virt_to_phys(GDT) + Segment_TSS + 4
 	shrl $8, %ecx
-	movb %cl, GDT + Segment_TSS + 7
-	movl $0, GDT + Segment_TSS + 8
+	movb %cl, virt_to_phys(GDT) + Segment_TSS + 7
+	movl $0, virt_to_phys(GDT) + Segment_TSS + 8
 
 	# We got our multiboot information in various registers.
 	pushl $0
 	pushl %ebx
 
-	movl $init_pl4, %edi
+	movl $virt_to_phys(init_pl4), %edi
 	movl %edi, %cr3
 
-	movl $(init_pl3 + (Page_User | Page_Write | Page_Present)), init_pl4
+	movl $(virt_to_phys(init_pl3) + (Page_User | Page_Write | Page_Present)), virt_to_phys(init_pl4)
+	movl $(virt_to_phys(init_pl3) + (Page_User | Page_Write | Page_Present)), virt_to_phys(init_pl4) + 256 * 8
 
-	movl $(init_pl2 + (Page_User | Page_Write | Page_Present)), init_pl3
+	movl $(virt_to_phys(init_pl2) + (Page_User | Page_Write | Page_Present)), virt_to_phys(init_pl3)
 
-	movl $(init_pl1_a + (Page_Write | Page_Present)), init_pl2
-	movl $(init_pl1_b + (Page_Write | Page_Present)), init_pl2 + 8
+	movl $(virt_to_phys(init_pl1_a) + (Page_Write | Page_Present)), virt_to_phys(init_pl2)
+	movl $(virt_to_phys(init_pl1_b) + (Page_Write | Page_Present)), virt_to_phys(init_pl2) + 8
 
 	# Page Table (identity map the first 1 MiB, except NULL).
-	movl $(init_pl1_a + 8), %edi
+	movl $(virt_to_phys(init_pl1_a) + 8), %edi
 	movl $(0x1000 | Page_Present | Page_Write), %esi
 	movl $Page_Execute_Disable_High, %edx
 	movl $0xff, %ecx
@@ -91,8 +92,8 @@ _start:
 	# Map kernel text section
 	andl $(Memory_Writable_Mask), %esi
 	movl $0, %edx
-	movl $__text_end, %ecx
-	subl $__text_start, %ecx
+	movl $virt_to_phys(__text_end), %ecx
+	subl $virt_to_phys(__text_start), %ecx
 	shrl $12, %ecx
 1:
 	movl %esi, (%edi)
@@ -105,8 +106,8 @@ _start:
 	# Map kernel data section
 	orl $(Memory_Writable), %esi
 	movl $Page_Execute_Disable_High, %edx
-	movl $__data_end, %ecx
-	subl $__data_start, %ecx
+	movl $virt_to_phys(__data_end), %ecx
+	subl $virt_to_phys(__data_start), %ecx
 	shrl $12, %ecx
 1:
 	movl %esi, (%edi)
@@ -119,8 +120,8 @@ _start:
 	# Map kernel rodata section
 	andl $(Memory_Writable_Mask), %esi
 	movl $Page_Execute_Disable_High, %edx
-	movl $__rodata_end, %ecx
-	subl $__rodata_start, %ecx
+	movl $virt_to_phys(__rodata_end), %ecx
+	subl $virt_to_phys(__rodata_start), %ecx
 	shrl $12, %ecx
 1:
 	movl %esi, (%edi)
@@ -133,8 +134,8 @@ _start:
 	# Map kernel bss section
 	orl $(Memory_Writable), %esi
 	movl $Page_Execute_Disable_High, %edx
-	movl $__bss_end, %ecx
-	subl $__bss_start, %ecx
+	movl $virt_to_phys(__bss_end), %ecx
+	subl $virt_to_phys(__bss_start), %ecx
 	shrl $12, %ecx
 1:
 	movl %esi, (%edi)
@@ -145,7 +146,7 @@ _start:
 	loop 1b
 
 	# Fractal mapping.
-	movl $(init_pl4 + (Page_Write | Page_Present)), init_pl4 + 511 * 8
+	movl $(virt_to_phys(init_pl4) + (Page_Write | Page_Present)), virt_to_phys(init_pl4) + 511 * 8
 
 	# Enable PAE.
 	movl %cr4, %eax
@@ -166,15 +167,15 @@ paging:
 
 	# Load the Global Descriptor Table pointer register.
 	subl $6, %esp
-	movw (GDT_Size - 1), %cx
+	movw (virt_to_phys(GDT_Size) - 1), %cx
 	movw %cx, 0(%esp)
-	movl $GDT, %ecx
+	movl $virt_to_phys(GDT), %ecx
 	movl %ecx, 2(%esp)
 	lgdt 0(%esp)
 	addl $6, %esp
 
 	# Now use the 64-bit code segment, and we are in full 64-bit mode.
-	ljmp $Segment_Kernel_Code, $long_mode
+	ljmp $Segment_Kernel_Code, $virt_to_phys(long_mode)
 
 .code64
 long_mode:
@@ -196,6 +197,18 @@ long_mode:
 	movw %cx, %fs
 	movw %cx, %gs
 
+#l:
+#	hlt
+#	pause
+#	jmp l
+	movq $Higher_Half_High, %rcx
+	shlq $32, %rcx
+	orq %rcx, %rsp
+	movq $virt_to_phys(higher_half), %rcx
+	jmp *%rcx
+
+
+higher_half:
 	# Multiboot information structure pointer.
 	pop %rdi
 	call kernel_main
