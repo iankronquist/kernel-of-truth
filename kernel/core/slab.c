@@ -5,14 +5,7 @@
 #include <truth/types.h>
 #include <truth/physical_allocator.h>
 #include <truth/region_vector.h>
-
-// The highest lower half canonical address.
-#define lower_half_start  ((void *)0)
-#define lower_half_end    ((void *)0x00007fffffffffff)
-#define higher_half_start ((void *)0xffff800000000000)
-#define higher_half_end   ((void *)~0)
-#define lower_half_size   (lower_half_end - lower_half_start)
-#define higher_half_size  (higher_half_end - higher_half_start)
+#include <truth/memory.h>
 
 static struct lock slab_lower_half_lock = Lock_Clear;
 static struct lock slab_higher_half_lock = Lock_Clear;
@@ -22,7 +15,7 @@ extern struct region_vector slab_higher_half;
 
 
 static inline bool in_lower_half(void *address) {
-    return address <= lower_half_end;
+    return address <= Lower_Half_End;
 }
 
 
@@ -60,10 +53,13 @@ out:
 
 
 static void slab_free_helper(size_t bytes, void *address,
-                             struct region_vector *vect) {
+                             struct region_vector *vect, bool free_phys) {
+    if (address == NULL) {
+        return;
+    }
     union address virt_address;
     virt_address.virtual = address;
-    unmap_page(virt_address.virtual, true);
+    unmap_page(virt_address.virtual, free_phys);
     region_free(vect, virt_address, bytes);
 }
 
@@ -73,20 +69,33 @@ void slab_init(void) {
     region_vector_init(&slab_higher_half);
     region_vector_init(&slab_lower_half);
     address.virtual = (void *)(4 * MB);
-    region_free(&slab_lower_half, address, lower_half_size - (4 * MB));
-    address.virtual = higher_half_start;
-    region_free(&slab_higher_half, address, higher_half_size);
+    region_free(&slab_lower_half, address, Lower_Half_Size - (4 * MB));
+    address.virtual = Higher_Half_Start;
+    region_free(&slab_higher_half, address, Higher_Half_Size);
 }
 
 
 void slab_free(size_t bytes, void *address) {
     if (in_lower_half(address)) {
         lock_acquire_writer(&slab_lower_half_lock);
-        slab_free_helper(bytes, address, &slab_lower_half);
+        slab_free_helper(bytes, address, &slab_lower_half, true);
         lock_release_writer(&slab_lower_half_lock);
     } else {
         lock_acquire_writer(&slab_higher_half_lock);
-        slab_free_helper(bytes, address, &slab_higher_half);
+        slab_free_helper(bytes, address, &slab_higher_half, true);
+        lock_release_writer(&slab_higher_half_lock);
+    }
+}
+
+
+void slab_free_virt(size_t bytes, void *address) {
+    if (in_lower_half(address)) {
+        lock_acquire_writer(&slab_lower_half_lock);
+        slab_free_helper(bytes, address, &slab_lower_half, false);
+        lock_release_writer(&slab_lower_half_lock);
+    } else {
+        lock_acquire_writer(&slab_higher_half_lock);
+        slab_free_helper(bytes, address, &slab_higher_half, false);
         lock_release_writer(&slab_higher_half_lock);
     }
 }
@@ -94,9 +103,9 @@ void slab_free(size_t bytes, void *address) {
 
 void slab_free_locked(size_t bytes, void *address) {
     if (in_lower_half(address)) {
-        slab_free_helper(bytes, address, &slab_lower_half);
+        slab_free_helper(bytes, address, &slab_lower_half, true);
     } else {
-        slab_free_helper(bytes, address, &slab_higher_half);
+        slab_free_helper(bytes, address, &slab_higher_half, true);
     }
 }
 
