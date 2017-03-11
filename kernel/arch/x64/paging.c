@@ -37,6 +37,26 @@ typedef uint64_t pl3_entry;
 typedef uint64_t pl2_entry;
 typedef uint64_t pl1_entry;
 
+static bool paging_test(void) {
+    size_t orig_usage = heap_get_usage();
+    struct page_table original_pt = { .physical_address = read_cr3(), };
+    struct page_table *new_pt = page_table_init();
+    page_table_switch(new_pt->physical_address);
+    struct page_table *clone_pt = page_table_clone(&original_pt);
+    page_table_switch(clone_pt->physical_address);
+    page_table_fini(new_pt);
+    assert_ok(map_page(NULL, physical_alloc(1), Memory_Writable));
+    int *test = (int *)0x20;
+    *test = 10;
+    assert(*test == 10);
+    unmap_page(NULL, true);
+    page_table_switch(original_pt.physical_address);
+    page_table_fini(clone_pt);
+    size_t final_usage = heap_get_usage();
+    assert(orig_usage == final_usage);
+    log(Log_Debug, "Paging test passed");
+    return true;
+}
 
 phys_addr page_entry_to_phys(uint64_t entry) {
     return entry & Phys_Addr_Mask;
@@ -228,6 +248,7 @@ enum status paging_init(void) {
             invalidate_tlb();
         }
     }
+    assert(paging_test() == true);
     return Ok;
 }
 
@@ -280,11 +301,12 @@ void page_table_fini(struct page_table *pt) {
 
 
 // FIXME: Implement COW
-struct page_table *page_table_clone(struct page_table *pt, phys_addr *new_phys) {
+struct page_table *page_table_clone(struct page_table *pt) {
     pl4_entry *level_four_clone = NULL;
     pl3_entry *level_three_clone = NULL;
     pl2_entry *level_two_clone = NULL;
     pl1_entry *level_one_clone = NULL;
+    phys_addr new_phys;
     uint64_t *original_page;
     phys_addr original_phys = read_cr3();
     page_table_switch(pt->physical_address);
@@ -292,10 +314,11 @@ struct page_table *page_table_clone(struct page_table *pt, phys_addr *new_phys) 
     if (pt_clone == NULL) {
         goto err;
     }
-    level_four_clone = slab_alloc_phys(new_phys, Memory_Writable | Memory_User_Access);
+    level_four_clone = slab_alloc_phys(&new_phys, Memory_Writable | Memory_User_Access);
     if (level_four_clone == NULL) {
         goto err;
     }
+    pt_clone->physical_address = new_phys;
     pl4_entry *level_four = get_pl4();
     memcpy(&level_four_clone[Page_Small / 2], get_pl4(), pl4_Count / 2);
     for (size_t i4 = 0; i4 < pl4_Count / 2; ++i4) {

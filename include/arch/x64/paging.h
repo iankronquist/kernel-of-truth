@@ -21,16 +21,15 @@ void unmap_external_page(struct page_table *page_table, void *virtual_address,
 
 
 
-void switch_page_table(struct page_table *page_table);
+void page_table_switch(phys_addr physical_address);
 
 enum status paging_init(void);
 
 struct page_table *page_table_init(void);
 
 struct page_table *page_table_new_current(void);
+struct page_table *page_table_clone(struct page_table *pt);
 
 void page_table_fini(struct page_table *pt);
-
-void init_page_table(struct page_table *page_table);
 
 void debug_paging(void);
