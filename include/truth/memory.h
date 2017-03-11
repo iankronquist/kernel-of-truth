@@ -32,6 +32,14 @@ enum memory_attributes {
     Memory_No_Execute    = (1ul << 63),
 };
 
+#define Lower_Half_Start  ((void *)Page_Small)
+#define Lower_Half_End    ((void *)0x00007fffffffffff)
+#define Higher_Half_Start ((void *)0xffff800000000000)
+#define Higher_Half_End   ((void *)~0)
+#define Lower_Half_Size   (Lower_Half_End - Lower_Half_Start)
+#define Higher_Half_Size  (Higher_Half_End - Higher_Half_Start)
+
+
 void memory_init(void);
 void memory_user_access_enable(void);
 void memory_user_access_disable(void);
