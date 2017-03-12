@@ -17,7 +17,7 @@
 #define Thread_Pool_Default_Size 10
 #define Process_Pool_Default_Size 100
 
-struct lock Process_Pool_Lock;
+struct lock Process_Pool_Lock = Lock_Clear;
 struct hashtable *Process_Pool;
 
 
