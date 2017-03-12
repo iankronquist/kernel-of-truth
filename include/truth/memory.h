@@ -37,9 +37,9 @@ enum page_size {
 enum memory_attributes {
     Memory_No_Attributes = (0),
     Memory_Present       = (1ul << 0),
-    Memory_Writable      = (1ul << 1),
     Memory_User_Access   = (1ul << 2),
     Memory_No_Execute    = (1ul << 63),
+    Memory_Writable      = (1ul << 1) | Memory_No_Execute,
     Memory_Execute_Mask  = ~Memory_No_Execute,
 };
 
