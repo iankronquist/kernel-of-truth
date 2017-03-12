@@ -22,7 +22,7 @@ static struct idt_entry {
 
 struct idt_ptr {
     uint16_t limit;
-    uint32_t base;
+    uint64_t base;
 } pack;
 
 extern void idt_load(struct idt_ptr *);

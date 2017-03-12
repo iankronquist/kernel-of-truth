@@ -248,6 +248,7 @@ enum status paging_init(void) {
             invalidate_tlb();
         }
     }
+    pl4[0] = 0;
     assert(paging_test() == true);
     return Ok;
 }

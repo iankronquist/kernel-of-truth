@@ -49,7 +49,7 @@ _start:
 
 	# Finish installing the kernel stack into the Task Switch Segment.
 	movl %esp, virt_to_phys(Tss) + 4
-	movl $0, virt_to_phys(Tss) + 8
+	movl $Higher_Half_High, virt_to_phys(Tss) + 8
 
 	# Finish installing the TSS into the GDT
 	movl $virt_to_phys(Tss), %ecx
@@ -58,10 +58,10 @@ _start:
 	movb %cl, virt_to_phys(GDT) + Segment_TSS + 4
 	shrl $8, %ecx
 	movb %cl, virt_to_phys(GDT) + Segment_TSS + 7
-	movl $0, virt_to_phys(GDT) + Segment_TSS + 8
+	movl $Higher_Half_High, virt_to_phys(GDT) + Segment_TSS + 8
 
 	# We got our multiboot information in various registers.
-	pushl $0
+	pushl $Higher_Half_High
 	pushl %ebx
 
 	movl $virt_to_phys(init_pl4), %edi
@@ -200,11 +200,22 @@ long_mode:
 	movq $Higher_Half_High, %rcx
 	shlq $32, %rcx
 	orq %rcx, %rsp
-	movq $virt_to_phys(higher_half), %rcx
+	orq $virt_to_phys(higher_half), %rcx
 	jmp *%rcx
 
-
 higher_half:
+	# Load the Global Descriptor Table pointer register again.
+	subq $10, %rsp
+	movabs $GDT_Size, %rdx
+	movq (%rdx), %rcx
+	movw %cx, 0(%rsp)
+	movabs $GDT, %rcx
+	movq %rcx, 2(%rsp)
+	lgdt 0(%rsp)
+	addq $10, %rsp
+
+
+
 	# Multiboot information structure pointer.
 	pop %rdi
 	call kernel_main
@@ -231,3 +242,10 @@ cpu_time:
     shlq $32, %rdx
     orq %rax, %rdx
     ret
+
+.global read_rip
+.type read_rip, @function
+read_rip:
+	pop %rax
+	push %rax
+	ret
