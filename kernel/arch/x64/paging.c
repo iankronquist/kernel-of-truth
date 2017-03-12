@@ -154,11 +154,16 @@ void debug_paging(void) {
 enum status checked map_page(void *virtual_address, phys_addr phys_address,
                              enum memory_attributes permissions) {
 
+    if ((permissions & Memory_Writable) && !(permissions & Memory_No_Execute))
+    {
+        return Error_Permissions;
+    }
+
     pl4_entry *pl4 = get_pl4();
     if (!is_pl3_present(pl4, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
         pl4[pl4_index(virtual_address)] =
-            (phys_address | permissions | Memory_User_Access |
+            (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
         invalidate_tlb();
     }
@@ -167,7 +172,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     if (!is_pl2_present(level_three, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
         level_three[pl3_index(virtual_address)] =
-            (phys_address | permissions | Memory_User_Access |
+            (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
         invalidate_tlb();
     }
@@ -176,7 +181,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     if (!is_pl1_present(level_two, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
         level_two[pl2_index(virtual_address)] =
-            (phys_address | permissions | Memory_User_Access |
+            (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
         invalidate_tlb();
     }
