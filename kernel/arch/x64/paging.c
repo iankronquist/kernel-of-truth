@@ -265,8 +265,8 @@ struct page_table *page_table_init(void) {
     if (pl4 == NULL) {
         return NULL;
     }
-    memset(pl4, 0, pl4_Count / 2);
-    memcpy(&pl4[pl4_Count / 2], get_pl4(), pl4_Count / 2);
+    memset(pl4, 0, Page_Small / 2);
+    memcpy(&pl4[pl4_Count / 2], &get_pl4()[pl4_Count / 2], Page_Small / 2);
     slab_free_virt(Page_Small, pl4);
     return pt;
 }
