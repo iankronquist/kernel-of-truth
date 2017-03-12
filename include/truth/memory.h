@@ -27,8 +27,6 @@
 #define virt_to_phys(x) (x - Higher_Half_Start)
 #define phys_to_virt(x) (x + Higher_Half_Start)
 
-
-
 #elif __C__
 enum page_size {
     Page_Small  = (4 * KB),
@@ -42,6 +40,7 @@ enum memory_attributes {
     Memory_Writable      = (1ul << 1),
     Memory_User_Access   = (1ul << 2),
     Memory_No_Execute    = (1ul << 63),
+    Memory_Execute_Mask  = ~Memory_No_Execute,
 };
 
 #define Lower_Half_Start  ((void *)Page_Small)
