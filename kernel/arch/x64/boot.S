@@ -10,32 +10,38 @@
 
 .section .bss, "aw", @nobits
 	.align Page_Small
+
 .global init_pl4
 init_pl4:
 	.skip Page_Small
+
 .global init_pl3
 init_pl3:
 	.skip Page_Small
+
 .global init_pl2
 init_pl2:
 	.skip Page_Small
-.global init_pl1_a
-init_pl1_a:
+
+.global init_pl1
+init_pl1:
 	.skip Page_Small
-init_pl1_b:
-	.skip Page_Small
+
 .global slab_higher_half
 slab_higher_half:
-	.skip Page_Small
+       .skip Page_Small
+
 .global slab_lower_half
 slab_lower_half:
-	.skip Page_Small
+       .skip Page_Small
+
 .global init_physical_allocator_vector
 init_physical_allocator_vector:
-	.skip Page_Small
+       .skip Page_Small
+
+.global _init_stack_top
 init_stack:
 	.skip (16 * KB)
-.global _init_stack_top
 _init_stack_top:
 
 .section .text
@@ -72,11 +78,10 @@ _start:
 
 	movl $(virt_to_phys(init_pl2) + (Page_User | Page_Write | Page_Present)), virt_to_phys(init_pl3)
 
-	movl $(virt_to_phys(init_pl1_a) + (Page_Write | Page_Present)), virt_to_phys(init_pl2)
-	movl $(virt_to_phys(init_pl1_b) + (Page_Write | Page_Present)), virt_to_phys(init_pl2) + 8
+	movl $(virt_to_phys(init_pl1) + (Page_Write | Page_Present)), virt_to_phys(init_pl2)
 
 	# Page Table (identity map the first 1 MiB, except NULL).
-	movl $(virt_to_phys(init_pl1_a) + 8), %edi
+	movl $(virt_to_phys(init_pl1) + 8), %edi
 	movl $(0x1000 | Page_Present | Page_Write), %esi
 	movl $Page_Execute_Disable_High, %edx
 	movl $0xff, %ecx
@@ -147,6 +152,7 @@ _start:
 
 	# Fractal mapping.
 	movl $(virt_to_phys(init_pl4) + (Page_Write | Page_Present)), virt_to_phys(init_pl4) + 511 * 8
+	movl $Page_Execute_Disable_High, virt_to_phys(init_pl4) + (511 * 8) + 4
 
 	# Enable PAE.
 	movl %cr4, %eax
@@ -163,6 +169,8 @@ _start:
 	movl %cr0, %eax
 	orl $(CR0_Paging | CR0_Write_Protect), %eax
 	movl %eax, %cr0
+
+
 paging:
 
 	# Load the Global Descriptor Table pointer register.
