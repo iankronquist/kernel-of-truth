@@ -162,33 +162,34 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     }
 
     pl4_entry *pl4 = get_pl4();
+    pl3_entry *level_three = get_pl3(virtual_address);
+    pl2_entry *level_two = get_pl2(virtual_address);
+    pl1_entry *level_one = get_pl1(virtual_address);
+
     if (!is_pl3_present(pl4, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
         pl4[pl4_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
-        invalidate_tlb();
+        invalidate_page(level_three);
     }
 
-    pl3_entry *level_three = get_pl3(virtual_address);
     if (!is_pl2_present(level_three, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
         level_three[pl3_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
-        invalidate_tlb();
+        invalidate_page(level_two);
     }
 
-    pl2_entry *level_two = get_pl2(virtual_address);
     if (!is_pl1_present(level_two, virtual_address)) {
         phys_addr phys_address = physical_alloc(1);
         level_two[pl2_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
-        invalidate_tlb();
+        invalidate_page(level_one);
     }
 
-    pl1_entry *level_one = get_pl1(virtual_address);
     if (is_Memory_Present(level_one, virtual_address)) {
         logf(Log_Debug, "The virtual address %p is already present\n",
              virtual_address);
@@ -197,7 +198,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
 
     level_one[pl1_index(virtual_address)] =
         (phys_address | permissions | Memory_Present);
-    invalidate_tlb();
+    invalidate_page(level_one);
 
     return Ok;
 }
