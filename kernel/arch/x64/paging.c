@@ -269,6 +269,8 @@ struct page_table *page_table_init(void) {
     }
     memset(pl4, 0, Page_Small / 2);
     memcpy(&pl4[pl4_Count / 2], &get_pl4()[pl4_Count / 2], Page_Small / 2);
+    pl4[pl4_Count - 1] = pt->physical_address | Memory_Writable |
+                         Memory_Present;
     slab_free_virt(Page_Small, pl4);
     return pt;
 }
