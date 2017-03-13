@@ -39,21 +39,23 @@ typedef uint64_t pl1_entry;
 
 static bool paging_test(void) {
     size_t orig_usage = heap_get_usage();
+
     struct page_table original_pt = { .physical_address = read_cr3(), };
     struct page_table *new_pt = page_table_init();
     page_table_switch(new_pt->physical_address);
-    struct page_table *clone_pt = page_table_clone(&original_pt);
-    page_table_switch(clone_pt->physical_address);
-    page_table_fini(new_pt);
+
     assert_ok(map_page(NULL, physical_alloc(1), Memory_Writable));
     int *test = (int *)0x20;
     *test = 10;
     assert(*test == 10);
     unmap_page(NULL, true);
+
     page_table_switch(original_pt.physical_address);
-    page_table_fini(clone_pt);
+    page_table_fini(new_pt);
+
     size_t final_usage = heap_get_usage();
     assert(orig_usage == final_usage);
+
     log(Log_Debug, "Paging test passed");
     return true;
 }
