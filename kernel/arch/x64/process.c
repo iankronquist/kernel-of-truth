@@ -1,4 +1,6 @@
+#include <arch/x64/interrupts.h>
 #include <arch/x64/paging.h>
+#include <arch/x64/segments.h>
 
 #include <truth/hashtable.h>
 #include <truth/heap.h>
@@ -128,14 +130,45 @@ void bootstrap_thread_init(struct process *proc) {
     thread->kernel_stack = &_init_stack_top;
 }
 
-static void thread_user_stack_init(struct thread *thread, void *entry_point) {
+static enum status thread_user_stack_init(struct thread *thread,
+                                          struct process *proc,
+                                          void *entry_point) {
     assert(thread != NULL);
-    assert(thread->user_stack != NULL);
+    assert(proc != NULL);
+    assert(proc->address_space != NULL);
+    assert(proc->page_table != NULL);
+
+    enum status status;
+    phys_addr original_cr3 = read_cr3();
+    page_table_switch(proc->page_table->physical_address);
+    phys_addr phys;
+    thread->user_stack_size = Thread_Default_User_Stack_Size;
+    thread->user_stack = slab_alloc_helper(thread->user_stack_size, &phys,
+                                           Memory_Writable |
+                                               Memory_User_Access,
+                                           proc->address_space);
+    if (thread->user_stack == NULL) {
+        status = Error_No_Memory;
+        goto out;
+    }
     size_t last_stack_index = thread->user_stack_size / sizeof(uint64_t) - 1;
     thread->user_stack[last_stack_index] = (uintptr_t)entry_point;
     // 16 GPRs, 1 rflags
-    thread->current_stack_pointer = (void *)last_stack_index -
-        (17 * sizeof(uint64_t));
+    thread->current_stack_pointer =
+        (void *)thread->user_stack[last_stack_index] -
+        sizeof(struct interrupt_cpu_state);
+    struct interrupt_cpu_state *state = (void *)thread->current_stack_pointer;
+    if (thread->user_space) {
+        state->ds = Segment_User_Data;
+        state->cs = Segment_User_Code;
+    } else {
+        state->ds = Segment_Kernel_Data;
+        state->cs = Segment_Kernel_Code;
+    }
+    status = Ok;
+out:
+    page_table_switch(original_cr3);
+    return status;
 }
 
 struct thread *thread_init(struct process *proc, void *entry_point,
@@ -147,9 +180,11 @@ struct thread *thread_init(struct process *proc, void *entry_point,
     if (thread == NULL) {
         return NULL;
     }
+    thread->user_space = user_space;
 
     thread->kernel_stack_size = Thread_Default_Kernel_Stack_Size;
-    thread->kernel_stack = slab_alloc(thread->kernel_stack_size, Memory_Writable);
+    thread->kernel_stack = slab_alloc(thread->kernel_stack_size,
+                                      Memory_Writable);
     if (thread->kernel_stack == NULL) {
         kfree(thread);
         return NULL;
@@ -157,9 +192,8 @@ struct thread *thread_init(struct process *proc, void *entry_point,
 
     if (user_space) {
         thread->user_stack_size = Thread_Default_User_Stack_Size;
-        thread->user_stack = slab_alloc(thread->user_stack_size, Memory_Writable |
-                                        Memory_User_Access);
-        if (thread->user_stack == NULL) {
+        status = thread_user_stack_init(thread, proc, entry_point);
+        if (status != Ok) {
             slab_free(thread->kernel_stack_size, thread->kernel_stack);
             kfree(thread);
             return NULL;
@@ -183,8 +217,6 @@ struct thread *thread_init(struct process *proc, void *entry_point,
     thread->next = NULL;
     thread->prev = NULL;
     thread->process = proc;
-
-    thread_user_stack_init(thread, entry_point);
 
     object_clear(&thread->obj, thread_free);
     scheduler_add_thread(thread);
@@ -213,31 +245,31 @@ struct process *process_init(void *entry_point) {
     }
     proc->threads = thread_pool;
 
-    thread = thread_init(proc, entry_point, true);
-    if (thread == NULL) {
-        status = Error_No_Memory;
-        goto err;
-    }
-
     vect = process_create_address_space();
     if (vect == NULL) {
         status = Error_No_Memory;
         goto err;
     }
+    proc->address_space = vect;
 
     page_table = page_table_init();
     if (page_table == NULL) {
         status = Error_No_Memory;
         goto err;
     }
+    proc->page_table = page_table;
 
-	log(Log_Error, "~~ 7\n");
+    thread = thread_init(proc, entry_point, true);
+    if (thread == NULL) {
+        status = Error_No_Memory;
+        goto err;
+    }
+
     status = process_add_pool(proc);
     if (status != Ok) {
         goto err;
     }
 
-	log(Log_Error, "~~ 8\n");
     proc->exit_code = 0;
     proc->state = Process_Running;
     proc->thread_count = 1;
@@ -246,8 +278,6 @@ struct process *process_init(void *entry_point) {
     proc->child_capacity = 0;
     proc->children = NULL;
     proc->parent = NULL;
-    proc->page_table = page_table;
-    proc->address_space = vect;
     object_clear(&proc->obj, process_free);
 
 
