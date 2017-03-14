@@ -31,10 +31,6 @@ init_pl1:
 slab_higher_half:
        .skip Page_Small
 
-.global slab_lower_half
-slab_lower_half:
-       .skip Page_Small
-
 .global init_physical_allocator_vector
 init_physical_allocator_vector:
        .skip Page_Small
