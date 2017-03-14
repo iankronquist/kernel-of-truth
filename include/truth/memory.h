@@ -1,5 +1,6 @@
 #pragma once
 
+
 #define KB 0x400
 #define MB 0x100000
 #define GB 0x40000000
@@ -28,6 +29,7 @@
 #define phys_to_virt(x) (x + Higher_Half_Start)
 
 #elif __C__
+#include <truth/types.h>
 enum page_size {
     Page_Small  = (4 * KB),
     Page_Medium = (2 * MB),
@@ -49,6 +51,11 @@ enum memory_attributes {
 #define Higher_Half_End   ((void *)~0)
 #define Lower_Half_Size   (Lower_Half_End - Lower_Half_Start)
 #define Higher_Half_Size  (Higher_Half_End - Higher_Half_Start)
+
+
+static inline bool memory_is_lower_half(void *address) {
+    return address <= Lower_Half_End;
+}
 
 
 void memory_init(void);
