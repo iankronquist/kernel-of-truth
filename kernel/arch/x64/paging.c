@@ -159,6 +159,9 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     if ((permissions & Memory_Writable) && !(permissions & Memory_No_Execute))
     {
         return Error_Permissions;
+    } else if (!memory_is_lower_half(virtual_address) &&
+        (permissions & Memory_User_Access)) {
+        return Error_Permissions;
     }
 
     pl4_entry *pl4 = get_pl4();
