@@ -1,3 +1,4 @@
+OBJ += bitmap.c
 OBJ += file.c
 OBJ += hashtable.c
 OBJ += heap.c
