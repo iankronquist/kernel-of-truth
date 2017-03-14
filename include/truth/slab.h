@@ -2,6 +2,7 @@
 
 #include <truth/memory.h>
 #include <truth/types.h>
+#include <truth/region_vector.h>
 
 void slab_init(void);
 
@@ -12,3 +13,7 @@ void slab_free_virt(size_t count, void *address);
 
 void *slab_alloc_locked(size_t bytes, enum memory_attributes attrs);
 void slab_free_locked(size_t count, void *address);
+
+void *slab_alloc_helper(size_t bytes, phys_addr *phys,
+                        enum memory_attributes page_attributes,
+                        struct region_vector *vect);
