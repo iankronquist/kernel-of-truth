@@ -65,7 +65,7 @@ static struct hashdata *hashtable_seek(struct hashtable *ht,
                                        union hashtable_key key) {
     size_t hash = ht->hash(key) % ht->size;
     if (ht->data[hash].state == Hashdata_Full &&
-        ht->comp(key, ht->data[hash].key) == Partial_Not_Equal) {
+        ht->comp(key, ht->data[hash].key) == Partial_Equal) {
         return &ht->data[hash];
     }
     // There was a collision, probe the hash table.
@@ -76,7 +76,7 @@ static struct hashdata *hashtable_seek(struct hashtable *ht,
             return NULL;
         } else if (ht->data[s].state == Hashdata_Tombstone) {
             continue;
-        } else if (ht->comp(key, ht->data[s].key)) {
+        } else if (ht->comp(key, ht->data[s].key) == Partial_Equal) {
             return &ht->data[s];
         }
     }
@@ -173,6 +173,7 @@ enum status checked hashtable_put(struct hashtable *ht,
     struct hashdata *hd = hashtable_seek_empty(ht, key);
     hd->key = key;
     hd->value = value;
+    hd->state = Hashdata_Full;
     ht->used += 1;
     if (should_grow(ht->size, ht->used)) {
         return hashtable_rebalance(ht, ht->size * 2);
