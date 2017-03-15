@@ -24,13 +24,14 @@
 struct lock Process_Pool_Lock = Lock_Clear;
 struct hashtable *Process_Pool;
 
-void _privilege_level_switch(void *rip, uint16_t code_segment, void *rsp,
-                             uint16_t data_segment);
+extern void _privilege_level_switch(void *rip, uint16_t code_segment,
+                                    void *rsp, uint16_t data_segment);
 
 
 uint64_t read_rsp(void);
 extern uint64_t _init_stack_top;
-extern void _thread_switch(uint64_t *new_stack, uint64_t **old_stack, uint64_t cr3);
+extern void _thread_switch(uint64_t *new_stack, uint64_t **old_stack,
+                           uint64_t cr3);
 
 void thread_switch(struct thread *old_thread,
                           struct thread *new_thread) {
@@ -150,6 +151,8 @@ static enum status thread_user_stack_init(struct thread *thread,
     assert(proc->page_table != NULL);
 
     enum status status;
+    uint16_t code_segment;
+    uint16_t data_segment;
     phys_addr original_cr3 = read_cr3();
     page_table_switch(proc->page_table->physical_address);
     phys_addr phys;
@@ -163,36 +166,36 @@ static enum status thread_user_stack_init(struct thread *thread,
         goto out;
     }
 
-    // 16 GPRs, 1 rflags
     thread->current_stack_pointer = (uint64_t *)(
         (uint8_t *)thread->kernel_stack + thread->kernel_stack_size -
         sizeof(struct interrupt_cpu_state) -
         sizeof(uint64_t));
-    logf(Log_Debug, "Initializing %p\n", thread->current_stack_pointer);
     memset(thread->kernel_stack, 0, thread->kernel_stack_size);
     memset(thread->user_stack, 0xdddddddd, thread->user_stack_size);
     struct interrupt_cpu_state *state = (void *)thread->current_stack_pointer;
+
+    if (thread->user_space) {
+        code_segment = Segment_User_Code | Segment_RPL;
+        data_segment = Segment_User_Data | Segment_RPL;
+    } else {
+        code_segment = Segment_Kernel_Code;
+        data_segment = Segment_Kernel_Data;
+    }
 
     // Set up for _privilege_level_switch
     // The AMD64 ABI specifies the first four integer arguments are:
     // rdi, rsi, rdx, rcx
     state->rdi = (uintptr_t)entry_point;
-    state->rsi = Segment_User_Code | Segment_RPL;
-    state->rdx = (uintptr_t)((uint8_t *)thread->user_space +
+    state->rsi = code_segment;
+    state->rdx = (uintptr_t)((uint8_t *)thread->user_stack +
                              thread->user_stack_size);
-    state->rcx = Segment_User_Data | Segment_RPL;
+    state->rcx = data_segment;
 
-    // FIXME: This is not only a magic number but a wrong one.
     uint64_t *rip = (uint64_t*)((uint8_t *)thread->kernel_stack +
-                                thread->kernel_stack_size - 64);
+                                thread->kernel_stack_size -
+                                sizeof(uint64_t) * 8);
     *rip = (uintptr_t)_privilege_level_switch;
-    if (thread->user_space) {
-        state->ds = Segment_User_Data;
-        state->cs = Segment_User_Code;
-    } else {
-        state->ds = Segment_Kernel_Data;
-        state->cs = Segment_Kernel_Code;
-    }
+
     status = Ok;
 out:
     page_table_switch(original_cr3);
