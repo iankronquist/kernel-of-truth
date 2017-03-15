@@ -43,8 +43,8 @@ void scheduler_yield(void) {
         lock_acquire_writer(&Current_Thread_Lock);
         struct thread *prev = Current_Thread;
         Current_Thread = Current_Thread->next;
-        thread_switch(prev, Current_Thread);
         lock_release_writer(&Current_Thread_Lock);
+        thread_switch(prev, Current_Thread);
     }
 }
 
