@@ -97,7 +97,5 @@ struct gdt_entry GDT[] = {
 uint16_t GDT_Size = sizeof(GDT) - 1;
 
 void tss_set_stack(void *stack) {
-    Tss.stack0 = stack;
-    Tss.stack1 = 0xdeadbeef;
-    Tss.stack2 = 0xcafebabe;
+    Tss.stack0 = (uintptr_t)stack;
 }
