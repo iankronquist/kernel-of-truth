@@ -38,10 +38,13 @@ int _thread_switch2(int new_stack, int old_stack, uint64_t cr3) {
 void thread_switch(struct thread *old_thread,
                           struct thread *new_thread) {
     assert(new_thread != old_thread);
-    tss_set_stack(new_thread->current_stack_pointer);
+    tss_set_stack((uint8_t *)new_thread->kernel_stack +
+                  new_thread->kernel_stack_size);
+    logf(Log_Debug, "before %p %llx\n", new_thread->current_stack_pointer, read_rsp());
     _thread_switch(new_thread->current_stack_pointer,
             &old_thread->current_stack_pointer,
             new_thread->process->page_table->physical_address);
+    log(Log_Debug, "after");
 }
 
 static enum status process_add_pool(struct process *proc) {
@@ -167,25 +170,25 @@ static enum status thread_user_stack_init(struct thread *thread,
 
     // 16 GPRs, 1 rflags
     thread->current_stack_pointer =
-        (uint8_t *)thread->user_stack + thread->user_stack_size -
+        (uint8_t *)thread->kernel_stack + thread->kernel_stack_size -
         sizeof(struct interrupt_cpu_state) -
         sizeof(uint64_t);
-    memset(thread->user_stack, 0xcccccccc, thread->user_stack_size);
+    logf(Log_Debug, "Initializing %p\n", thread->current_stack_pointer);
+    memset(thread->kernel_stack, 0, thread->kernel_stack_size);
+    memset(thread->user_stack, 0xdddddddd, thread->user_stack_size);
     struct interrupt_cpu_state *state = (void *)thread->current_stack_pointer;
 
-    /*
     // Set up for _privilege_level_switch
     // The AMD64 ABI specifies the first four integer arguments are:
     // rdi, rsi, rdx, rcx
     state->rdi = (uintptr_t)entry_point;
-    state->rsi = Segment_User_Code;
-    state->rdx = ;
-    state->rcx = Segment_User_Data;
-    *rip = (uintptr_t)_privilege_level_switch;
-    */
+    state->rsi = Segment_User_Code | Segment_RPL;
+    state->rdx = (uintptr_t)((uint8_t *)thread->user_space +
+                             thread->user_stack_size);
+    state->rcx = Segment_User_Data | Segment_RPL;
 
-    uint64_t *rip = (uint8_t *)thread->user_stack + thread->user_stack_size - 64;
-    *rip = (uintptr_t)entry_point;
+    uint64_t *rip = (uint8_t *)thread->kernel_stack + thread->kernel_stack_size - 64;
+    *rip = (uintptr_t)_privilege_level_switch;
     if (thread->user_space) {
         state->ds = Segment_User_Data;
         state->cs = Segment_User_Code;
@@ -306,12 +309,6 @@ struct process *process_init(void *entry_point) {
     proc->parent = NULL;
     object_clear(&proc->obj, process_free);
     object_retain(&proc->obj);
-
-    phys_addr parent_pt = read_cr3();
-    page_table_switch(proc->page_table->physical_address);
-    uint64_t *rip = (uint8_t *)thread->user_stack + thread->user_stack_size - 64;
-    assert(*rip == entry_point);
-    page_table_switch(parent_pt);
 
     scheduler_add_thread(thread);
 
