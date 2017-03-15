@@ -1,3 +1,4 @@
+#include <arch/x64/control_registers.h>
 #include <arch/x64/interrupts.h>
 #include <arch/x64/paging.h>
 #include <arch/x64/segments.h>
@@ -10,6 +11,7 @@
 #include <truth/region_vector.h>
 #include <truth/scheduler.h>
 #include <truth/slab.h>
+#include <truth/string.h>
 #include <truth/types.h>
 
 #define Memory_Bootstrap_Stack_Size (16 * KB)
@@ -30,21 +32,14 @@ uint64_t read_rsp(void);
 extern uint64_t _init_stack_top;
 extern void _thread_switch(uint64_t *new_stack, uint64_t **old_stack, uint64_t cr3);
 
-int _thread_switch2(int new_stack, int old_stack, uint64_t cr3) {
-    int a = new_stack * old_stack / cr3;
-    return a;
-}
-
 void thread_switch(struct thread *old_thread,
                           struct thread *new_thread) {
     assert(new_thread != old_thread);
     tss_set_stack((uint8_t *)new_thread->kernel_stack +
                   new_thread->kernel_stack_size);
-    logf(Log_Debug, "before %p %llx\n", new_thread->current_stack_pointer, read_rsp());
     _thread_switch(new_thread->current_stack_pointer,
             &old_thread->current_stack_pointer,
             new_thread->process->page_table->physical_address);
-    log(Log_Debug, "after");
 }
 
 static enum status process_add_pool(struct process *proc) {
@@ -169,10 +164,10 @@ static enum status thread_user_stack_init(struct thread *thread,
     }
 
     // 16 GPRs, 1 rflags
-    thread->current_stack_pointer =
+    thread->current_stack_pointer = (uint64_t *)(
         (uint8_t *)thread->kernel_stack + thread->kernel_stack_size -
         sizeof(struct interrupt_cpu_state) -
-        sizeof(uint64_t);
+        sizeof(uint64_t));
     logf(Log_Debug, "Initializing %p\n", thread->current_stack_pointer);
     memset(thread->kernel_stack, 0, thread->kernel_stack_size);
     memset(thread->user_stack, 0xdddddddd, thread->user_stack_size);
@@ -187,7 +182,9 @@ static enum status thread_user_stack_init(struct thread *thread,
                              thread->user_stack_size);
     state->rcx = Segment_User_Data | Segment_RPL;
 
-    uint64_t *rip = (uint8_t *)thread->kernel_stack + thread->kernel_stack_size - 64;
+    // FIXME: This is not only a magic number but a wrong one.
+    uint64_t *rip = (uint64_t*)((uint8_t *)thread->kernel_stack +
+                                thread->kernel_stack_size - 64);
     *rip = (uintptr_t)_privilege_level_switch;
     if (thread->user_space) {
         state->ds = Segment_User_Data;
