@@ -1,6 +1,7 @@
 #pragma once
 
 extern void _service_interrupt(void);
+typedef void (*isr_f)(void);
 
 extern void isr0(void);
 extern void isr1(void);
