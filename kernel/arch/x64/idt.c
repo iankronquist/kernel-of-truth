@@ -9,6 +9,12 @@
 #include <arch/x64/pic.h>
 #include <arch/x64/port.h>
 
+isr_f ISRs[] = {
+    isr0, isr1, isr2, isr3, isr4, isr5, isr6, isr7, isr8, isr9, isr10, isr11,
+    isr12, isr13, isr14, isr15, isr16, isr17, isr18, isr19, isr20, isr21,
+    isr22, isr23, isr24, isr25, isr26, isr27, isr28, isr29, isr30, isr31,
+    isr32, isr33, isr34,
+};
 
 static struct idt_entry {
     uint16_t base_low;
@@ -27,7 +33,6 @@ struct idt_ptr {
 
 extern void idt_load(struct idt_ptr *);
 
-/* Set an entry in the idt.  */
 static void idt_set_gate(uint8_t num, uintptr_t base,
                          uint16_t segment_selector, uint8_t flags) {
     IDT[num].base_low = base & 0xffff;
@@ -39,42 +44,9 @@ static void idt_set_gate(uint8_t num, uintptr_t base,
 }
 
 void idt_init(void) {
-
-    idt_set_gate(0, (uintptr_t)isr0, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(1, (uintptr_t)isr1, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(2, (uintptr_t)isr2, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(3, (uintptr_t)isr3, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(4, (uintptr_t)isr4, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(5, (uintptr_t)isr5, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(6, (uintptr_t)isr6, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(7, (uintptr_t)isr7, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(8, (uintptr_t)isr8, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(9, (uintptr_t)isr9, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(10, (uintptr_t)isr10, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(11, (uintptr_t)isr11, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(12, (uintptr_t)isr12, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(13, (uintptr_t)isr13, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(14, (uintptr_t)isr14, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(15, (uintptr_t)isr15, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(16, (uintptr_t)isr16, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(17, (uintptr_t)isr17, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(18, (uintptr_t)isr18, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(19, (uintptr_t)isr19, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(20, (uintptr_t)isr20, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(21, (uintptr_t)isr21, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(22, (uintptr_t)isr22, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(23, (uintptr_t)isr23, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(24, (uintptr_t)isr24, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(25, (uintptr_t)isr25, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(26, (uintptr_t)isr26, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(27, (uintptr_t)isr27, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(28, (uintptr_t)isr28, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(29, (uintptr_t)isr29, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(30, (uintptr_t)isr30, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(31, (uintptr_t)isr31, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(32, (uintptr_t)isr32, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(33, (uintptr_t)isr33, Segment_Kernel_Code, 0x8e);
-    idt_set_gate(34, (uintptr_t)isr34, Segment_Kernel_Code, 0x8e);
+    for (size_t i = 0; i < static_array_count(ISRs); ++i) {
+        idt_set_gate(i, (uintptr_t)ISRs[i], Segment_Kernel_Code, 0x8e);
+    }
 
     struct idt_ptr idtp;
     idtp.limit = (sizeof(struct idt_entry) * IDT_Size) - 1;
