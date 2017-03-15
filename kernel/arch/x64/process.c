@@ -22,34 +22,47 @@
 struct lock Process_Pool_Lock = Lock_Clear;
 struct hashtable *Process_Pool;
 
+void _privilege_level_switch(void *rip, uint16_t code_segment, void *rsp,
+                             uint16_t data_segment);
 
 
+uint64_t read_rsp(void);
 extern uint64_t _init_stack_top;
-extern void _thread_switch(uint64_t *new_stack, uint64_t **old_stack);
+extern void _thread_switch(uint64_t *new_stack, uint64_t **old_stack, uint64_t cr3);
 
+int _thread_switch2(int new_stack, int old_stack, uint64_t cr3) {
+    int a = new_stack * old_stack / cr3;
+    return a;
+}
 
 void thread_switch(struct thread *old_thread,
                           struct thread *new_thread) {
-    _thread_switch(old_thread->current_stack_pointer,
-            &new_thread->current_stack_pointer);
+    assert(new_thread != old_thread);
+    tss_set_stack(new_thread->current_stack_pointer);
+    _thread_switch(new_thread->current_stack_pointer,
+            &old_thread->current_stack_pointer,
+            new_thread->process->page_table->physical_address);
 }
 
 static enum status process_add_pool(struct process *proc) {
     enum status status;
+    union hashtable_key key;
     static unsigned int next_pid = 0;
     unsigned int start_pid = next_pid;
 
     assert(proc != NULL);
 
     lock_acquire_writer(&Process_Pool_Lock);
+    key.data = next_pid;
 
-    while (hashtable_get(Process_Pool, (union hashtable_key)next_pid) != NULL)
+    while (hashtable_get(Process_Pool, key) != NULL)
     {
+        next_pid++;
+        key.data = next_pid;
         if (next_pid == start_pid) {
-            status = Error_Count;
+            status = Error_Full;
             goto out;
         }
-        next_pid++;
     }
     proc->id = next_pid;
     status = hashtable_put(Process_Pool, (union hashtable_key)proc->id,
@@ -151,13 +164,28 @@ static enum status thread_user_stack_init(struct thread *thread,
         status = Error_No_Memory;
         goto out;
     }
-    size_t last_stack_index = thread->user_stack_size / sizeof(uint64_t) - 1;
-    thread->user_stack[last_stack_index] = (uintptr_t)entry_point;
+
     // 16 GPRs, 1 rflags
     thread->current_stack_pointer =
-        (void *)thread->user_stack[last_stack_index] -
-        sizeof(struct interrupt_cpu_state);
+        (uint8_t *)thread->user_stack + thread->user_stack_size -
+        sizeof(struct interrupt_cpu_state) -
+        sizeof(uint64_t);
+    memset(thread->user_stack, 0xcccccccc, thread->user_stack_size);
     struct interrupt_cpu_state *state = (void *)thread->current_stack_pointer;
+
+    /*
+    // Set up for _privilege_level_switch
+    // The AMD64 ABI specifies the first four integer arguments are:
+    // rdi, rsi, rdx, rcx
+    state->rdi = (uintptr_t)entry_point;
+    state->rsi = Segment_User_Code;
+    state->rdx = ;
+    state->rcx = Segment_User_Data;
+    *rip = (uintptr_t)_privilege_level_switch;
+    */
+
+    uint64_t *rip = (uint8_t *)thread->user_stack + thread->user_stack_size - 64;
+    *rip = (uintptr_t)entry_point;
     if (thread->user_space) {
         state->ds = Segment_User_Data;
         state->cs = Segment_User_Code;
@@ -198,7 +226,6 @@ struct thread *thread_init(struct process *proc, void *entry_point,
             kfree(thread);
             return NULL;
         }
-        thread->current_stack_pointer = thread->user_stack + thread->user_stack_size;
     } else {
         thread->user_stack_size = 0;
         thread->user_stack = NULL;
@@ -219,7 +246,6 @@ struct thread *thread_init(struct process *proc, void *entry_point,
     thread->process = proc;
 
     object_clear(&thread->obj, thread_free);
-    scheduler_add_thread(thread);
 
     return thread;
 }
@@ -279,9 +305,15 @@ struct process *process_init(void *entry_point) {
     proc->children = NULL;
     proc->parent = NULL;
     object_clear(&proc->obj, process_free);
-
-
     object_retain(&proc->obj);
+
+    phys_addr parent_pt = read_cr3();
+    page_table_switch(proc->page_table->physical_address);
+    uint64_t *rip = (uint8_t *)thread->user_stack + thread->user_stack_size - 64;
+    assert(*rip == entry_point);
+    page_table_switch(parent_pt);
+
+    scheduler_add_thread(thread);
 
     return proc;
 

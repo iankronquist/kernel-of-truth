@@ -26,9 +26,12 @@ _thread_switch:
 
     mov %rsp, (%rsi)
 
+    mov %rdx, %cr3
+
     mov  %rdi, %rsp
 
     popf
+
     pop %r15
     pop %r14
     pop %r13
@@ -44,4 +47,6 @@ _thread_switch:
     pop %rcx
     pop %rbx
     pop %rax
+    sti
     ret
+    #iretq
