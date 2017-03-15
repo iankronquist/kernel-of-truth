@@ -51,8 +51,8 @@ out:
 }
 
 
-static void slab_free_helper(size_t bytes, void *address,
-                             struct region_vector *vect, bool free_phys) {
+void slab_free_helper(size_t bytes, void *address, struct region_vector *vect,
+                      bool free_phys) {
     if (address == NULL) {
         return;
     }

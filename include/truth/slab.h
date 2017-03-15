@@ -14,6 +14,8 @@ void slab_free_virt(size_t count, void *address);
 void *slab_alloc_locked(size_t bytes, enum memory_attributes attrs);
 void slab_free_locked(size_t count, void *address);
 
+void slab_free_helper(size_t bytes, void *address, struct region_vector *vect,
+                      bool free_phys);
 void *slab_alloc_helper(size_t bytes, phys_addr *phys,
                         enum memory_attributes page_attributes,
                         struct region_vector *vect);
