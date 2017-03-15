@@ -55,23 +55,3 @@ int thread_exit(struct thread *thread, int exit_code);
 struct process *process_spawn(void);
 void process_exit(struct process *process, int exit_code);
 void thread_switch(struct thread *old_thread, struct thread *new_thread);
-
-/*
-Spawn process:
-1. Get pid.
-2. Alloc address space.
-3. Alloc page table.
-4. Set process state.
-5. Spawn thread 0.
-
-Spawn thread:
-1. Get tid.
-2. Alloc kernel stack.
-3. Alloc user stack.
-4. Set up user stack.
-5. Set thread state.
-6. Schedule thread.
-
-unsigned int process_get_next_pid(void);
-unsigned int process_get_next_tid(struct process *proc);
-*/
