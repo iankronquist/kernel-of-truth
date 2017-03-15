@@ -126,7 +126,11 @@ static void thread_free(struct object *obj) {
     assert(thread->next == NULL);
     assert(thread->prev == NULL);
     assert(thread->state = Thread_Exited);
-    slab_free(thread->user_stack_size, thread->user_stack);
+
+void slab_free_helper(size_t bytes, void *address, struct region_vector *vect,
+                      bool free_phys);
+    slab_free_helper(thread->user_stack_size, thread->user_stack,
+                     thread->process->address_space, true);
     slab_free(thread->kernel_stack_size, thread->kernel_stack);
     object_release(&thread->process->obj);
     kfree(thread);
@@ -237,7 +241,8 @@ struct thread *thread_init(struct process *proc, void *entry_point,
 
     status = process_add_thread(proc, thread);
     if (status != Ok) {
-        slab_free(thread->user_stack_size, thread->user_stack);
+        slab_free_helper(thread->user_stack_size, thread->user_stack,
+                         proc->address_space, true);
         slab_free(thread->kernel_stack_size, thread->kernel_stack);
         kfree(thread);
     }
