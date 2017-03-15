@@ -73,7 +73,6 @@ struct thread *scheduler_get_current_thread(void) {
 
 
 void scheduler_add_thread(struct thread *thread) {
-    logf(Log_Debug, "Scheduling thread %p\n", thread);
     assert(thread != NULL);
     lock_acquire_writer(&Current_Thread_Lock);
     if (Current_Thread != NULL) {
