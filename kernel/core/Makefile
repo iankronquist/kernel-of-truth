@@ -1,0 +1,16 @@
+OBJ += $(BUILD_DIR)/core/bitmap.c.o
+OBJ += $(BUILD_DIR)/core/file.c.o
+OBJ += $(BUILD_DIR)/core/hashtable.c.o
+OBJ += $(BUILD_DIR)/core/heap.c.o
+OBJ += $(BUILD_DIR)/core/lock.c.o
+OBJ += $(BUILD_DIR)/core/log.c.o
+OBJ += $(BUILD_DIR)/core/main.c.o
+OBJ += $(BUILD_DIR)/core/object.c.o
+OBJ += $(BUILD_DIR)/core/process.c.o
+OBJ += $(BUILD_DIR)/core/physical_allocator.c.o
+OBJ += $(BUILD_DIR)/core/region_vector.c.o
+OBJ += $(BUILD_DIR)/core/slab.c.o
+OBJ += $(BUILD_DIR)/core/sorted_list.c.o
+OBJ += $(BUILD_DIR)/core/string.c.o
+OBJ += $(BUILD_DIR)/core/scheduler.c.o
+OBJ += $(BUILD_DIR)/core/ubsan.c.o

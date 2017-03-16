@@ -1,0 +1,14 @@
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/boot.S.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/control_registers.S.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/idt.S.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/isr.S.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/gdt.c.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/idt.c.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/interrupts.c.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/interrupts.S.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/paging.c.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/paging.S.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/pic.c.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/arch_process.c.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/process.S.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/memory.c.o

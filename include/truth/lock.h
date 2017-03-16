@@ -1,17 +1,18 @@
 #pragma once
 
-/* A spin lock is a CPU lock which is not likely to be contended for long.
- * A spin lock is a simple integer -- it is 1 if locked and 0 otherwise. It
- * should only be acquired via an atomic instruction. If it cannot successfully
- * be acquired, try again in a loop.
- */
-typedef int spinlock_t;
+#include <truth/types.h>
 
-// A simple definition for initializing a spin lock.
-#define SPINLOCK_INIT 0
+struct lock {
+    atomic_uint readers;
+    atomic_bool writer;
+};
 
-// Acquire a <spinlock_t>.
-void acquire_spinlock(spinlock_t *s);
+void lock_clear(struct lock *lock);
 
-// Release a <spinlock_t>.
-int release_spinlock(spinlock_t *s);
+void lock_acquire_reader(struct lock *lock);
+void lock_release_reader(struct lock *lock);
+
+void lock_acquire_writer(struct lock *lock);
+void lock_release_writer(struct lock *lock);
+
+#define Lock_Clear { .readers = 0, .writer = false }

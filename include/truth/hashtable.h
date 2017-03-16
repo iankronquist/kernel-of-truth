@@ -1,14 +1,22 @@
-#ifndef HASHTABLE_H
-#define HASHTABLE_H
+#pragma once
 
-#include <stdbool.h>
-#include <stddef.h>
+#include <truth/memory.h>
+#include <truth/types.h>
+
+// A hashtable key. May be a pointer or unsigned integer.
+union hashtable_key {
+    unsigned long data;
+    unsigned int integer;
+    void *ptr;
+};
+
 
 // Function used for hashing an object. Should return a good hash in the range
 // [0, SIZE_T_MAX].
-typedef size_t (*hashfunc)(void *);
-// Compare to objects when fetching from a hash table.
-typedef bool (*hashcomp)(void *, void *);
+typedef size_t (*hash_f)(union hashtable_key);
+
+// Compare two objects when fetching from a hash table.
+typedef enum partial (*partial_comp_f)(union hashtable_key, union hashtable_key);
 
 // A structure for holding key value pairs for the hash table.
 struct hashdata;
@@ -18,19 +26,21 @@ struct hashdata;
 struct hashtable {
     size_t used;
     size_t size;
-    hashfunc hash;
-    hashcomp comp;
+    hash_f hash;
+    partial_comp_f comp;
     struct hashdata *data;
 };
 
-// Hash a statically allocated string.
-size_t hash_str(void *str);
+// Hash a string.
+size_t hash_str(union hashtable_key str);
 
 // Compare two strings.
-bool hash_str_comp(void *key_a, void *key_b);
+enum partial hash_str_comp(union hashtable_key key_a,
+                           union hashtable_key key_b);
 
 // Create and allocate a new hash table.
-struct hashtable *hashtable_init(size_t size, hashfunc hf, hashcomp hc);
+struct hashtable *hashtable_init(size_t size, hash_f hf, partial_comp_f hc);
+
 // Free a hash table.
 void hashtable_destroy(struct hashtable *ht);
 
@@ -38,13 +48,15 @@ void hashtable_destroy(struct hashtable *ht);
 // Remove an item from the hash table.
 // Does not free the item.
 // May resize the hash table.
-void hashtable_remove(struct hashtable *ht, void *key);
+enum status checked hashtable_remove(struct hashtable *ht,
+                                     union hashtable_key key);
+
 // Get an item associated with a key from the hash table.
 // Return NULL if the item is absent.
-void *hashtable_get(struct hashtable *ht, void *key);
+void *hashtable_get(struct hashtable *ht, union hashtable_key key);
+
 // Put an item in the hash table.
 // Does not copy the item.
 // May resize the hash table.
-int hashtable_put(struct hashtable *ht, void *key, void *value);
-
-#endif
+enum status checked hashtable_put(struct hashtable *ht,
+                                  union hashtable_key key, void *value);
