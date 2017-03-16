@@ -52,6 +52,7 @@ enum memory_attributes {
 #define Lower_Half_Size   (Lower_Half_End - Lower_Half_Start)
 #define Higher_Half_Size  (Higher_Half_End - Higher_Half_Start)
 
+#define Memory_Bootstrap_Stack_Size (16 * KB)
 
 static inline bool memory_is_lower_half(void *address) {
     return address <= Lower_Half_End;
