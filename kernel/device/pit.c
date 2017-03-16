@@ -15,8 +15,9 @@
 #define Timer_Command_Reg 0x43
 #define RW_Oneshot_Square 0x36
 
-static void timer_interrupt_handler(struct interrupt_cpu_state *unused(r)) {
+static bool timer_interrupt_handler(struct interrupt_cpu_state *unused(r)) {
     scheduler_yield();
+    return true;
 }
 
 void timer_init(void) {
