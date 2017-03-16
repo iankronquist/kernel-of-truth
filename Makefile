@@ -61,7 +61,6 @@ $(KERNEL): $(KERNEL)64
 $(KERNEL)64: kernel/arch/$(ARCH)/link.ld $(OBJ)
 	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $@ $(LDFLAGS)
 
-
 $(BUILD_DIR)/%.c.o: kernel/%.c
 	mkdir -p $(shell dirname $@)
 	$(CC) -c $< -o $@ $(CFLAGS)
@@ -89,8 +88,7 @@ start: debug
 	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio
 
 start-log: $(KERNEL)
-	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall -D $(BUILD_DIR)/qemu.log $(QEMU_FLAGS) -monitor stdio
-
-
+	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall \
+		-D $(BUILD_DIR)/qemu.log $(QEMU_FLAGS) -monitor stdio
 
 -include $(OBJ:.o=.d)
