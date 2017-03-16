@@ -17,8 +17,10 @@ void interrupts_dispatcher(struct interrupt_cpu_state r) {
     bool handled = false;
     for (size_t i = 0; i < Interrupt_Handlers_Count; ++i) {
         if (Interrupt_Dispatch[r.interrupt_number][i] != NULL) {
-            Interrupt_Dispatch[r.interrupt_number][i](&r);
-            handled = true;
+            handled = Interrupt_Dispatch[r.interrupt_number][i](&r);
+            if (handled) {
+                break;
+            }
         }
     }
     if (r.interrupt_number < 32 && !handled) {

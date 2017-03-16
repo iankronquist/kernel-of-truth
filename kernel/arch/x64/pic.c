@@ -20,6 +20,7 @@
 #define PIC_All_IRQ_Mask 0xff
 #define PIC_No_IRQ_Mask 0x0
 
+#include <truth/log.h>
 
 void pic_end_of_interrupt(uint8_t interrupt_number) {
     if (interrupt_number > PIC2_First_Interrupt) {

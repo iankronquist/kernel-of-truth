@@ -77,7 +77,7 @@ struct file id##_File = { \
     .write = serial_write_##id, \
     .parent = NULL, \
     .children = NULL, \
-    .references = 0, \
+    .obj = Object_Clear, \
     .permissions = Perm_Write, \
 }; \
 static enum status checked serial_init_##id(const char *file_name) { \

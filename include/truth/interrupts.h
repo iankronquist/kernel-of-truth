@@ -1,8 +1,10 @@
 #pragma once
 
+#include <truth/types.h>
+
 struct interrupt_cpu_state;
 
-typedef void (interrupt_handler_f)(struct interrupt_cpu_state *);
+typedef bool (interrupt_handler_f)(struct interrupt_cpu_state *);
 
 void interrupts_init(void);
 void interrupts_fini(void);
