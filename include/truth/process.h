@@ -3,6 +3,9 @@
 #include <truth/types.h>
 #include <truth/object.h>
 
+#define Thread_Default_User_Stack_Size (16 * KB)
+#define Thread_Default_Kernel_Stack_Size (8 * KB)
+
 enum process_state {
     Process_Running,
     Process_Exited,
@@ -55,3 +58,6 @@ int thread_exit(struct thread *thread, int exit_code);
 struct process *process_spawn(void);
 void process_exit(struct process *process, int exit_code);
 void thread_switch(struct thread *old_thread, struct thread *new_thread);
+enum status thread_user_stack_init(struct thread *thread, struct process *proc,
+                                   void *entry_point);
+ 
