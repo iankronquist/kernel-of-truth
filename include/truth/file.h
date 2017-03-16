@@ -38,13 +38,6 @@ struct file {
 enum status file_system_init(void);
 void file_system_fini(void);
 enum status file_attach(struct file *parent, struct file *child);
-
-enum status vfprintf(struct file *file, const char *restrict format,
-                     va_list ap);
-
-enum status fprintf(struct file *file, const char *restrict format, ...);
-
-
 enum status file_attach_path(const char *parent_path, struct file *child);
 enum status file_attach(struct file *parent, struct file *child);
 struct file *file_from_path(const char *path);

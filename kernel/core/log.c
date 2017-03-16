@@ -1,6 +1,6 @@
 #include <stdarg.h>
 
-#include <truth/file.h>
+#include <truth/format.h>
 #include <truth/log.h>
 #include <truth/panic.h>
 #include <truth/types.h>
