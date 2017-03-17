@@ -39,7 +39,9 @@ struct file Dev = {
 
 
 enum status file_system_init(void) {
-    return file_attach(&Root, &Dev);
+    enum status status =  file_attach(&Root, &Dev);
+    log(Log_Info, "Virtual File System initialized");
+    return status;
 }
 
 
@@ -127,7 +129,8 @@ enum status file_attach(struct file *parent, struct file *child) {
     if (parent->child_capacity == parent->child_count) {
         parent->child_capacity += 10;
         struct file **new_children = krealloc(parent->children,
-                                              parent->child_capacity);
+                                              parent->child_capacity *
+                                              sizeof(struct file *));
         if (new_children == NULL) {
             return Error_No_Memory;
         }
