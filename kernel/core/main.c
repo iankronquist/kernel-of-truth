@@ -26,5 +26,7 @@ void kernel_main(void *multiboot_tables) {
     assert_ok(paging_init());
     assert_ok(processes_init());
     timer_init();
+    keyboard_init();
+    vga_init();
     halt();
 }
