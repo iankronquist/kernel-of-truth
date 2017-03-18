@@ -23,10 +23,10 @@ Kernel Features
 - [x] 8253 Programmable Interrupt Timer.
 - [x] Preemptive multitasking.
 - [x] Higher half.
-- [ ] PS2 keyboard driver.
+- [x] Virtual File System.
+- [x] PS2 keyboard driver.
 - [ ] VGA graphics driver.
 - [ ] Basic syscalls.
-- [ ] Virtual File System.
 - [ ] POSIX syscall layer.
 - [ ] FAT filesystem.
 - [ ] AHCI.
