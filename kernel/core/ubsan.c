@@ -51,6 +51,12 @@ void __ubsan_handle_negate_overflow(struct source_location *location) {
     panic();
 }
 
+void __ubsan_handle_add_overflow(struct source_location *location) {
+    log(Log_Error, "Add overflow");
+    log_location(location);
+    panic();
+}
+
 void __ubsan_handle_type_mismatch(struct type_mismatch_info *type_mismatch,
                                   uintptr_t pointer) {
     struct source_location *location = &type_mismatch->location;
