@@ -117,6 +117,23 @@ enum status file_attach_path(const char *parent_path, struct file *child) {
 }
 
 
+enum status file_detach(struct file *parent, struct file *child) {
+    assert(parent != NULL);
+    assert(child != NULL);
+
+    for (size_t i = 0; i < parent->child_count; ++i) {
+        if (parent->children[i] == child) {
+            parent->child_count--;
+            parent->children[i] = parent->children[parent->child_count];
+            object_release(&parent->obj);
+            return Ok;
+        }
+    }
+
+    return Error_Absent;
+}
+
+
 enum status file_attach(struct file *parent, struct file *child) {
     assert(parent != NULL);
     assert(child != NULL);
