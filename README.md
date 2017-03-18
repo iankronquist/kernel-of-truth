@@ -25,6 +25,7 @@ Kernel Features
 - [x] Higher half.
 - [x] Virtual File System.
 - [x] PS2 keyboard driver.
+- [x] CMOS Real Time Clock.
 - [ ] VGA graphics driver.
 - [ ] Basic syscalls.
 - [ ] POSIX syscall layer.
