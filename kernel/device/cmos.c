@@ -103,7 +103,7 @@ void cmos_get_time_of_day(struct timeval *time) {
                           days_to_seconds(
                                   CMOS_Days_Per_Standard_Month[month]) +
                           standard_years_to_seconds(year_low);
-    logf(Log_Debug, "Time: %d/%d/%d %d:%d:%d\n", day_of_month, month, year,
+    logf(Log_Debug, "Time: %d/%d/%ld %d:%d:%d\n", day_of_month, month, year,
             hours, minutes, seconds1);
     time->tv_sec = epoch_time;
     time->tv_usec = 0;
