@@ -26,6 +26,7 @@ Kernel Features
 - [x] Virtual File System.
 - [x] PS2 keyboard driver.
 - [x] VGA graphics driver.
+- [x] CMOS Real Time Clock.
 - [ ] Elf loader.
 - [ ] Basic syscalls.
 - [ ] POSIX syscall layer.
