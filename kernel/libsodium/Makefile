@@ -1,0 +1,11 @@
+OBJ += $(BUILD_DIR)/libsodium/crypto_hash.c.o
+OBJ += $(BUILD_DIR)/libsodium/hash_sha512.c.o
+OBJ += $(BUILD_DIR)/libsodium/crypto_sign.c.o
+OBJ += $(BUILD_DIR)/libsodium/sign_ed25519.c.o
+OBJ += $(BUILD_DIR)/libsodium/ref10/sign.c.o
+OBJ += $(BUILD_DIR)/libsodium/ref10/open.c.o
+OBJ += $(BUILD_DIR)/libsodium/hash_sha512_cp.c.o
+OBJ += $(BUILD_DIR)/libsodium/ref10/keypair.c.o
+OBJ += $(BUILD_DIR)/libsodium/curve25519_ref10.c.o
+OBJ += $(BUILD_DIR)/libsodium/verify.c.o
+OBJ += $(BUILD_DIR)/libsodium/truth_shims.c.o
