@@ -10,7 +10,7 @@
 #define Keyboard_Left_Shift_Released 0xaa
 #define Keyboard_Input_Available 0x1
 
-#define Keyboard_Status_Port 0x60
+#define Keyboard_Status_Port 0x64
 #define Keyboard_Data_Port 0x60
 
 #define Keyboard_IRQ_Number 0x21
@@ -110,9 +110,9 @@ bool keyboard_handler(struct interrupt_cpu_state *unused(r)) {
     uint8_t key_code;
     char c = 0;
 
-    status_port = read_port(Keyboard_Data_Port);
+    status_port = read_port(Keyboard_Status_Port);
 
-    if (status_port != 0) {
+    if (status_port & Keyboard_Input_Available) {
         key_code = read_port(Keyboard_Data_Port);
         if (key_code == Keyboard_Right_Shift_Held ||
                 key_code == Keyboard_Right_Shift_Held) {
