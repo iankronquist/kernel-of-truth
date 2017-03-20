@@ -1,3 +1,4 @@
+#include <truth/device/vga.h>
 #include <truth/interrupts.h>
 #include <truth/file.h>
 #include <truth/log.h>
