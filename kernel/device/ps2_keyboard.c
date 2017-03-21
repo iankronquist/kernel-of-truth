@@ -1,3 +1,4 @@
+#include <truth/device/vga.h>
 #include <truth/interrupts.h>
 #include <truth/file.h>
 #include <truth/log.h>
@@ -10,7 +11,7 @@
 #define Keyboard_Left_Shift_Released 0xaa
 #define Keyboard_Input_Available 0x1
 
-#define Keyboard_Status_Port 0x60
+#define Keyboard_Status_Port 0x64
 #define Keyboard_Data_Port 0x60
 
 #define Keyboard_IRQ_Number 0x21
@@ -110,10 +111,10 @@ bool keyboard_handler(struct interrupt_cpu_state *unused(r)) {
     uint8_t key_code;
     char c = 0;
 
-    status_port = read_port(0x60);
+    status_port = read_port(Keyboard_Status_Port);
 
-    if (status_port != 0) {
-        key_code = read_port(0x60);
+    if (status_port & Keyboard_Input_Available) {
+        key_code = read_port(Keyboard_Data_Port);
         if (key_code == Keyboard_Right_Shift_Held ||
                 key_code == Keyboard_Right_Shift_Held) {
             shift_held = true;
@@ -130,7 +131,7 @@ bool keyboard_handler(struct interrupt_cpu_state *unused(r)) {
             }
         }
         if (c != 0) {
-            logf(Log_None, "%c", c);
+            vga_putc(c);
         }
     }
 
@@ -139,10 +140,8 @@ bool keyboard_handler(struct interrupt_cpu_state *unused(r)) {
 
 
 void keyboard_init(void) {
-    log(Log_Error, "keyboard init");
     file_attach_path("/dev/", &Keyboard_Device);
     interrupt_register_handler(Keyboard_IRQ_Number, keyboard_handler);
-    log(Log_Error, "keyboard inited");
 }
 
 
