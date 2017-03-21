@@ -9,6 +9,7 @@ OBJ += $(BUILD_DIR)/core/main.c.o
 OBJ += $(BUILD_DIR)/core/object.c.o
 OBJ += $(BUILD_DIR)/core/process.c.o
 OBJ += $(BUILD_DIR)/core/physical_allocator.c.o
+OBJ += $(BUILD_DIR)/core/random.c.o
 OBJ += $(BUILD_DIR)/core/region_vector.c.o
 OBJ += $(BUILD_DIR)/core/slab.c.o
 OBJ += $(BUILD_DIR)/core/sorted_list.c.o
