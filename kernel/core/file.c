@@ -39,7 +39,9 @@ struct file Dev = {
 
 
 enum status file_system_init(void) {
-    return file_attach(&Root, &Dev);
+    enum status status =  file_attach(&Root, &Dev);
+    log(Log_Info, "Virtual File System initialized");
+    return status;
 }
 
 
@@ -115,6 +117,23 @@ enum status file_attach_path(const char *parent_path, struct file *child) {
 }
 
 
+enum status file_detach(struct file *parent, struct file *child) {
+    assert(parent != NULL);
+    assert(child != NULL);
+
+    for (size_t i = 0; i < parent->child_count; ++i) {
+        if (parent->children[i] == child) {
+            parent->child_count--;
+            parent->children[i] = parent->children[parent->child_count];
+            object_release(&parent->obj);
+            return Ok;
+        }
+    }
+
+    return Error_Absent;
+}
+
+
 enum status file_attach(struct file *parent, struct file *child) {
     assert(parent != NULL);
     assert(child != NULL);
@@ -127,7 +146,8 @@ enum status file_attach(struct file *parent, struct file *child) {
     if (parent->child_capacity == parent->child_count) {
         parent->child_capacity += 10;
         struct file **new_children = krealloc(parent->children,
-                                              parent->child_capacity);
+                                              parent->child_capacity *
+                                              sizeof(struct file *));
         if (new_children == NULL) {
             return Error_No_Memory;
         }

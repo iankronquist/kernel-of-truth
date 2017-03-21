@@ -37,10 +37,12 @@ struct file {
 
 enum status file_system_init(void);
 void file_system_fini(void);
-enum status file_attach(struct file *parent, struct file *child);
 enum status file_attach_path(const char *parent_path, struct file *child);
 enum status file_attach(struct file *parent, struct file *child);
+enum status file_detach(struct file *parent, struct file *child);
 struct file *file_from_path(const char *path);
 struct file *file_find_child_named(struct file *file, const char *name,
                                    size_t n);
 void file_fini(struct file *file);
+
+extern struct file Dev;

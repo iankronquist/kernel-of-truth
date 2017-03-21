@@ -76,6 +76,9 @@ void *kmalloc(size_t bytes) {
 
 void *krealloc(void *ptr, size_t size) {
     uint8_t *old_mem = ptr;
+    if (ptr == NULL) {
+        return NULL;
+    }
     uint8_t *new_mem = kmalloc(size);
     if (new_mem == NULL) {
         return NULL;
