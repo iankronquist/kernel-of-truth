@@ -2,4 +2,4 @@
 
 #include <truth/types.h>
 
-void random(void *buf, size_t size);
+void random_bytes(void *buf, size_t size);
