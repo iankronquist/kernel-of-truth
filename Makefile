@@ -8,9 +8,9 @@ VCS_VERSION := $(shell git rev-parse HEAD)
 WEBSITE := https://github.com/iankronquist/kernel-of-truth
 MACROS := -dD \
 	-D project_website='"$(WEBSITE)"' \
-	-D kernel_major=$(KERNEL_MAJOR) \
-	-D kernel_minor=$(KERNEL_MINOR) \
-	-D kernel_patch=$(KERNEL_PATCH) \
+	-D kernel_major='"$(KERNEL_MAJOR)"' \
+    -D kernel_minor='"$(KERNEL_MINOR)"' \
+    -D kernel_patch='"$(KERNEL_PATCH)"' \
 	-D vcs_version='"$(VCS_VERSION)"'
 
 BUILD_DIR := build

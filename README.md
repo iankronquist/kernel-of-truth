@@ -25,13 +25,13 @@ Kernel Features
 - [x] Higher half.
 - [x] Virtual File System.
 - [x] PS2 keyboard driver.
+- [x] VGA graphics driver.
 - [x] CMOS Real Time Clock.
-- [ ] VGA graphics driver.
+- [ ] Elf loader.
 - [ ] Basic syscalls.
 - [ ] POSIX syscall layer.
 - [ ] FAT filesystem.
 - [ ] AHCI.
-- [ ] Elf loader.
 - [ ] Loadable kernel modules.
 - [ ] Symmetric Multiprocessing (SMP).
 

@@ -12,6 +12,27 @@ static struct lock slab_higher_half_lock = Lock_Clear;
 extern struct region_vector slab_higher_half;
 
 
+void *slab_alloc_request_physical(phys_addr phys,
+                                  enum memory_attributes attrs) {
+    union address virt_address;
+
+    lock_acquire_writer(&slab_higher_half_lock);
+    if (region_alloc(&slab_higher_half, Page_Small, &virt_address) != Ok) {
+        virt_address.virtual = NULL;
+        goto out;
+    }
+
+    if (map_page(virt_address.virtual, phys, attrs) != Ok) {
+        virt_address.virtual = NULL;
+        goto out;
+    }
+
+out:
+    lock_release_writer(&slab_higher_half_lock);
+
+    return virt_address.virtual;
+}
+
 
 void *slab_alloc_helper(size_t bytes, phys_addr *phys,
                         enum memory_attributes page_attributes,

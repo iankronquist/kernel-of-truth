@@ -10,7 +10,7 @@ static uint64_t rdrand(void) {
     return rand;
 }
 
-void random(void *buf, size_t size) {
+void random_bytes(void *buf, size_t size) {
     uint64_t *word_buf = buf;
     uint8_t *byte_buf = buf;
     size_t remainder = size % sizeof(uint64_t);
@@ -20,7 +20,7 @@ void random(void *buf, size_t size) {
     if (remainder != 0) {
         uint64_t left_over = rdrand();
         for (size_t i = 0; i < remainder; ++i) {
-            byte_buf[i] = (left_over >> (i * sizeof(uint8_t))) & 0xff;
+            byte_buf[size - remainder + i] = (left_over >> (i * sizeof(uint8_t))) & 0xff;
         }
     }
 }
