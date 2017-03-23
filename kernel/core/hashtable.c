@@ -32,7 +32,7 @@ size_t hash_str(union hashtable_key str) {
 enum partial hash_str_comp(union hashtable_key key_a,
                            union hashtable_key key_b) {
     // Strings should not be longer than pages. That is nonsense.
-    if (strncmp(key_a.ptr, key_b.ptr, Page_Small) != Order_Equal) {
+    if (strncmp(key_a.ptr, key_b.ptr, Page_Small) != 0) {
         return Partial_Not_Equal;
     } else {
         return Partial_Equal;

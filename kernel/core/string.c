@@ -76,22 +76,19 @@ void *user_memmove(void *destination, const void *source, size_t size) {
     return ret;
 }
 
-enum order strncmp(const char *s1, const char *s2, size_t n) {
+int strncmp(const char *s1, const char *s2, size_t n) {
     for (size_t i = 0; i < n; ++i) {
-        if (s1[i] != s2[i]) {
-            if (s1[i] > s2[i]) {
-                return Order_Greater;
-            } else {
-                return Order_Less;
-            }
+        int difference = s1[i] - s2[i];
+        if (difference != 0) {
+            return difference;
         }
     }
-    return Order_Equal;
+    return 0;
 }
 
-enum order user_strncmp(const char *s1, const char *s2, size_t n) {
+int user_strncmp(const char *s1, const char *s2, size_t n) {
     memory_user_access_enable();
-    enum order ret = strncmp(s1, s2, n);
+    int ret = strncmp(s1, s2, n);
     memory_user_access_disable();
     return ret;
 }
