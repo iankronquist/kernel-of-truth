@@ -1,0 +1,9 @@
+OBJ += $(BUILD_DIR)/crypto/ed25519/keypair.c.o
+OBJ += $(BUILD_DIR)/crypto/ed25519/open.c.o
+OBJ += $(BUILD_DIR)/crypto/ed25519/sign.c.o
+OBJ += $(BUILD_DIR)/crypto/ed25519/verify.c.o
+OBJ += $(BUILD_DIR)/crypto/ed25519/curve25519_ref10.c.o
+OBJ += $(BUILD_DIR)/crypto/sha512/hash_sha512.c.o
+OBJ += $(BUILD_DIR)/crypto/sha512/hash_sha512_cp.c.o
+OBJ += $(BUILD_DIR)/crypto/truth_shims.c.o
+OBJ += $(BUILD_DIR)/crypto/truth_shims_randombytes.c.o
