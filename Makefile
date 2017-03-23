@@ -21,11 +21,12 @@ OBJ :=
 include kernel/arch/$(ARCH)/Makefile
 include kernel/core/Makefile
 include kernel/device/Makefile
+include kernel/libsodium/Makefile
 
 
 CC := $(TRIPLE)-gcc
 CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra \
-	-I ./include $(MACROS) -D __C__ -mcmodel=large
+	-I ./include $(MACROS) -D __C__ -mcmodel=large -I kernel/libsodium
 
 AS := $(TRIPLE)-gcc
 ASFLAGS := -MP -MMD -ffreestanding -O2 -Wall -Wextra \
