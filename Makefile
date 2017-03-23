@@ -20,6 +20,7 @@ KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
 OBJ :=
 include kernel/arch/$(ARCH)/Makefile
 include kernel/core/Makefile
+include kernel/crypto/Makefile
 include kernel/device/Makefile
 
 
@@ -42,9 +43,12 @@ QEMU := qemu-system-x86_64
 QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/serial.txt \
 	-cpu Broadwell
 
+MAKE := make
+
 .PHONY: all clean debug iso release start start-log
 
 all: $(KERNEL)
+	$(MAKE) -C tools/
 
 debug: CFLAGS += -g -fsanitize=undefined
 debug: ASFLAGS += -g
