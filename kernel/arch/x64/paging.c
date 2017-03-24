@@ -9,7 +9,10 @@
 #include <truth/types.h>
 
 extern void invalidate_tlb(void);
-extern uint64_t invalidate_page(void *);
+
+static void paging_page_invalidate(void *virt) {
+    __asm__ volatile ("invlpg %0" ::"m"(*(uint8_t *)virt));
+}
 
 #define pl1_Count 512
 #define pl2_Count 512
@@ -174,7 +177,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
         pl4[pl4_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
-        invalidate_page(level_three);
+        paging_page_invalidate(level_three);
     }
 
     if (!is_pl2_present(level_three, virtual_address)) {
@@ -182,7 +185,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
         level_three[pl3_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
-        invalidate_page(level_two);
+        paging_page_invalidate(level_two);
     }
 
     if (!is_pl1_present(level_two, virtual_address)) {
@@ -190,7 +193,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
         level_two[pl2_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
-        invalidate_page(level_one);
+        paging_page_invalidate(level_one);
     }
 
     if (is_Memory_Present(level_one, virtual_address)) {
@@ -201,7 +204,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
 
     level_one[pl1_index(virtual_address)] =
         (phys_address | permissions | Memory_Present);
-    invalidate_page(virtual_address);
+    paging_page_invalidate(virtual_address);
 
     return Ok;
 }
@@ -218,7 +221,7 @@ void unmap_page(void *address, bool free_physical_memory) {
             physical_free(align_page(level_one[pl1_index(address)]), 1);
         }
         level_one[pl1_index(address)] = free_page_entry;
-        invalidate_page(address);
+        paging_page_invalidate(address);
     }
 }
 
@@ -256,10 +259,10 @@ enum status paging_init(void) {
             memset(virt, 0, Page_Small);
             slab_free_virt(Page_Small, virt);
             pl4[i] = new_phys | Memory_Present | Memory_Writable;
-            invalidate_tlb();
         }
     }
     pl4[0] = 0;
+    invalidate_tlb();
     assert(paging_test() == true);
     return Ok;
 }
