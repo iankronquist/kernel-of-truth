@@ -1,4 +1,4 @@
-CC=clang
+CC=gcc
 BUILD_DIR := ../build
 CFLAGS := -Wall -std=c11
 LIBSODIUM_OBJS := ../kernel/crypto/ed25519/sign.c \
