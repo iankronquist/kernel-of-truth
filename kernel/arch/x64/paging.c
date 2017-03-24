@@ -201,7 +201,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
 
     level_one[pl1_index(virtual_address)] =
         (phys_address | permissions | Memory_Present);
-    invalidate_page(level_one);
+    invalidate_page(virtual_address);
 
     return Ok;
 }
