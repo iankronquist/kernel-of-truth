@@ -1,6 +1,6 @@
 CC=gcc
 BUILD_DIR := ../build
-CFLAGS := -Wall -std=c11
+CFLAGS := -Wall -Wextra -Werror -std=c11 -O2
 LIBSODIUM_OBJS := ../kernel/crypto/ed25519/sign.c \
 	../kernel/crypto/ed25519/keypair.c ../kernel/crypto/ed25519/open.c \
 	../kernel/crypto/sha512/hash_sha512.c \
@@ -15,7 +15,7 @@ all: $(BUILD_DIR)/tools/truesign test
 
 $(BUILD_DIR)/tools/truesign: truesign.c  $(LIBSODIUM_OBJS)
 	mkdir -p $(shell dirname $@)
-	$(CC) $(LIBSODIUM_OBJS) $< -o $@ $(CFLAGS) -I ../include/ -I ../kernel/libsodium
+	$(CC) $(LIBSODIUM_OBJS) $< -o $@ $(CFLAGS) -I ../include/
 
 test: $(BUILD_DIR)/tools/truesign
 	$(VALGRIND) $(BUILD_DIR)/tools/truesign generate \
