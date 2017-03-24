@@ -8,21 +8,22 @@
 #define SIGNATURE_MAGIC_STRING "Kernel of Truth truesign 1.0.0"
 
 
-int usage(int argc, char *argv[]) {
+int usage(char *name) {
     fprintf(stderr,
             "Usage: %s <command> <args>\n"
             "Commands:\n"
             "\tgenerate privkey pubkey      \tGenerate an ed25519 key pair\n"
             "\tsign privkey in_file out_file\tSign file with public key\n"
             "\tverify pubkey file           \tVerify file with private key\n",
-            argv[0]);
+            name);
     return EXIT_FAILURE;
 }
 
 
 static int get_file_size(FILE *file, size_t *size) {
-    long orignal_position = ftell(file);
-    if (orignal_position == -1) {
+    long told;
+    long original_position = ftell(file);
+    if (original_position == -1) {
         return -1;
     }
 
@@ -31,12 +32,13 @@ static int get_file_size(FILE *file, size_t *size) {
         return error;
     }
 
-    *size = ftell(file);
-    if (*size == -1) {
+    told = ftell(file);
+    if (told == -1) {
         return -1;
     }
 
-    error = fseek(file, orignal_position, SEEK_SET);
+    error = fseek(file, original_position, SEEK_SET);
+    *size = told;
 
     return error;
 }
@@ -342,6 +344,6 @@ int main(int argc, char *argv[]) {
         return verify_file(argv[2], argv[3]);
         return -1;
     } else {
-        return usage(argc, argv);
+        return usage(argv[0]);
     }
 }
