@@ -47,7 +47,7 @@ static bool paging_test(void) {
     struct page_table *new_pt = page_table_init();
     page_table_switch(new_pt->physical_address);
 
-    assert_ok(map_page(NULL, physical_alloc(1), Memory_Writable));
+    assert_ok(map_page(NULL, physical_alloc(), Memory_Writable));
     int *test = (int *)0x20;
     *test = 10;
     assert(*test == 10);
@@ -173,7 +173,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     pl1_entry *level_one = get_pl1(virtual_address);
 
     if (!is_pl3_present(pl4, virtual_address)) {
-        phys_addr phys_address = physical_alloc(1);
+        phys_addr phys_address = physical_alloc();
         pl4[pl4_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
@@ -181,7 +181,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     }
 
     if (!is_pl2_present(level_three, virtual_address)) {
-        phys_addr phys_address = physical_alloc(1);
+        phys_addr phys_address = physical_alloc();
         level_three[pl3_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
@@ -189,7 +189,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     }
 
     if (!is_pl1_present(level_two, virtual_address)) {
-        phys_addr phys_address = physical_alloc(1);
+        phys_addr phys_address = physical_alloc();
         level_two[pl2_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
@@ -218,7 +218,7 @@ void unmap_page(void *address, bool free_physical_memory) {
 
 
         if (free_physical_memory) {
-            physical_free(align_page(level_one[pl1_index(address)]), 1);
+            physical_free(align_page(level_one[pl1_index(address)]));
         }
         level_one[pl1_index(address)] = free_page_entry;
         paging_page_invalidate(address);
@@ -299,20 +299,21 @@ void page_table_fini(struct page_table *pt) {
                             pl1_entry *level_one = get_pl1_index(i4, i3, i2);
                             for (size_t i1 = 0; i1 < pl1_Count; ++i1) {
                                 if (level_one[i1] & Memory_Present) {
-                                    physical_free(page_entry_to_phys(level_one[i1]), 1);
+                                    physical_free(page_entry_to_phys(
+                                                    level_one[i1]));
                                 }
                             }
-                            physical_free(page_entry_to_phys(level_two[i2]), 1);
+                            physical_free(page_entry_to_phys(level_two[i2]));
                         }
                     }
-                    physical_free(page_entry_to_phys(level_three[i3]), 1);
+                    physical_free(page_entry_to_phys(level_three[i3]));
                 }
             }
-            physical_free(page_entry_to_phys(level_four[i4]), 1);
+            physical_free(page_entry_to_phys(level_four[i4]));
         }
     }
     page_table_switch(original_pt);
-    physical_free(pt->physical_address, 1);
+    physical_free(pt->physical_address);
     kfree(pt);
 }
 

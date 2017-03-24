@@ -53,7 +53,7 @@ void physical_allocator_init(struct multiboot_info *multiboot_tables) {
     insert_regions(multiboot_tables);
 }
 
-phys_addr physical_alloc(size_t pages) {
+phys_addr physical_alloc(void) {
     phys_addr phys;
     phys_addr next;
     lock_acquire_writer(&physical_allocator_lock);
@@ -66,12 +66,11 @@ phys_addr physical_alloc(size_t pages) {
     }
     Physical_Page = next;
     assert(phys != next);
-    invalidate_tlb();
     lock_release_writer(&physical_allocator_lock);
     return phys;
 }
 
-void physical_free(phys_addr address, size_t pages) {
+void physical_free(phys_addr address) {
     assert(is_aligned(address, Page_Small));
     phys_addr prev;
     lock_acquire_writer(&physical_allocator_lock);
@@ -90,7 +89,7 @@ void physical_free(phys_addr address, size_t pages) {
 void physical_free_range(phys_addr address, size_t pages) {
     assert(is_aligned(address, Page_Small));
     for (size_t i = 0; i < pages; ++i) {
-        physical_free(address, 0);
+        physical_free(address);
         address += Page_Small;
     }
 }
