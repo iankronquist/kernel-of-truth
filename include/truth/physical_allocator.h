@@ -13,3 +13,5 @@ void physical_allocator_init(struct multiboot_info *multiboot_tables);
 phys_addr physical_alloc(void);
 
 void physical_free(phys_addr address);
+
+enum status physical_page_remove(phys_addr address);
