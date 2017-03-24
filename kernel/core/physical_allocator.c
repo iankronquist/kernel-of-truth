@@ -80,7 +80,6 @@ void physical_free(phys_addr address) {
     map_page(Physical_Page_Stack, address, Memory_Writable);
     Physical_Page_Stack->next = prev;
     Physical_Page = address;
-    invalidate_tlb();
 
     lock_release_writer(&physical_allocator_lock);
 }
