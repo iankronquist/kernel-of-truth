@@ -16,21 +16,46 @@ int usage(int argc, char *argv[]) {
     return EXIT_FAILURE;
 }
 
-int verify_file(char *public_key_name, char *file_name) {
+static int get_file_size(FILE *file, size_t *size) {
+    long orignal_position = ftell(file);
+    if (orignal_position == -1) {
+        return -1;
+    }
+
+    int error = fseek(file, 0, SEEK_END);
+    if (error != 0) {
+        return error;
+    }
+
+    *size = ftell(file);
+    if (*size == -1) {
+        return -1;
+    }
+
+    error = fseek(file, orignal_position, SEEK_SET);
+
+    return error;
+}
+
+void print_bytes(unsigned char *bytes, size_t size) {
+    for (size_t i = 0; i < size; ++i) {
+        printf("%x%x", (bytes[i] >> 4) & 0x0f, bytes[i] & 0x0f);
+    }
+    printf("\n");
+}
+
+int verify_file(char *public_key_name, char *test_file_name) {
     int error = 0;
-    crypto_hash_sha512_state state;
+    char signature_magic[sizeof(SIGNATURE_MAGIC_STRING)];
     unsigned char signature[crypto_hash_sha512_BYTES];
     unsigned char public_key[crypto_sign_ed25519_PUBLICKEYBYTES];
-    unsigned char hash[crypto_hash_sha512_BYTES];
     size_t read;
     size_t test_file_size;
     size_t signature_field_size = crypto_sign_ed25519_BYTES +
         sizeof(SIGNATURE_MAGIC_STRING);
-    size_t test_file_data_size;
-    size_t test_file_data_remainder_size;
-    unsigned char file_contents[512];
     FILE *public_key_file = NULL;
     FILE *test_file = NULL;
+    unsigned char *test_file_contents = NULL;
 
     public_key_file = fopen(public_key_name, "r");
     if (public_key_file == NULL) {
@@ -39,91 +64,87 @@ int verify_file(char *public_key_name, char *file_name) {
         goto out;
     }
 
-    test_file = fopen(file_name, "r");
+    test_file = fopen(test_file_name, "r");
     if (test_file == NULL) {
         perror("opening test file");
         error = -1;
         goto out;
     }
 
-    fseek(test_file, 0, SEEK_END);
-
-    test_file_size = ftell(test_file);
-    if (test_file_size <= signature_field_size) {
-        fprintf(stderr, "File too small to have signature\n");
-        error = -1;
-        goto out;
-    }
-    rewind(test_file);
-
-    test_file_data_size = (test_file_size - signature_field_size) /
-        sizeof(file_contents);
-    test_file_data_remainder_size = (test_file_size - signature_field_size) %
-        sizeof(file_contents);
-
-    crypto_hash_sha512_init(&state);
-
-    for (size_t i = 0; i < test_file_data_size; ++i) {
-        read = fread(file_contents, 1, sizeof(file_contents), test_file);
-        if (ferror(test_file) != 0) {
-            perror("Reading test file");
-            error = -1;
-            goto out;
-        }
-
-        error = crypto_hash_sha512_update(&state, file_contents, read);
-        if (error != 0) {
-            fprintf(stderr, "Updating hash\n");
-            error = -1;
-            goto out;
-        }
-    }
-
-    if (test_file_data_remainder_size != 0) {
-        read = fread(file_contents, 1, test_file_data_remainder_size, test_file);
-        if (ferror(test_file) != 0) {
-            perror("Reading test file");
-            error = -1;
-            goto out;
-        }
-
-        error = crypto_hash_sha512_update(&state, file_contents, read);
-        if (error != 0) {
-            fprintf(stderr, "Updating hash\n");
-            error = -1;
-            goto out;
-        }
-    }
-
-    error = crypto_hash_sha512_final(&state, hash);
+    error = get_file_size(test_file, &test_file_size);
     if (error != 0) {
-        fprintf(stderr, "Finalizing hash\n");
+        perror("Reading test file size");
+        goto out;
+    } else if (test_file_size < crypto_sign_ed25519_PUBLICKEYBYTES) {
+        fprintf(stderr, "File is too small to contain a signature\n");
         error = -1;
         goto out;
     }
 
-    error = fseek(test_file, sizeof(signature), SEEK_END);
-    if (error != 0 || ferror(test_file) != 0) {
-        perror("seeking test file");
+    read = fread(public_key, 1, sizeof(public_key), public_key_file);
+    if (ferror(public_key_file) != 0) {
+        perror("Reading public key");
+        error = -1;
+        goto out;
+    }
+
+    test_file_contents = malloc(test_file_size);
+    if (test_file_contents == NULL) {
+        fprintf(stderr, "Couldn't allocate memory for test file contents\n");
+        error = -1;
+        goto out;
+    }
+
+    read = fread(test_file_contents, 1, test_file_size - signature_field_size,
+                 test_file);
+    if (ferror(test_file) != 0) {
+        perror("Reading data from test file");
+        error = -1;
+        goto out;
+    }
+
+    read = fread(signature_magic, 1, sizeof(signature_magic), test_file);
+    if (ferror(test_file) != 0) {
+        perror("Reading signature from test file");
+        error = -1;
+        goto out;
+    }
+
+    if (strncmp(SIGNATURE_MAGIC_STRING, signature_magic,
+                sizeof(SIGNATURE_MAGIC_STRING)) != 0) {
+        fprintf(stderr, "Bad signature magic\n");
         error = -1;
         goto out;
     }
 
     read = fread(signature, 1, sizeof(signature), test_file);
-    if (read != 0 || ferror(test_file) != 0) {
-        perror("reading test file");
+    if (ferror(test_file) != 0) {
+        perror("Reading signature from test file");
         error = -1;
         goto out;
     }
-    printf("signatized %s\n", signature);
 
-    error = crypto_sign_ed25519_verify_detached(signature, hash, sizeof(hash),
-            public_key);
+    read = ftell(test_file);
+    if (read != test_file_size) {
+        fprintf(stderr, "Bug reading signature\n");
+        error = -1;
+        goto out;
+    }
+
+    printf("Public key:\n");
+    print_bytes(public_key, sizeof(public_key));
+    printf("Signature:\n");
+    print_bytes(signature, sizeof(signature));
+
+    error = crypto_sign_ed25519_verify_detached(signature, test_file_contents,
+                                                test_file_size, public_key);
     if (error != 0) {
-        fprintf(stderr, "Failed to verify file %s %d\n", file_name, error);
+        fprintf(stderr, "Failed to verify file %s %d\n", test_file_name, error);
+        goto out;
     }
 
 out:
+    free(test_file_contents);
     fclose(public_key_file);
     fclose(test_file);
     return error;
@@ -131,31 +152,19 @@ out:
 
 int sign_file(char *secret_key_name, char *file_name, char *out_file_name) {
     int error = 0;
-    crypto_hash_sha512_state state;
     unsigned char secret_key[crypto_sign_ed25519_SECRETKEYBYTES];
-    unsigned char hash[crypto_hash_sha512_BYTES];
     unsigned long long signature_final_size;
     unsigned char signature[crypto_sign_ed25519_BYTES];
-    unsigned char file_contents[512];
+    size_t file_size;
     size_t read;
     FILE *secret_key_file = NULL;
     FILE *target_file = NULL;
     FILE *out_file = NULL;
+    unsigned char *file_contents = NULL;
 
     secret_key_file = fopen(secret_key_name, "r");
     if (secret_key_file == NULL) {
         perror("opening secret key file");
-        error = -1;
-        goto out;
-    }
-
-    read = fread(secret_key, 1, sizeof(secret_key), secret_key_file);
-    if (read != sizeof(secret_key)) {
-        fprintf(stderr, "Invalid secret key file\n");
-        error = -1;
-        goto out;
-    } else if (ferror(secret_key_file) != 0) {
-        perror("reading secret key file");
         error = -1;
         goto out;
     }
@@ -174,40 +183,46 @@ int sign_file(char *secret_key_name, char *file_name, char *out_file_name) {
         goto out;
     }
 
-    crypto_hash_sha512_init(&state);
-
-    while (read != 0) {
-        read = fread(file_contents, 1, sizeof(file_contents), target_file);
-        if (ferror(target_file) != 0) {
-            perror("reading target file");
-            error = -1;
-            goto out;
-        }
-
-        fwrite(file_contents, 1, read, out_file);
-        if (ferror(out_file) != 0) {
-            perror("writing out file");
-            error = -1;
-            goto out;
-        }
-
-        error = crypto_hash_sha512_update(&state, file_contents, read);
-        if (error != 0) {
-            fprintf(stderr, "Updating hash\n");
-            error = -1;
-            goto out;
-        }
+    error = get_file_size(target_file, &file_size);
+    if (error != 0) {
+        perror("Getting file size");
+        goto out;
     }
 
-    error = crypto_hash_sha512_final(&state, hash);
-    if (error != 0) {
-        fprintf(stderr, "Finalizing hash\n");
+    file_contents = malloc(file_size);
+    if (file_contents == NULL) {
+        fprintf(stderr, "Could not allocate memory\n");
+        error = -1;
+        goto out;
+    }
+
+    read = fread(secret_key, 1, sizeof(secret_key), secret_key_file);
+    if (read != sizeof(secret_key)) {
+        fprintf(stderr, "Invalid secret key file\n");
+        error = -1;
+        goto out;
+    } else if (ferror(secret_key_file) != 0) {
+        perror("reading secret key file");
+        error = -1;
+        goto out;
+    }
+
+    read = fread(file_contents, 1, file_size, target_file);
+    if (ferror(target_file) != 0) {
+        perror("Reading target file");
+        error = -1;
+        goto out;
+    }
+
+    fwrite(file_contents, 1, read, out_file);
+    if (ferror(out_file) != 0) {
+        perror("Writing out file");
         error = -1;
         goto out;
     }
 
     error = crypto_sign_ed25519_detached(signature, &signature_final_size,
-                                         hash, sizeof(hash), secret_key);
+                                         file_contents, file_size, secret_key);
     if (error != 0) {
         fprintf(stderr, "Signature\n");
         error = -1;
@@ -228,12 +243,17 @@ int sign_file(char *secret_key_name, char *file_name, char *out_file_name) {
         error = -1;
         goto out;
     }
-    printf("signatized %s\n", signature);
+
+    printf("Secret key:\n");
+    print_bytes(secret_key, sizeof(secret_key));
+    printf("Signature:\n");
+    print_bytes(signature, sizeof(signature));
 
 out:
     fclose(target_file);
     fclose(secret_key_file);
     fclose(out_file);
+    free(file_contents);
     return error;
 }
 
@@ -278,6 +298,12 @@ int generate_key(char *secret_key_name, char *public_key_name) {
         error = -1;
         goto out;
     }
+
+    printf("Public key:\n");
+    print_bytes(public_key, sizeof(public_key));
+    printf("Secret key:\n");
+    print_bytes(secret_key, sizeof(secret_key));
+
 
 out:
     fclose(public_key_file);
