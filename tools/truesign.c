@@ -3,7 +3,10 @@
 #include <string.h>
 #include <truth/crypto.h>
 
+#define DEBUG 0
+
 #define SIGNATURE_MAGIC_STRING "Kernel of Truth truesign 1.0.0"
+
 
 int usage(int argc, char *argv[]) {
     fprintf(stderr,
@@ -15,6 +18,7 @@ int usage(int argc, char *argv[]) {
             argv[0]);
     return EXIT_FAILURE;
 }
+
 
 static int get_file_size(FILE *file, size_t *size) {
     long orignal_position = ftell(file);
@@ -37,12 +41,16 @@ static int get_file_size(FILE *file, size_t *size) {
     return error;
 }
 
+
+#if DEBUG
 void print_bytes(unsigned char *bytes, size_t size) {
     for (size_t i = 0; i < size; ++i) {
         printf("%x%x", (bytes[i] >> 4) & 0x0f, bytes[i] & 0x0f);
     }
     printf("\n");
 }
+#endif
+
 
 int verify_file(char *public_key_name, char *test_file_name) {
     int error = 0;
@@ -131,16 +139,23 @@ int verify_file(char *public_key_name, char *test_file_name) {
         goto out;
     }
 
+#if DEBUG
     printf("Public key:\n");
     print_bytes(public_key, sizeof(public_key));
     printf("Signature:\n");
     print_bytes(signature, sizeof(signature));
+#endif
 
     error = crypto_sign_ed25519_verify_detached(signature, test_file_contents,
-                                                test_file_size, public_key);
+                                                test_file_size -
+                                                    sizeof(signature) -
+                                                    sizeof(signature_magic),
+                                                 public_key);
     if (error != 0) {
-        fprintf(stderr, "Failed to verify file %s %d\n", test_file_name, error);
+        fprintf(stderr, "Failed to verify file %s\n", test_file_name);
         goto out;
+    } else {
+        printf("Signature successfully verified\n");
     }
 
 out:
@@ -149,6 +164,7 @@ out:
     fclose(test_file);
     return error;
 }
+
 
 int sign_file(char *secret_key_name, char *file_name, char *out_file_name) {
     int error = 0;
@@ -244,10 +260,12 @@ int sign_file(char *secret_key_name, char *file_name, char *out_file_name) {
         goto out;
     }
 
+#if DEBUG
     printf("Secret key:\n");
     print_bytes(secret_key, sizeof(secret_key));
     printf("Signature:\n");
     print_bytes(signature, sizeof(signature));
+#endif
 
 out:
     fclose(target_file);
@@ -256,6 +274,7 @@ out:
     free(file_contents);
     return error;
 }
+
 
 int generate_key(char *secret_key_name, char *public_key_name) {
     int error = 0;
@@ -299,10 +318,12 @@ int generate_key(char *secret_key_name, char *public_key_name) {
         goto out;
     }
 
+#if DEBUG
     printf("Public key:\n");
     print_bytes(public_key, sizeof(public_key));
     printf("Secret key:\n");
     print_bytes(secret_key, sizeof(secret_key));
+#endif
 
 
 out:
