@@ -50,6 +50,7 @@ struct hashtable *hashtable_init(size_t size, hash_f hf, partial_comp_f hc) {
     table->used = 0;
     table->data = kmalloc(size * sizeof(struct hashdata));
     if (table->data == NULL) {
+        kfree(table);
         return NULL;
     }
     memset(table->data, 0, size * sizeof(struct hashdata));
