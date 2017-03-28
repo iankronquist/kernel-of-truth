@@ -49,7 +49,7 @@ void *slab_alloc_helper(size_t bytes, phys_addr *phys,
     }
     next_virt_address = virt_address;
     for (size_t i = 0; i < bytes / Page_Small; ++i) {
-        phys_address.physical = physical_alloc(bytes / Page_Small);
+        phys_address.physical = physical_alloc();
         *phys = phys_address.physical;
         if (phys_address.physical == invalid_phys_addr) {
             assert(0);
@@ -57,7 +57,10 @@ void *slab_alloc_helper(size_t bytes, phys_addr *phys,
         }
         if (map_page(next_virt_address.virtual, phys_address.physical,
                      page_attributes) != Ok) {
-            physical_free(phys_address.physical, bytes / Page_Small);
+            for (size_t j = 0; j < i; ++j) {
+                unmap_page(next_virt_address.virtual, true);
+                next_virt_address.virtual -= Page_Small;
+            }
             logf(Log_Warning, "Failed to map slab page: %p, %lx\n",
                  next_virt_address.virtual, phys_address.physical);
             assert(0);
