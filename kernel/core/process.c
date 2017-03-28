@@ -186,34 +186,29 @@ struct process *process_init(void *entry_point) {
 
     proc = kmalloc(sizeof(struct process));
     if (proc == NULL) {
-        status = Error_No_Memory;
         goto err;
     }
 
     thread_pool = kcalloc(Thread_Pool_Default_Size, sizeof(struct thread *));
     if (thread_pool == NULL) {
-        status = Error_No_Memory;
         goto err;
     }
     proc->threads = thread_pool;
 
     vect = process_create_address_space();
     if (vect == NULL) {
-        status = Error_No_Memory;
         goto err;
     }
     proc->address_space = vect;
 
     page_table = page_table_init();
     if (page_table == NULL) {
-        status = Error_No_Memory;
         goto err;
     }
     proc->page_table = page_table;
 
     thread = thread_init(proc, entry_point, true);
     if (thread == NULL) {
-        status = Error_No_Memory;
         goto err;
     }
 
