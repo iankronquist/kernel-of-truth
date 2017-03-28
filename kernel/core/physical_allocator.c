@@ -14,7 +14,7 @@ struct physical_page_stack {
     phys_addr next;
 };
 
-static volatile struct physical_page_stack *volatile const Physical_Page_Stack =
+static struct physical_page_stack *const Physical_Page_Stack =
     Kernel_Pivot_Page;
 static volatile phys_addr Physical_Page = 0xfff;
 
