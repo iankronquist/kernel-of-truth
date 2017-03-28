@@ -2,6 +2,10 @@
 sudo: false
 language: c
 dist: trusty
+env:
+  global:
+    - secure: "T6SjAaRfKpVbmjRBM5pQowJZdhEp6W/WtZ87b7wJ5DI8L1S2GIYsSBqsE0aHS6avfjofqNAnYckOEPZObC9SL/p21dHwsg8Q14okyHOCDhs/5IXBoyyU7x8zwCLcGjsWLhFpiBhlQVrhyg74Y0XoyZ3ydSxzO9l0YCGxt9kCiLg="
+
 addons:
     apt:
         packages:
@@ -14,11 +18,35 @@ addons:
             - yasm
             - xorriso
             - grub2
+
+addons:
+  coverity_scan:
+    project:
+      name: iankronquist/kernel-of-truth
+      version: 0.0
+      description: A Simple Kernel Written in C
+
+    notification_email: iankronquist+coverity@gmail.com
+
+    build_command_prepend:
+      - bash ./scripts/build_cross_compiler.sh;
+      - export PATH=$PATH:compiler/x86_64-elf/bin/
+
+    build_command:
+      - make
+
+    # Pattern to match selecting branches that will run analysis. We recommend leaving this set to 'coverity_scan'.
+    # Take care in resource usage, and consider the build frequency allowances per
+    #   https://scan.coverity.com/faq#frequency
+    branch_pattern: coverity_scan
+
 cache:
     directories:
         - compiler/x86_64-none-elf
 
 before_script:
+    # Coverity
+    - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
     - virtualenv ~/venv
     - source ~/venv/bin/activate
     - pip install cldoc
