@@ -9,7 +9,10 @@
 #include <truth/types.h>
 
 extern void invalidate_tlb(void);
-extern uint64_t invalidate_page(void *);
+
+static void paging_page_invalidate(void *virt) {
+    __asm__ volatile ("invlpg %0" ::"m"(*(uint8_t *)virt));
+}
 
 #define pl1_Count 512
 #define pl2_Count 512
@@ -44,7 +47,7 @@ static bool paging_test(void) {
     struct page_table *new_pt = page_table_init();
     page_table_switch(new_pt->physical_address);
 
-    assert_ok(map_page(NULL, physical_alloc(1), Memory_Writable));
+    assert_ok(map_page(NULL, physical_alloc(), Memory_Writable));
     int *test = (int *)0x20;
     *test = 10;
     assert(*test == 10);
@@ -170,27 +173,27 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
     pl1_entry *level_one = get_pl1(virtual_address);
 
     if (!is_pl3_present(pl4, virtual_address)) {
-        phys_addr phys_address = physical_alloc(1);
+        phys_addr phys_address = physical_alloc();
         pl4[pl4_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
-        invalidate_page(level_three);
+        paging_page_invalidate(level_three);
     }
 
     if (!is_pl2_present(level_three, virtual_address)) {
-        phys_addr phys_address = physical_alloc(1);
+        phys_addr phys_address = physical_alloc();
         level_three[pl3_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
-        invalidate_page(level_two);
+        paging_page_invalidate(level_two);
     }
 
     if (!is_pl1_present(level_two, virtual_address)) {
-        phys_addr phys_address = physical_alloc(1);
+        phys_addr phys_address = physical_alloc();
         level_two[pl2_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
-        invalidate_page(level_one);
+        paging_page_invalidate(level_one);
     }
 
     if (is_Memory_Present(level_one, virtual_address)) {
@@ -201,7 +204,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
 
     level_one[pl1_index(virtual_address)] =
         (phys_address | permissions | Memory_Present);
-    invalidate_page(level_one);
+    paging_page_invalidate(virtual_address);
 
     return Ok;
 }
@@ -215,10 +218,10 @@ void unmap_page(void *address, bool free_physical_memory) {
 
 
         if (free_physical_memory) {
-            physical_free(align_page(level_one[pl1_index(address)]), 1);
+            physical_free(align_page(level_one[pl1_index(address)]));
         }
         level_one[pl1_index(address)] = free_page_entry;
-        invalidate_page(address);
+        paging_page_invalidate(address);
     }
 }
 
@@ -256,10 +259,10 @@ enum status paging_init(void) {
             memset(virt, 0, Page_Small);
             slab_free_virt(Page_Small, virt);
             pl4[i] = new_phys | Memory_Present | Memory_Writable;
-            invalidate_tlb();
         }
     }
     pl4[0] = 0;
+    invalidate_tlb();
     assert(paging_test() == true);
     return Ok;
 }
@@ -296,20 +299,21 @@ void page_table_fini(struct page_table *pt) {
                             pl1_entry *level_one = get_pl1_index(i4, i3, i2);
                             for (size_t i1 = 0; i1 < pl1_Count; ++i1) {
                                 if (level_one[i1] & Memory_Present) {
-                                    physical_free(page_entry_to_phys(level_one[i1]), 1);
+                                    physical_free(page_entry_to_phys(
+                                                    level_one[i1]));
                                 }
                             }
-                            physical_free(page_entry_to_phys(level_two[i2]), 1);
+                            physical_free(page_entry_to_phys(level_two[i2]));
                         }
                     }
-                    physical_free(page_entry_to_phys(level_three[i3]), 1);
+                    physical_free(page_entry_to_phys(level_three[i3]));
                 }
             }
-            physical_free(page_entry_to_phys(level_four[i4]), 1);
+            physical_free(page_entry_to_phys(level_four[i4]));
         }
     }
     page_table_switch(original_pt);
-    physical_free(pt->physical_address, 1);
+    physical_free(pt->physical_address);
     kfree(pt);
 }
 
