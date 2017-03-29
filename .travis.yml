@@ -34,4 +34,4 @@ script:
     - make release
     - make iso
     - make clean
-    - scan-build make
+    - scan-build --status-bugs make
