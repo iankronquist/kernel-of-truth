@@ -27,7 +27,7 @@ addons:
     notification_email: iankronquist+coverity@gmail.com
 
     build_command_prepend:
-      - bash ./scripts/build_cross_compiler.sh;
+      - ./scripts/build_cross_compiler.sh;
       - export PATH=$PATH:compiler/x86_64-elf/bin/
 
     build_command:
