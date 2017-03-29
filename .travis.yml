@@ -26,7 +26,7 @@ before_script:
 
 script:
     - if [[ ! -e compiler/x86_64-none-elf/bin/x86_64-elf-gcc ]]; then
-        bash ./scripts/build_cross_compiler.sh;
+        bash ./scripts/build_cross_compiler.sh > /dev/null 2>&1
       fi
     - export PATH=$PATH:compiler/x86_64-elf/bin/
     - make debug
