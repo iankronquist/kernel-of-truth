@@ -26,12 +26,8 @@ addons:
 
     notification_email: iankronquist+coverity@gmail.com
 
-    build_command_prepend:
-      - ./scripts/build_cross_compiler.sh;
-      - export PATH=$PATH:compiler/x86_64-elf/bin/
-
     build_command:
-      - make
+      - make CC=gcc LD=gcc AS=gcc
 
     # Pattern to match selecting branches that will run analysis. We recommend leaving this set to 'coverity_scan'.
     # Take care in resource usage, and consider the build frequency allowances per
@@ -44,17 +40,13 @@ cache:
 
 before_script:
     # Coverity
-    #- echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | tee -a /etc/ssl/certs/ca-certificates.crt
+    - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-certificates.crt
     - virtualenv ~/venv
     - source ~/venv/bin/activate
     - pip install cldoc
 
 script:
-    - if [[ ! -e compiler/x86_64-none-elf/bin/x86_64-elf-gcc ]]; then
-        bash ./scripts/build_cross_compiler.sh 2>&1 > /dev/null;
-      fi
-    - export PATH=$PATH:compiler/x86_64-elf/bin/
-    - make debug
-    - make clean
-    - make release
-    - make iso
+    - make debug CC=gcc LD=gcc AS=gcc
+    - make clean CC=gcc LD=gcc AS=gcc
+    - make release CC=gcc LD=gcc AS=gcc
+    - make iso CC=gcc LD=gcc AS=gcc
