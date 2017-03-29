@@ -171,7 +171,7 @@ enum status vga_init(void) {
     VGA_Framebuffer = slab_alloc_request_physical(VGA_Framebuffer_Phys,
                                                   Memory_Writable);
     if (VGA_Framebuffer == NULL) {
-        physical_free(VGA_Framebuffer_Phys, 1);
+        physical_free(VGA_Framebuffer_Phys);
         file_detach(&Dev, &VGA);
         return Error_No_Memory;
     }
