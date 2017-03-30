@@ -39,6 +39,8 @@ OBJCOPY := objcopy
 GRUB_MKRESCUE := grub-mkrescue
 STRIP := strip
 
+TOOLS_CC :=
+
 QEMU := qemu-system-x86_64
 QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/serial.txt \
 	-cpu Broadwell
@@ -48,7 +50,7 @@ MAKE := make
 .PHONY: all clean debug iso release start start-log
 
 all: $(KERNEL)
-	$(MAKE) -C tools/
+	$(MAKE) -C tools/ $(TOOLS_CC)
 
 debug: CFLAGS += -g -fsanitize=undefined
 debug: ASFLAGS += -g

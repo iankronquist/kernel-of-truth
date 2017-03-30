@@ -16,6 +16,7 @@ addons:
             - grub2
             - llvm
             - valgrind
+            - gcc-6
 cache:
     directories:
         - compiler/x86_64-none-elf
@@ -30,9 +31,9 @@ script:
         bash ./scripts/build_cross_compiler.sh;
       fi
     - export PATH=$PATH:compiler/x86_64-elf/bin/
-    - make debug
+    - make debug TOOLS_CC="CC=gcc-6"
     - make clean
-    - make release
+    - make release TOOLS_CC="CC=gcc-6"
     - make iso
     - make clean
-    - scan-build --status-bugs make
+    - scan-build --status-bugs make TOOLS_CC="CC=gcc-6"
