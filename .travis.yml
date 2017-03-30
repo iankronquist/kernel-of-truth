@@ -14,6 +14,7 @@ addons:
             - yasm
             - xorriso
             - grub2
+            - llvm
 cache:
     directories:
         - compiler/x86_64-none-elf
@@ -32,3 +33,5 @@ script:
     - make clean
     - make release
     - make iso
+    - make clean
+    - scan-build --status-bugs make

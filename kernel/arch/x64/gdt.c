@@ -1,3 +1,4 @@
+#include <truth/memory.h>
 #include <truth/types.h>
 
 struct gdt_entry {
@@ -94,7 +95,20 @@ struct gdt_entry GDT[] = {
     gdt_entry64(0ull, sizeof(Tss) - 1, 0xe9, 0x00),
 };
 
-uint16_t GDT_Size = sizeof(GDT) - 1;
+struct gdt_register {
+    uint16_t limit;
+    uint64_t base;
+} pack;
+
+struct gdt_register Physical_GDT_Register = {
+    .limit = sizeof(GDT) - 1,
+    .base = virt_to_phys((uint64_t)&GDT),
+};
+
+struct gdt_register GDT_Register = {
+    .limit = sizeof(GDT) - 1,
+    .base = (uint64_t)&GDT,
+};
 
 void tss_set_stack(void *stack) {
     Tss.stack0 = (uintptr_t)stack;

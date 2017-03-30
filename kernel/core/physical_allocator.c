@@ -1,3 +1,4 @@
+#include <arch/x64/paging.h>
 #include <external/multiboot.h>
 #include <truth/types.h>
 #include <truth/panic.h>
@@ -8,7 +9,16 @@
 
 
 static struct lock physical_allocator_lock = Lock_Clear;
-extern struct region_vector init_physical_allocator_vector;
+
+struct physical_page_stack {
+    phys_addr next;
+};
+
+static struct physical_page_stack *const Physical_Page_Stack =
+    Kernel_Pivot_Page;
+static volatile phys_addr Physical_Page = 0xfff;
+
+static void physical_free_range(phys_addr address, size_t pages);
 
 #define Boot_Map_Start (phys_addr)0x001000
 #define Boot_Map_End   (phys_addr)Kernel_Physical_End
@@ -28,47 +38,104 @@ static void insert_regions(struct multiboot_info *multiboot_tables) {
 
                 if (Boot_Map_Start > mmap[i].addr) {
                     size_t prefix_length = Boot_Map_Start - mmap[i].addr;
-                    physical_free(mmap[i].addr, prefix_length / Page_Small);
+                    physical_free_range(mmap[i].addr, prefix_length / Page_Small);
                 }
                 if (Boot_Map_End < mmap[i].addr + mmap[i].len) {
                     size_t postfix_length = mmap[i].addr + mmap[i].len -
                                             Boot_Map_End;
-                    physical_free(Boot_Map_End, postfix_length / Page_Small);
+                    physical_free_range(Boot_Map_End, postfix_length / Page_Small);
                 }
             } else {
-                physical_free(mmap[i].addr, mmap[i].len / Page_Small);
+                physical_free_range(mmap[i].addr, mmap[i].len / Page_Small);
             }
         }
     }
 }
 
-void debug_physical_allocator(void) {
-    debug_region_vector(&init_physical_allocator_vector);
-}
-
 void physical_allocator_init(struct multiboot_info *multiboot_tables) {
-    region_vector_init(&init_physical_allocator_vector);
     insert_regions(multiboot_tables);
 }
 
-phys_addr physical_alloc(size_t pages) {
-    union address address;
-    size_t size = pages * Page_Small;
+// FIXME: x86_64-elf-gcc 6.1.0 with -O2 and UBSAN interact poorly here.
+// UBSAN always reports:
+// `store to address Physical_Page_Stack->next with insufficient space for
+// object of type 'phys_addr'`
+// As a fix until I figure out something better, disable all optimizations
+// here.
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+phys_addr physical_alloc(void) {
+    phys_addr phys;
+    phys_addr next;
     lock_acquire_writer(&physical_allocator_lock);
-    struct region_vector *vect = &init_physical_allocator_vector;
-    if (region_alloc(vect, size, &address) != Ok) {
-        address.physical = invalid_phys_addr;
+
+    phys = Physical_Page;
+    next = Physical_Page_Stack->next;
+    unmap_page(Physical_Page_Stack, false);
+    if (next != invalid_phys_addr) {
+        if (map_page(Physical_Page_Stack, next, Memory_Writable) != Ok) {
+            phys = invalid_phys_addr;
+            goto out;
+        }
     }
+    Physical_Page = next;
+    assert(phys != next);
+out:
     lock_release_writer(&physical_allocator_lock);
-    return address.physical;
+    return phys;
 }
 
-void physical_free(phys_addr address, size_t pages) {
-    union address in;
-    size_t size = pages * Page_Small;
-    in.physical = address;
+
+void physical_free(phys_addr address) {
+    assert(is_aligned(address, Page_Small));
+    phys_addr prev;
     lock_acquire_writer(&physical_allocator_lock);
-    struct region_vector *vect = &init_physical_allocator_vector;
-    region_free(vect, in, size);
+
+    prev = Physical_Page;
+    unmap_page(Physical_Page_Stack, false);
+    assert_ok(map_page(Physical_Page_Stack, address, Memory_Writable));
+    Physical_Page_Stack->next = prev;
+    Physical_Page = address;
+
     lock_release_writer(&physical_allocator_lock);
+}
+#pragma GCC pop_options
+
+
+enum status physical_page_remove(phys_addr address) {
+    enum status status = Error_Absent;
+    assert(is_aligned(address, Page_Small));
+    phys_addr original = Physical_Page;
+    phys_addr current = original;
+    lock_acquire_writer(&physical_allocator_lock);
+    while (current != invalid_phys_addr) {
+        unmap_page(Physical_Page_Stack, false);
+        assert_ok(map_page(Physical_Page_Stack, current, Memory_Writable));
+        current = Physical_Page_Stack->next;
+
+        if (Physical_Page_Stack->next == address) {
+            unmap_page(Physical_Page_Stack, false);
+            assert_ok(map_page(Physical_Page_Stack, Physical_Page_Stack->next,
+                     Memory_Writable));
+            phys_addr next_next = Physical_Page_Stack->next;
+            unmap_page(Physical_Page_Stack, false);
+            assert_ok(map_page(Physical_Page_Stack, current, Memory_Writable));
+            Physical_Page_Stack->next = next_next;
+            status = Ok;
+            break;
+        }
+    }
+    unmap_page(Physical_Page_Stack, false);
+    assert_ok(map_page(Physical_Page_Stack, original, Memory_Writable));
+    lock_release_writer(&physical_allocator_lock);
+    return status;
+}
+
+
+static void physical_free_range(phys_addr address, size_t pages) {
+    assert(is_aligned(address, Page_Small));
+    for (size_t i = 0; i < pages; ++i) {
+        physical_free(address);
+        address += Page_Small;
+    }
 }
