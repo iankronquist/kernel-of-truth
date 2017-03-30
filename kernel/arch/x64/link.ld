@@ -1,14 +1,9 @@
 ENTRY(_start)
 
 SECTIONS {
-	/*. = 1M;*/
 
-	. = 0xffff800000000000 + 1M;
-	/*. = 0xffffffff80000000 + 0x00200000;*/
-	/*. = %KERNEL_BASE% + %KERNEL_LOAD_OFFSET%;*/
+	. = 0xffffffff80000000 + 1M;
 
-	/*.text : AT(%MEMBASE% + %KERNEL_LOAD_OFFSET%) {*/
-	/*.text : AT(0 + 0x00200000) {*/
 	.text : AT(1M) {
 		__kernel_start = .;
 		__text_start = .;

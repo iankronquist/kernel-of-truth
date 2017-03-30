@@ -37,32 +37,34 @@ out:
 void *slab_alloc_helper(size_t bytes, phys_addr *phys,
                         enum memory_attributes page_attributes,
                         struct region_vector *vect) {
+    assert(vect != NULL);
+    assert(phys != NULL);
     if (!is_aligned(bytes, Page_Small)) {
         logf(Log_Error, "unaligned %lx %x\n", bytes, Page_Small);
         return NULL;
     }
     union address virt_address;
     union address next_virt_address;
-    union address phys_address;
+    phys_addr phys_address;
     if (region_alloc(vect, bytes, &virt_address) != Ok) {
         return NULL;
     }
     next_virt_address = virt_address;
     for (size_t i = 0; i < bytes / Page_Small; ++i) {
-        phys_address.physical = physical_alloc();
-        *phys = phys_address.physical;
-        if (phys_address.physical == invalid_phys_addr) {
+        phys_address = physical_alloc();
+        *phys = phys_address;
+        if (phys_address== invalid_phys_addr) {
             assert(0);
             goto out;
         }
-        if (map_page(next_virt_address.virtual, phys_address.physical,
+        if (map_page(next_virt_address.virtual, phys_address,
                      page_attributes) != Ok) {
             for (size_t j = 0; j < i; ++j) {
                 unmap_page(next_virt_address.virtual, true);
                 next_virt_address.virtual -= Page_Small;
             }
             logf(Log_Warning, "Failed to map slab page: %p, %lx\n",
-                 next_virt_address.virtual, phys_address.physical);
+                 next_virt_address.virtual, phys_address);
             assert(0);
             goto out;
         }

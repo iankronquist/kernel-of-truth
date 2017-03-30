@@ -49,32 +49,26 @@ _start:
 	# Initialize stack pointer.
 	movl $virt_to_phys(_init_stack_top), %esp
 
-	# Finish installing the kernel stack into the Task Switch Segment.
-	movl %esp, virt_to_phys(Tss) + 4
-	movl $Higher_Half_High, virt_to_phys(Tss) + 8
-
-	# Finish installing the TSS into the GDT
-	movl $virt_to_phys(Tss), %ecx
-	movw %cx, virt_to_phys(GDT) + Segment_TSS + 2
-	shrl $16, %ecx
-	movb %cl, virt_to_phys(GDT) + Segment_TSS + 4
-	shrl $8, %ecx
-	movb %cl, virt_to_phys(GDT) + Segment_TSS + 7
-	movl $Higher_Half_High, virt_to_phys(GDT) + Segment_TSS + 8
 
 	# We got our multiboot information in various registers.
-	pushl $Higher_Half_High
+	pushl $0
 	pushl %ebx
 
 	movl $virt_to_phys(init_pl4), %edi
 	movl %edi, %cr3
 
 	movl $(virt_to_phys(init_pl3) + (Page_User | Page_Write | Page_Present)), virt_to_phys(init_pl4)
-	movl $(virt_to_phys(init_pl3) + (Page_User | Page_Write | Page_Present)), virt_to_phys(init_pl4) + 256 * 8
+	movl $(virt_to_phys(init_pl3) + (Page_User | Page_Write | Page_Present)), virt_to_phys(init_pl4) + 511 * 8
 
 	movl $(virt_to_phys(init_pl2) + (Page_User | Page_Write | Page_Present)), virt_to_phys(init_pl3)
+	movl $(virt_to_phys(init_pl2) + (Page_User | Page_Write | Page_Present)), virt_to_phys(init_pl3) + 510 * 8
 
 	movl $(virt_to_phys(init_pl1) + (Page_Write | Page_Present)), virt_to_phys(init_pl2)
+
+	# Fractal mapping.
+	movl $(virt_to_phys(init_pl4) + (Page_Write | Page_Present)), virt_to_phys(init_pl4) + Kernel_Fractal_Page_Table_Index * 8
+	movl $Page_Execute_Disable_High, virt_to_phys(init_pl4) + (Kernel_Fractal_Page_Table_Index * 8) + 4
+
 
 	# Page Table (identity map the first 1 MiB, except NULL).
 	movl $(virt_to_phys(init_pl1) + 8), %edi
@@ -146,10 +140,6 @@ _start:
 	addl $4, %edi
 	loop 1b
 
-	# Fractal mapping.
-	movl $(virt_to_phys(init_pl4) + (Page_Write | Page_Present)), virt_to_phys(init_pl4) + 511 * 8
-	movl $Page_Execute_Disable_High, virt_to_phys(init_pl4) + (511 * 8) + 4
-
 	# Enable PAE.
 	movl %cr4, %eax
 	orl $CR4_PAE, %eax
@@ -170,13 +160,7 @@ _start:
 paging:
 
 	# Load the Global Descriptor Table pointer register.
-	subl $6, %esp
-	movw (virt_to_phys(GDT_Size) - 1), %cx
-	movw %cx, 0(%esp)
-	movl $virt_to_phys(GDT), %ecx
-	movl %ecx, 2(%esp)
-	lgdt 0(%esp)
-	addl $6, %esp
+	lgdt virt_to_phys(Physical_GDT_Register)
 
 	# Now use the 64-bit code segment, and we are in full 64-bit mode.
 	ljmp $Segment_Kernel_Code, $virt_to_phys(long_mode)
@@ -192,31 +176,31 @@ long_mode:
 	movw %cx, %es
 	movw %cx, %ss
 
+	# Install the kernel stack into the Task Switch Segment.
+	mov $_init_stack_top, %rcx
+	mov %rcx, Tss + 4
+
+	# Finish installing the TSS into the GDT
+	mov $Tss, %rcx
+	movw %cx, GDT + Segment_TSS + 2
+	shr $16, %rcx
+	movb %cl, GDT + Segment_TSS + 4
+	shr $8, %rcx
+	movb %cl, GDT + Segment_TSS + 7
+	shr $8, %rcx
+	movl %ecx, GDT + Segment_TSS + 8
+
 	# Switch the task switch segment register to the task switch segment.
 	movw $(Segment_TSS | Segment_RPL), %cx
 	ltr %cx
 
-	# Switch to the thread local fs and gs segments.
-	movw $(Segment_User_Data | Segment_RPL), %cx
-	movw %cx, %fs
-	movw %cx, %gs
-
-	movq $Higher_Half_High, %rcx
-	shlq $32, %rcx
-	orq %rcx, %rsp
-	orq $virt_to_phys(higher_half), %rcx
+	add $Kernel_Space_Start, %rsp
+	mov $higher_half, %rcx
 	jmp *%rcx
 
 higher_half:
 	# Load the Global Descriptor Table pointer register again.
-	subq $10, %rsp
-	movabs $GDT_Size, %rdx
-	movq (%rdx), %rcx
-	movw %cx, 0(%rsp)
-	movabs $GDT, %rcx
-	movq %rcx, 2(%rsp)
-	lgdt 0(%rsp)
-	addq $10, %rsp
+	lgdt GDT_Register
 
 
 
@@ -230,6 +214,7 @@ higher_half:
 .type halt, @function
 halt:
 	hlt
+	pause
 	jmp halt
 
 .global cpu_sleep_state

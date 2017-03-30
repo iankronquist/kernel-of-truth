@@ -25,7 +25,7 @@ include kernel/device/Makefile
 
 CC := $(TRIPLE)-gcc
 CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra \
-	-I ./include $(MACROS) -D __C__ -mcmodel=large
+	-I ./include $(MACROS) -D __C__ -mcmodel=kernel
 
 AS := $(TRIPLE)-gcc
 ASFLAGS := -MP -MMD -ffreestanding -O2 -Wall -Wextra \

@@ -40,6 +40,7 @@ typedef uint64_t pl3_entry;
 typedef uint64_t pl2_entry;
 typedef uint64_t pl1_entry;
 
+
 static bool paging_test(void) {
     size_t orig_usage = heap_get_usage();
 
@@ -88,22 +89,22 @@ static inline size_t pl1_index(void *address) {
 }
 
 static pl4_entry *get_pl4(void) {
-    return (pl4_entry *)01777777777777777770000;
+    return (pl4_entry *)01777774004004004000000;
 }
 
 static pl3_entry *get_pl3_index(size_t pl4_index) {
-    return (pl3_entry *)(01777777777777770000000 | (pl4_index << 12));
+    return (pl3_entry *)(01777774004004000000000 | (pl4_index << 12));
 }
 
 static pl2_entry *get_pl2_index(size_t pl4_index, size_t pl3_index) {
-    return (pl2_entry *)(01777777777770000000000 |
+    return (pl2_entry *)(01777774004000000000000 |
                    (pl4_index << 21) |
                    (pl3_index << 12));
 }
 
 static pl1_entry *get_pl1_index(size_t pl4_index, size_t pl3_index,
                           size_t pl2_index) {
-    return (pl1_entry *)(01777777770000000000000 |
+    return (pl1_entry *)(01777774000000000000000 |
                    (pl4_index << 30) |
                    (pl3_index << 21) |
                    (pl2_index << 12));
@@ -249,6 +250,7 @@ void page_table_switch(phys_addr physical_address) {
 
 enum status paging_init(void) {
     pl4_entry *pl4 = get_pl4();
+    pl3_entry *pl3 = get_pl3_index(0);
     for (size_t i = pl4_Count / 2; i < pl4_Count; ++i) {
         if (!(pl4[i] & Memory_Present)) {
             phys_addr new_phys;
@@ -261,6 +263,7 @@ enum status paging_init(void) {
             pl4[i] = new_phys | Memory_Present | Memory_Writable;
         }
     }
+    pl3[0] = 0;
     pl4[0] = 0;
     invalidate_tlb();
     assert(paging_test() == true);
@@ -276,7 +279,7 @@ struct page_table *page_table_init(void) {
     }
     memset(pl4, 0, Page_Small / 2);
     memcpy(&pl4[pl4_Count / 2], &get_pl4()[pl4_Count / 2], Page_Small / 2);
-    pl4[pl4_Count - 1] = pt->physical_address | Memory_Writable |
+    pl4[Kernel_Fractal_Page_Table_Index] = pt->physical_address | Memory_Writable |
                          Memory_Present;
     slab_free_virt(Page_Small, pl4);
     return pt;
