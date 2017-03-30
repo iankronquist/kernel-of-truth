@@ -91,7 +91,7 @@ int verify_file(char *public_key_name, char *test_file_name) {
         goto out;
     }
 
-    read = fread(public_key, 1, sizeof(public_key), public_key_file);
+    fread(public_key, 1, sizeof(public_key), public_key_file);
     if (ferror(public_key_file) != 0) {
         perror("Reading public key");
         error = -1;
@@ -105,15 +105,15 @@ int verify_file(char *public_key_name, char *test_file_name) {
         goto out;
     }
 
-    read = fread(test_file_contents, 1, test_file_size - signature_field_size,
-                 test_file);
+    fread(test_file_contents, 1, test_file_size - signature_field_size,
+          test_file);
     if (ferror(test_file) != 0) {
         perror("Reading data from test file");
         error = -1;
         goto out;
     }
 
-    read = fread(signature_magic, 1, sizeof(signature_magic), test_file);
+    fread(signature_magic, 1, sizeof(signature_magic), test_file);
     if (ferror(test_file) != 0) {
         perror("Reading signature from test file");
         error = -1;
@@ -127,7 +127,7 @@ int verify_file(char *public_key_name, char *test_file_name) {
         goto out;
     }
 
-    read = fread(signature, 1, sizeof(signature), test_file);
+    fread(signature, 1, sizeof(signature), test_file);
     if (ferror(test_file) != 0) {
         perror("Reading signature from test file");
         error = -1;
