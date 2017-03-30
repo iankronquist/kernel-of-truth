@@ -5,6 +5,8 @@
 #define MB 0x100000
 #define GB 0x40000000
 
+#define Kernel_Space_Start (0xffffffff80000000)
+
 #ifdef __ASM__
 #define Page_Small  (4 * KB)
 #define Page_Medium (2 * MB)
@@ -25,11 +27,17 @@
 #define Lower_Half_Size   (Lower_Half_End - Lower_Half_Start)
 #define Higher_Half_Size  (Higher_Half_End - Higher_Half_Start)
 
-#define virt_to_phys(x) (x - Higher_Half_Start)
-#define phys_to_virt(x) (x + Higher_Half_Start)
+#define virt_to_phys(x) (x - Kernel_Space_Start)
+#define phys_to_virt(x) (x + Kernel_Space_Start)
+
 
 #elif __C__
 #include <truth/types.h>
+
+#define virt_to_phys(x) ((uint64_t)(x) - Kernel_Space_Start)
+#define phys_to_virt(x) ((void *)((x) + Kernel_Space_Start))
+
+
 enum page_size {
     Page_Small  = (4 * KB),
     Page_Medium = (2 * MB),

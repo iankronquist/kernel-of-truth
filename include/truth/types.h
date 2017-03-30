@@ -74,8 +74,6 @@ extern uint8_t __kernel_end;
 #define Kernel_Pivot_Page     ((void *)&__kernel_end)
 #define Kernel_Virtual_End    (((void *)&__kernel_end) + Page_Small)
 
-#define phys_to_virt(a) ((void *)a)
-
 #define container_of(child, parent_type, parent_entry) \
     ((parent_type)(child - &((parent_type)NULL)->parent_entry))
 #define is_aligned(value, alignment) !(value & (alignment - 1))
