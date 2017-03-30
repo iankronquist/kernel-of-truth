@@ -6,6 +6,7 @@
 #define GB 0x40000000
 
 #define Kernel_Space_Start (0xffffffff80000000)
+#define Kernel_Fractal_Page_Table_Index (256)
 
 #ifdef __ASM__
 #define Page_Small  (4 * KB)
