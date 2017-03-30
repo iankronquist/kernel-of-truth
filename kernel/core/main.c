@@ -14,16 +14,16 @@
 #include <truth/device/ps2_keyboard.h>
 
 
-void kernel_main(void *multiboot_tables) {
+void kernel_main(uint32_t multiboot_tables) {
     assert_ok(log_init(Log_Debug, "log"));
     log(Log_None, Logo);
     logf(Log_None, "\tCPU Time %ld\n", cpu_time());
     interrupts_init();
-    physical_allocator_init(multiboot_tables);
+    physical_allocator_init(phys_to_virt(multiboot_tables));
     slab_init();
     assert_ok(heap_init());
-    memory_init();
     assert_ok(paging_init());
+    memory_init();
     assert_ok(processes_init());
     timer_init();
     keyboard_init();
