@@ -56,6 +56,14 @@ void physical_allocator_init(struct multiboot_info *multiboot_tables) {
     insert_regions(multiboot_tables);
 }
 
+// FIXME: x86_64-elf-gcc 6.1.0 with -O2 and UBSAN interact poorly here.
+// UBSAN always reports:
+// `store to address Physical_Page_Stack->next with insufficient space for
+// object of type 'phys_addr'`
+// As a fix until I figure out something better, disable all optimizations
+// here.
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 phys_addr physical_alloc(void) {
     phys_addr phys;
     phys_addr next;
@@ -77,6 +85,7 @@ out:
     return phys;
 }
 
+
 void physical_free(phys_addr address) {
     assert(is_aligned(address, Page_Small));
     phys_addr prev;
@@ -90,6 +99,7 @@ void physical_free(phys_addr address) {
 
     lock_release_writer(&physical_allocator_lock);
 }
+#pragma GCC pop_options
 
 
 enum status physical_page_remove(phys_addr address) {
