@@ -4,19 +4,19 @@ language: c
 dist: trusty
 addons:
     apt:
+        sources:
+          - ubuntu-toolchain-r-test
         packages:
-        # Libraries needed to build cross compiler
+            # Libraries needed to build cross compiler
             - libgmp-dev
             - libmpfr-dev
-            - python-virtualenv
-            - libclang1-3.4
-            - clang
-            - yasm
+            # Needed to build the ISO
             - xorriso
             - grub2
+            # Userland tools
             - llvm
             - valgrind
-            - gcc-5
+            - gcc-4.8
 cache:
     directories:
         - compiler/x86_64-none-elf
@@ -31,9 +31,9 @@ script:
         bash ./scripts/build_cross_compiler.sh;
       fi
     - export PATH=$PATH:compiler/x86_64-elf/bin/
-    - make debug TOOLS_CC="CC=gcc-5"
+    - make debug TOOLS_CC="CC=gcc-4.8"
     - make clean
-    - make release TOOLS_CC="CC=gcc-5"
+    - make release TOOLS_CC="CC=gcc-4.8"
     - make iso
     - make clean
-    - scan-build --status-bugs make TOOLS_CC="CC=gcc-5"
+    - scan-build --status-bugs make TOOLS_CC="CC=gcc-4.8"
