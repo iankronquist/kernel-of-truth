@@ -49,18 +49,6 @@ _start:
 	# Initialize stack pointer.
 	movl $virt_to_phys(_init_stack_top), %esp
 
-	# Finish installing the kernel stack into the Task Switch Segment.
-	; movl %esp, virt_to_phys(Tss) + 4
-	; movl $Higher_Half_High, virt_to_phys(Tss) + 8
-
-	# Finish installing the TSS into the GDT
-	; movl $virt_to_phys(Tss), %ecx
-	; movw %cx, virt_to_phys(GDT) + Segment_TSS + 2
-	; shrl $16, %ecx
-	; movb %cl, virt_to_phys(GDT) + Segment_TSS + 4
-	; shrl $8, %ecx
-	; movb %cl, virt_to_phys(GDT) + Segment_TSS + 7
-	; movl $Higher_Half_High, virt_to_phys(GDT) + Segment_TSS + 8
 
 	# We got our multiboot information in various registers.
 	pushl $0
@@ -188,14 +176,23 @@ long_mode:
 	movw %cx, %es
 	movw %cx, %ss
 
-	# Switch the task switch segment register to the task switch segment.
-	#movw $(Segment_TSS | Segment_RPL), %cx
-	#ltr %cx
+	# Install the kernel stack into the Task Switch Segment.
+	mov $_init_stack_top, %rcx
+	mov %rcx, Tss + 4
 
-	# Switch to the thread local fs and gs segments.
-	#movw $(Segment_User_Data | Segment_RPL), %cx
-	#movw %cx, %fs
-	#movw %cx, %gs
+	# Finish installing the TSS into the GDT
+	mov $Tss, %rcx
+	movw %cx, GDT + Segment_TSS + 2
+	shr $16, %rcx
+	movb %cl, GDT + Segment_TSS + 4
+	shr $8, %rcx
+	movb %cl, GDT + Segment_TSS + 7
+	shr $8, %rcx
+	movl %ecx, GDT + Segment_TSS + 8
+
+	# Switch the task switch segment register to the task switch segment.
+	movw $(Segment_TSS | Segment_RPL), %cx
+	ltr %cx
 
 	add $Kernel_Space_Start, %rsp
 	mov $higher_half, %rcx
