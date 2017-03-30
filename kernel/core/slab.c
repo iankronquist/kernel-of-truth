@@ -37,6 +37,8 @@ out:
 void *slab_alloc_helper(size_t bytes, phys_addr *phys,
                         enum memory_attributes page_attributes,
                         struct region_vector *vect) {
+    assert(vect != NULL);
+    assert(phys != NULL);
     if (!is_aligned(bytes, Page_Small)) {
         logf(Log_Error, "unaligned %lx %x\n", bytes, Page_Small);
         return NULL;
