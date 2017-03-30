@@ -98,9 +98,7 @@ enum status physical_page_remove(phys_addr address) {
     phys_addr original = Physical_Page;
     phys_addr current = original;
     lock_acquire_writer(&physical_allocator_lock);
-    logf(Log_Debug, "aa-1\n");
     while (current != invalid_phys_addr) {
-        logf(Log_Debug, "%lx %lx\n", current, Physical_Page_Stack->next);
         unmap_page(Physical_Page_Stack, false);
         assert_ok(map_page(Physical_Page_Stack, current, Memory_Writable));
         current = Physical_Page_Stack->next;
@@ -117,12 +115,9 @@ enum status physical_page_remove(phys_addr address) {
             break;
         }
     }
-    logf(Log_Debug, "aa0\n");
     unmap_page(Physical_Page_Stack, false);
     assert_ok(map_page(Physical_Page_Stack, original, Memory_Writable));
-    logf(Log_Debug, "aa1\n");
     lock_release_writer(&physical_allocator_lock);
-    logf(Log_Debug, "aa2 %s\n", status_message(status));
     return status;
 }
 
