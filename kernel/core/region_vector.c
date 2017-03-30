@@ -59,6 +59,8 @@ struct region_vector *region_vector_new(union address addr, size_t size) {
 
 enum status checked region_alloc(struct region_vector *vect, size_t size,
                                  union address *out) {
+    assert(vect != NULL);
+    assert(out != NULL);
     do {
         for (size_t i = 0; i < vect->regions_used && i < regions_count; ++i) {
             if (vect->regions[i].size > size) {
@@ -73,7 +75,7 @@ enum status checked region_alloc(struct region_vector *vect, size_t size,
                     vect->regions[i].size = new_size;
                     vect->regions[i].address.physical += size;
                 }
-                *out = address;
+                (*out).virtual = address.virtual;
                 return Ok;
             }
         }
