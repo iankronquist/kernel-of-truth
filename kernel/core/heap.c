@@ -69,10 +69,10 @@ void *kmalloc(size_t bytes) {
         assert(fill_chunks[i] == Heap_Red_Zone_Fill);
     }
 
-    assert(address < heap + Heap_Size);
-    assert(address >= heap);
-    assert(address + bytes > heap);
-    assert(address + bytes <= heap + Heap_Size);
+    assert((uint8_t *)address < heap + Heap_Size);
+    assert((uint8_t *)address >= heap);
+    assert((uint8_t *)address + bytes > heap);
+    assert((uint8_t *)address + bytes <= heap + Heap_Size);
     Used += allocation_size;
     return address + Heap_Red_Zone_Size;
 }
@@ -109,10 +109,10 @@ void kfree(void *addr) {
     unsigned long *redzone_suffix = addr + size - Heap_Red_Zone_Size;
     assert(*redzone_prefix == Heap_Red_Zone_Fill);
     assert(*redzone_suffix == Heap_Red_Zone_Fill);
-    assert(addr >= heap);
-    assert(addr < heap + Heap_Size);
-    assert(addr + size > heap);
-    assert(addr + size <= heap + Heap_Size);
+    assert((uint8_t *)addr >= heap);
+    assert((uint8_t *)addr < heap + Heap_Size);
+    assert((uint8_t *)addr + size > heap);
+    assert((uint8_t *)addr + size <= heap + Heap_Size);
 
     memset(heap, (int)Heap_Red_Zone_Fill, Page_Small);
     Used -= size;
