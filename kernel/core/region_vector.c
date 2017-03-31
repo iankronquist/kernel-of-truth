@@ -7,7 +7,7 @@
 #include <truth/slab.h>
 
 struct region {
-    union address address;
+    void *address;
     size_t size;
 };
 
@@ -27,7 +27,7 @@ void debug_region_vector(struct region_vector *cur) {
         logf(Log_Debug, "Region used %ld regions count %ld\n", cur->regions_used, regions_count);
         for (size_t i = 0; i < cur->regions_used && i < regions_count; ++i) {
             logf(Log_Debug, "Region starts at %p and has size %zu\n",
-                 cur->regions[i].address.virtual, cur->regions[i].size);
+                 cur->regions[i].address, cur->regions[i].size);
         }
         cur = cur->next;
     } while (cur != NULL);
@@ -46,7 +46,7 @@ void region_vector_fini(struct region_vector *vect) {
     }
 }
 
-struct region_vector *region_vector_new(union address addr, size_t size) {
+struct region_vector *region_vector_new(void *addr, size_t size) {
     struct region_vector *vect = slab_alloc(Page_Small, Memory_Writable);
     if (vect == NULL) {
         return NULL;
@@ -58,13 +58,13 @@ struct region_vector *region_vector_new(union address addr, size_t size) {
 }
 
 enum status checked region_alloc(struct region_vector *vect, size_t size,
-                                 union address *out) {
+                                 void **out) {
     assert(vect != NULL);
     assert(out != NULL);
     do {
         for (size_t i = 0; i < vect->regions_used && i < regions_count; ++i) {
             if (vect->regions[i].size > size) {
-                union address address = vect->regions[i].address;
+                void *address = vect->regions[i].address;
                 size_t new_size = vect->regions[i].size - size;
                 if (new_size == 0) {
                     vect->regions_used--;
@@ -73,9 +73,9 @@ enum status checked region_alloc(struct region_vector *vect, size_t size,
                     }
                 } else {
                     vect->regions[i].size = new_size;
-                    vect->regions[i].address.physical += size;
+                    vect->regions[i].address += size;
                 }
-                (*out).virtual = address.virtual;
+                *out = address;
                 return Ok;
             }
         }
@@ -96,12 +96,12 @@ static struct region_vector *extend_vector(void) {
 }
 
 size_t region_find_size_and_free(struct region_vector *vect,
-                                 union address address) {
+                                 void *address) {
     struct region_vector *prev = NULL;
     struct region_vector *cur = vect;
     do {
         for (size_t i = 0; i < cur->regions_used && i < regions_count; ++i) {
-            if (cur->regions[i].address.virtual == address.virtual) {
+            if (cur->regions[i].address== address) {
                 cur->regions_used--;
                 size_t size = cur->regions[i].size;
                 if (cur->regions_used != 0) {
@@ -119,7 +119,7 @@ size_t region_find_size_and_free(struct region_vector *vect,
     return 0;
 }
 
-void region_free(struct region_vector *vect, union address address,
+void region_free(struct region_vector *vect, void *address,
                  size_t size) {
     struct region_vector *prev = vect;
     struct region_vector *cur = vect;

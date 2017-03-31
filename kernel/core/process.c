@@ -82,7 +82,7 @@ void thread_fini(struct thread *thread, int exit_code) {
 }
 
 struct region_vector *process_create_address_space(void) {
-    return region_vector_new((union address)Lower_Half_Start, Lower_Half_Size);
+    return region_vector_new(Lower_Half_Start, Lower_Half_Size);
 }
 
 static void process_free(struct object *obj) {

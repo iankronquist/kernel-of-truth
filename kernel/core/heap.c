@@ -43,7 +43,7 @@ enum status checked heap_init(void) {
 
     region_vector_init(heap_metadata_used);
     region_vector_init(heap_metadata_free);
-    region_free(heap_metadata_free, (union address)heap, Heap_Size);
+    region_free(heap_metadata_free, heap, Heap_Size);
 
     memset(heap, (int)Heap_Red_Zone_Fill, Heap_Size);
 
@@ -52,7 +52,8 @@ enum status checked heap_init(void) {
 }
 
 void *kmalloc(size_t bytes) {
-    union address address;
+    void *address;
+    uint64_t *fill_chunks;
     size_t allocation_size = bytes + 2 * Heap_Red_Zone_Size;
 
     enum status status = region_alloc(heap_metadata_free,
@@ -62,16 +63,18 @@ void *kmalloc(size_t bytes) {
     }
     region_free(heap_metadata_used, address, allocation_size);
 
+
+    fill_chunks = address;
     for (size_t i = 0; i < allocation_size / sizeof(Heap_Red_Zone_Fill); ++i) {
-        assert(address.ulong[i] == Heap_Red_Zone_Fill);
+        assert(fill_chunks[i] == Heap_Red_Zone_Fill);
     }
 
-    assert(address.bytes < heap + Heap_Size);
-    assert(address.bytes >= heap);
-    assert(address.bytes + bytes > heap);
-    assert(address.bytes + bytes <= heap + Heap_Size);
+    assert((uint8_t *)address < heap + Heap_Size);
+    assert((uint8_t *)address >= heap);
+    assert((uint8_t *)address + bytes > heap);
+    assert((uint8_t *)address + bytes <= heap + Heap_Size);
     Used += allocation_size;
-    return address.bytes + Heap_Red_Zone_Size;
+    return address + Heap_Red_Zone_Size;
 }
 
 void *krealloc(void *ptr, size_t size) {
@@ -96,21 +99,20 @@ void *kcalloc(size_t count, size_t size) {
     return address;
 }
 
-void kfree(void *address) {
-    if (address == NULL) {
+void kfree(void *addr) {
+    if (addr == NULL) {
         return;
     }
-    union address addr;
-    addr.virtual = address - Heap_Red_Zone_Size;
+    addr -= Heap_Red_Zone_Size;
     size_t size = region_find_size_and_free(heap_metadata_used, addr);
-    unsigned long *redzone_prefix = addr.virtual;
-    unsigned long *redzone_suffix = addr.virtual + size - Heap_Red_Zone_Size;
+    unsigned long *redzone_prefix = addr;
+    unsigned long *redzone_suffix = addr + size - Heap_Red_Zone_Size;
     assert(*redzone_prefix == Heap_Red_Zone_Fill);
     assert(*redzone_suffix == Heap_Red_Zone_Fill);
-    assert(addr.bytes >= heap);
-    assert(addr.bytes < heap + Heap_Size);
-    assert(addr.bytes + size > heap);
-    assert(addr.bytes + size <= heap + Heap_Size);
+    assert((uint8_t *)addr >= heap);
+    assert((uint8_t *)addr < heap + Heap_Size);
+    assert((uint8_t *)addr + size > heap);
+    assert((uint8_t *)addr + size <= heap + Heap_Size);
 
     memset(heap, (int)Heap_Red_Zone_Fill, Page_Small);
     Used -= size;
