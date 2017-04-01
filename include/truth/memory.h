@@ -4,7 +4,6 @@
 #define KB 0x400
 #define MB 0x100000
 #define GB 0x40000000
-
 #define Kernel_Space_Start (0xffffffff80000000)
 #define Kernel_Fractal_Page_Table_Index (256)
 
@@ -38,6 +37,11 @@
 #define virt_to_phys(x) ((uint64_t)(x) - Kernel_Space_Start)
 #define phys_to_virt(x) ((void *)((x) + Kernel_Space_Start))
 
+#define Kernel_Memory_Start ((void *)01777774010000000000000)
+
+#define Boot_Map_Start ((phys_addr)0x001000)
+#define Boot_Map_End   ((phys_addr)Kernel_Physical_End)
+#define Boot_Map_Size  (Boot_Map_End - Boot_Map_Start - Page_Small)
 
 enum page_size {
     Page_Small  = (4 * KB),
