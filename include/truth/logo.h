@@ -11,4 +11,5 @@
              "\n" \
              "      The Kernel of Truth\n" \
              "\tVersion " kernel_major"."kernel_minor"."kernel_patch "\n" \
-             "\tCommit " vcs_version
+             "\tCommit " vcs_version "\n" \
+             "\t" project_website
