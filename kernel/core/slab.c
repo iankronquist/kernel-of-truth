@@ -103,7 +103,14 @@ void slab_init(void) {
     void *address;
     region_vector_init(&slab_higher_half);
     address = Kernel_Virtual_End;
-    region_free(&slab_higher_half, address, Higher_Half_Size - Kernel_Image_Size - (4 * MB));
+    logf(Log_Debug, "%p\n", Kernel_Memory_Start);
+    size_t kernel_available_memory_size = (Kernel_Memory_Start -
+                                           Higher_Half_End) -
+                                          Kernel_Image_Size - Boot_Map_Size;
+    region_free(&slab_higher_half, address, Kernel_Virtual_Start -
+                Kernel_Memory_Start);
+    region_free(&slab_higher_half, address, Higher_Half_End -
+                Kernel_Virtual_End);
 }
 
 
