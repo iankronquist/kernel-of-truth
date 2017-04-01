@@ -19,7 +19,10 @@ enum status map_external_page(struct page_table *page_table,
 void unmap_external_page(struct page_table *page_table, void *virtual_address,
         bool free_physical_memory);
 
+void unmap_range(void *virt, size_t count, bool free_phys);
 
+enum status map_range(void *virt, phys_addr phys, size_t count,
+                      enum memory_attributes attrs);
 
 void page_table_switch(phys_addr physical_address);
 

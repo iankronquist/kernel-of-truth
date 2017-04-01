@@ -69,10 +69,7 @@ void *slab_alloc_helper(size_t bytes, phys_addr *phys,
         }
         if (map_page(next_virt_address, phys_address,
                      page_attributes) != Ok) {
-            for (size_t j = 0; j < i; ++j) {
-                unmap_page(next_virt_address, true);
-                next_virt_address -= Page_Small;
-            }
+            unmap_range(virt_address, i, true);
             logf(Log_Warning, "Failed to map slab page: %p, %lx\n",
                  next_virt_address, phys_address);
             assert(0);
@@ -94,7 +91,7 @@ void slab_free_helper(size_t bytes, void *address, struct region_vector *vect,
     }
     void *virt_address;
     virt_address  = address;
-    unmap_page(virt_address, free_phys);
+    unmap_range(virt_address, bytes / Page_Small, free_phys);
     region_free(vect, virt_address, bytes);
 }
 

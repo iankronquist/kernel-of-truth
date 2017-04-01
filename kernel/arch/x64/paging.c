@@ -244,6 +244,29 @@ void unmap_external_page(struct page_table *page_table, void *virtual_address,
     write_cr3(original_paging);
 }
 
+void unmap_range(void *virt, size_t count, bool free_phys) {
+    for (size_t i = 0; i < count; ++i) {
+        unmap_page(virt, free_phys);
+        virt += Page_Small;
+    }
+}
+
+enum status map_range(void *virt, phys_addr phys, size_t count,
+                      enum memory_attributes attrs) {
+    enum status status;
+    void *original_virt = virt;
+    for (size_t i = 0; i < count; ++i) {
+        status = map_page(virt, phys, attrs);
+        if (status != Ok) {
+            unmap_range(original_virt, i, false);
+            return Error_Present;
+        }
+        virt += Page_Small;
+        phys += Page_Small;
+    }
+    return Ok;
+}
+
 void page_table_switch(phys_addr physical_address) {
     write_cr3(physical_address);
 }
