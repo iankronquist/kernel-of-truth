@@ -12,17 +12,27 @@ static struct lock slab_higher_half_lock = Lock_Clear;
 extern struct region_vector slab_higher_half;
 
 
-void *slab_alloc_request_physical(phys_addr phys,
+void *slab_alloc_request_physical(phys_addr phys, size_t size,
                                   enum memory_attributes attrs) {
+    enum status status;
     void *virt_address;
+    void *map_address;
+    if (!is_aligned(size, Page_Small)) {
+        return NULL;
+    } else if (size == 0) {
+        return NULL;
+    }
 
     lock_acquire_writer(&slab_higher_half_lock);
-    if (region_alloc(&slab_higher_half, Page_Small, &virt_address) != Ok) {
+
+    if (region_alloc(&slab_higher_half, size, &virt_address) != Ok) {
         virt_address = NULL;
         goto out;
     }
 
-    if (map_page(virt_address, phys, attrs) != Ok) {
+    status = map_range(virt_address, phys, size / Page_Small, attrs);
+    if (status != Ok) {
+        region_free(&slab_higher_half, virt_address, size);
         virt_address = NULL;
         goto out;
     }

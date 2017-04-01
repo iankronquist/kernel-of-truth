@@ -19,5 +19,5 @@ void slab_free_helper(size_t bytes, void *address, struct region_vector *vect,
 void *slab_alloc_helper(size_t bytes, phys_addr *phys,
                         enum memory_attributes page_attributes,
                         struct region_vector *vect);
-void *slab_alloc_request_physical(phys_addr phys,
+void *slab_alloc_request_physical(phys_addr phys, size_t bytes,
                                   enum memory_attributes attrs);
