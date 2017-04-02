@@ -22,7 +22,8 @@ static void physical_free_range(phys_addr address, size_t pages);
 
 static bool physical_region_contains(uintptr_t start_a, uintptr_t end_a,
                                      uintptr_t start_b, uintptr_t end_b) {
-    return start_a > start_b || end_a < end_b;
+    return (start_b > start_a && start_b < end_a) ||
+           (end_b > start_a && end_b < end_a);
 }
 
 // When populating the physical allocator, certain addresses are unavailable or
@@ -62,7 +63,7 @@ static void insert_regions(struct multiboot_info *multiboot_tables) {
         reserved_count = multiboot_tables->mods_count + 2;
 
         status = map_range(modules, mods_list_start,
-                           mods_list_end - mods_list_start,
+                           (mods_list_end - mods_list_start) / Page_Small,
                            Memory_No_Attributes);
         assert_ok(status);
     }
@@ -86,14 +87,17 @@ static void insert_regions(struct multiboot_info *multiboot_tables) {
         reserved[0].end = Boot_Map_End;
     }
 
-    for (size_t i = modules_index_start;
+    for (size_t i = 0;
          i < multiboot_tables->mods_count; ++i) {
+
         reserved[i + modules_index_start].start = modules[i].mod_start;
-        reserved[i + modules_index_start].end = modules[i].mod_end;
+        reserved[i + modules_index_start].end = round_next(modules[i].mod_end,
+                                                           Page_Small);
     }
 
     for (size_t i = 0; i < (multiboot_tables->mmap_length /
                             sizeof(struct multiboot_mmap_entry)); ++i) {
+        inserted = false;
         if (mmap[i].type == MULTIBOOT_MEMORY_AVAILABLE) {
             total += mmap[i].len;
             for (size_t j = 0; j < reserved_count; ++j) {
@@ -111,10 +115,14 @@ static void insert_regions(struct multiboot_info *multiboot_tables) {
                             physical_region_contains(mem_start, mem_end,
                                                      reserved[j + 1].start,
                                                      reserved[j + 1].end)) {
-                        physical_free_range(reserved[j].end,
-                                            reserved[j + 1].start -
-                                            reserved[j].end);
+                        if (reserved[j].end != reserved[j + 1].start) {
+                            physical_free_range(reserved[j].end,
+                                                reserved[j + 1].start -
+                                                reserved[j].end);
+                        }
                         mmap[i].addr = reserved[j + 1].start;
+                        mmap[i].len -= reserved[j + 1].start -
+                                       reserved[j].start;
                     } else if (reserved[j].end < mem_end) {
                         physical_free_range(reserved[j].end,
                                             mem_end - reserved[j].end);
@@ -129,7 +137,8 @@ static void insert_regions(struct multiboot_info *multiboot_tables) {
     }
 
     if (modules_index_start == 2) {
-        unmap_range(modules, mods_list_end - mods_list_start, false);
+        unmap_range(modules, (mods_list_end - mods_list_start) / Page_Small,
+                    false);
     }
 }
 
@@ -182,6 +191,24 @@ void physical_free(phys_addr address) {
 }
 #pragma GCC pop_options
 
+void physical_stack_debug(void) {
+    size_t actual_usage = 0;
+    phys_addr original = Physical_Page;
+    phys_addr current = Physical_Page;
+    lock_acquire_writer(&physical_allocator_lock);
+    while (current != invalid_phys_addr) {
+        unmap_page(Physical_Page_Stack, false);
+        assert_ok(map_page(Physical_Page_Stack, current, Memory_Writable));
+        logf(Log_Debug, "%lx\n", current);
+        current = Physical_Page_Stack->next;
+    }
+    logf(Log_Debug, "%lx\n", current);
+    unmap_page(Physical_Page_Stack, false);
+    assert_ok(map_page(Physical_Page_Stack, original, Memory_Writable));
+    lock_release_writer(&physical_allocator_lock);
+}
+
+
 
 enum status physical_page_remove(phys_addr address) {
     enum status status = Error_Absent;
@@ -212,8 +239,8 @@ enum status physical_page_remove(phys_addr address) {
     return status;
 }
 
-
-static void physical_free_range(phys_addr address, size_t pages) {
+static void physical_free_range(phys_addr address, size_t length) {
+    assert(length > 0);
     assert(is_aligned(address, Page_Small));
     for (size_t i = 0; i < length / Page_Small; ++i) {
         physical_free(address);
