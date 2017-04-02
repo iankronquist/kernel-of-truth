@@ -21,3 +21,4 @@ void *slab_alloc_helper(size_t bytes, phys_addr *phys,
                         struct region_vector *vect);
 void *slab_alloc_request_physical(phys_addr phys, size_t bytes,
                                   enum memory_attributes attrs);
+size_t slab_get_usage(void);

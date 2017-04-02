@@ -11,12 +11,17 @@ static struct lock slab_higher_half_lock = Lock_Clear;
 
 extern struct region_vector slab_higher_half;
 
+size_t Usage = 0;
+
+size_t slab_get_usage(void) {
+    return Usage;
+}
+
 
 void *slab_alloc_request_physical(phys_addr phys, size_t size,
                                   enum memory_attributes attrs) {
     enum status status;
     void *virt_address;
-    void *map_address;
     if (!is_aligned(size, Page_Small)) {
         return NULL;
     } else if (size == 0) {
@@ -37,6 +42,7 @@ void *slab_alloc_request_physical(phys_addr phys, size_t size,
         goto out;
     }
 
+    Usage -= size;
 out:
     lock_release_writer(&slab_higher_half_lock);
 
@@ -77,6 +83,7 @@ void *slab_alloc_helper(size_t bytes, phys_addr *phys,
         }
         next_virt_address += Page_Small;
     }
+    Usage -= bytes;
     return virt_address;
 out:
     region_free(vect, virt_address, bytes / Page_Small);
@@ -92,6 +99,7 @@ void slab_free_helper(size_t bytes, void *address, struct region_vector *vect,
     void *virt_address;
     virt_address  = address;
     unmap_range(virt_address, bytes / Page_Small, free_phys);
+    Usage += bytes;
     region_free(vect, virt_address, bytes);
 }
 
@@ -100,12 +108,10 @@ void slab_init(void) {
     void *address;
     region_vector_init(&slab_higher_half);
     address = Kernel_Virtual_End;
-    logf(Log_Debug, "%p\n", Kernel_Memory_Start);
-    size_t kernel_available_memory_size = (Kernel_Memory_Start -
-                                           Higher_Half_End) -
-                                          Kernel_Image_Size - Boot_Map_Size;
+    Usage += Kernel_Virtual_Start - Kernel_Memory_Start;
     region_free(&slab_higher_half, address, Kernel_Virtual_Start -
                 Kernel_Memory_Start);
+    Usage += Higher_Half_End - Kernel_Virtual_End;
     region_free(&slab_higher_half, address, Higher_Half_End -
                 Kernel_Virtual_End);
 }
