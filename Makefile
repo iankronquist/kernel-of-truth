@@ -24,11 +24,15 @@ include kernel/device/Makefile
 
 
 CC := $(TRIPLE)-gcc
-CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra \
-	-I ./include $(MACROS) -D __C__ -mcmodel=kernel
+CFLAGS := -std=c11 -O2 -MP -MMD -mcmodel=kernel \
+	-ffreestanding -fstack-protector-all \
+	-Wall -Wextra \
+	-I ./include $(MACROS) -D __C__
 
 AS := $(TRIPLE)-gcc
-ASFLAGS := -MP -MMD -ffreestanding -O2 -Wall -Wextra \
+ASFLAGS := -O2 -MP -MMD -mcmodel=kernel \
+	-ffreestanding \
+	-Wall -Wextra \
 	-I ./include $(MACROS) -D __ASM__
 
 LD := $(TRIPLE)-gcc
