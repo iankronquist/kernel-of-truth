@@ -192,7 +192,6 @@ void physical_free(phys_addr address) {
 #pragma GCC pop_options
 
 void physical_stack_debug(void) {
-    size_t actual_usage = 0;
     phys_addr original = Physical_Page;
     phys_addr current = Physical_Page;
     lock_acquire_writer(&physical_allocator_lock);
