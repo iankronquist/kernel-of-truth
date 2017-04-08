@@ -12,7 +12,7 @@ target ARMv7 or x86.
 Kernel Features
 ---------------
 - [x] Support for x86_64.
-- [x] Boots from multiboot2 compliant bootloader.
+- [x] Boots from multiboot v1 compliant bootloader.
 - [x] 🔐 Supervisor Memory Access & Execution Protection (SMEP & SMAP).
 - [x] 🔐 Write XOR Execute page permissions AKA Data Execution Prevention.
 - [x] 🔐 Heap red zone protection.
@@ -27,12 +27,12 @@ Kernel Features
 - [x] PS2 keyboard driver.
 - [x] VGA graphics driver.
 - [x] CMOS Real Time Clock.
-- [ ] Elf loader.
+- [x] Elf loader.
+- [x] Loadable kernel modules.
 - [ ] Basic syscalls.
 - [ ] POSIX syscall layer.
 - [ ] FAT filesystem.
 - [ ] AHCI.
-- [ ] Loadable kernel modules.
 - [ ] Symmetric Multiprocessing (SMP).
 
 

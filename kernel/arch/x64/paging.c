@@ -157,6 +157,8 @@ void debug_paging(void) {
     logf(Log_Debug, "kernel end: %p\n", Kernel_Virtual_End);
 }
 
+bool debug_me = false;
+
 enum status checked map_page(void *virtual_address, phys_addr phys_address,
                              enum memory_attributes permissions) {
 
@@ -175,6 +177,9 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
 
     if (!is_pl3_present(pl4, virtual_address)) {
         phys_addr phys_address = physical_alloc();
+        if (phys_address == invalid_phys_addr) {
+            return Error_No_Memory;
+        }
         pl4[pl4_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
@@ -183,6 +188,9 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
 
     if (!is_pl2_present(level_three, virtual_address)) {
         phys_addr phys_address = physical_alloc();
+        if (phys_address == invalid_phys_addr) {
+            return Error_No_Memory;
+        }
         level_three[pl3_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);
@@ -191,6 +199,9 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
 
     if (!is_pl1_present(level_two, virtual_address)) {
         phys_addr phys_address = physical_alloc();
+        if (phys_address == invalid_phys_addr) {
+            return Error_No_Memory;
+        }
         level_two[pl2_index(virtual_address)] =
             (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
              Memory_Present);

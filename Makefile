@@ -9,8 +9,8 @@ WEBSITE := https://github.com/iankronquist/kernel-of-truth
 MACROS := -dD \
 	-D project_website='"$(WEBSITE)"' \
 	-D kernel_major='"$(KERNEL_MAJOR)"' \
-    -D kernel_minor='"$(KERNEL_MINOR)"' \
-    -D kernel_patch='"$(KERNEL_PATCH)"' \
+	-D kernel_minor='"$(KERNEL_MINOR)"' \
+	-D kernel_patch='"$(KERNEL_PATCH)"' \
 	-D vcs_version='"$(VCS_VERSION)"'
 
 BUILD_DIR := build
@@ -18,9 +18,13 @@ BUILD_DIR := build
 KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
 
 OBJ :=
+MODULES :=
+MODULE_CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra \
+	-fpic -nostdlib -I ../../include -D __C__
 include kernel/arch/$(ARCH)/Makefile
 include kernel/core/Makefile
 include kernel/device/Makefile
+include modules/Makefile
 
 
 CC := $(TRIPLE)-gcc
@@ -40,7 +44,7 @@ STRIP := strip
 
 QEMU := qemu-system-x86_64
 QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/serial.txt \
-	-cpu Broadwell
+	-cpu Broadwell -initrd "$(strip $(MODULES))"
 
 .PHONY: all clean debug iso release start start-log
 
@@ -55,7 +59,7 @@ release: AFLAGS += -Werror
 release: all
 	$(STRIP) -s $(KERNEL)
 
-$(KERNEL): $(KERNEL)64
+$(KERNEL): $(KERNEL)64 $(MODULES)
 	$(OBJCOPY) $< -O elf32-i386 $@
 
 $(KERNEL)64: kernel/arch/$(ARCH)/link.ld $(OBJ)
@@ -68,6 +72,11 @@ $(BUILD_DIR)/%.c.o: kernel/%.c
 $(BUILD_DIR)/%.S.o: kernel/%.S
 	mkdir -p $(shell dirname $@)
 	$(AS) -c $< -o $@ $(ASFLAGS)
+
+$(BUILD_DIR)/modules/%.ko: modules/%
+	mkdir -p $(shell dirname $@)
+	$(MAKE) -C $< OUTFILE='../../$@' CFLAGS='$(MODULE_CFLAGS)' CC='$(CC)' \
+		BUILD_DIR='$(BUILD_DIR)' LD='$(LD)'
 
 tags: kernel/arch/$(ARCH)/*.c kernel/core/*.c kernel/device/*.c \
 		include/arch/$(ARCH)/*.h include/truth/*.h

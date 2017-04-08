@@ -127,7 +127,7 @@ static const void *elf_get_section(const struct elf64_header *header,
 
     for (size_t i = 0; i < header->e_shnum; ++i) {
         const char *section_name = strtab + sections[i].sh_name;
-        if (section_name >= start + size) {
+        if ((uint8_t *)section_name >= start + size) {
             continue;
         }
         if (strncmp(name, section_name, strlen(name)) == 0) {
