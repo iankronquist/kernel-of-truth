@@ -17,4 +17,5 @@ OBJ += $(BUILD_DIR)/core/slab.c.o
 OBJ += $(BUILD_DIR)/core/sorted_list.c.o
 OBJ += $(BUILD_DIR)/core/string.c.o
 OBJ += $(BUILD_DIR)/core/scheduler.c.o
+OBJ += $(BUILD_DIR)/core/symbols.c.o
 OBJ += $(BUILD_DIR)/core/ubsan.c.o

@@ -27,6 +27,9 @@ include kernel/device/Makefile
 include modules/Makefile
 
 
+PYTHON := python
+
+
 CC := $(TRIPLE)-gcc
 CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra \
 	-I ./include $(MACROS) -D __C__ -mcmodel=kernel
@@ -62,8 +65,8 @@ release: all
 $(KERNEL): $(KERNEL)64 $(MODULES)
 	$(OBJCOPY) $< -O elf32-i386 $@
 
-$(KERNEL)64: kernel/arch/$(ARCH)/link.ld $(OBJ)
-	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $@ $(LDFLAGS)
+$(KERNEL)64: kernel/arch/$(ARCH)/link.ld $(BUILD_DIR)/symbols.o
+	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) $(BUILD_DIR)/symbols.o -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.c.o: kernel/%.c
 	mkdir -p $(shell dirname $@)
@@ -72,6 +75,11 @@ $(BUILD_DIR)/%.c.o: kernel/%.c
 $(BUILD_DIR)/%.S.o: kernel/%.S
 	mkdir -p $(shell dirname $@)
 	$(AS) -c $< -o $@ $(ASFLAGS)
+
+$(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld
+	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $(KERNEL)64 $(LDFLAGS)
+	nm $(KERNEL)64 | $(PYTHON) build_symbol_table.py $(BUILD_DIR)/symbols.S
+	$(AS) -c $(BUILD_DIR)/symbols.S -o $@ $(ASFLAGS)
 
 $(BUILD_DIR)/modules/%.ko: modules/%
 	mkdir -p $(shell dirname $@)

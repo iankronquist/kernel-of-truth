@@ -5,6 +5,7 @@
 #include <truth/memory.h>
 #include <truth/panic.h>
 #include <truth/slab.h>
+#include <truth/symbols.h>
 #include <external/multiboot.h>
 
 
@@ -39,6 +40,7 @@ void *module_list_offset(phys_addr mods_addr, phys_addr ptr, void *mapped) {
     return mapped + (ptr - mods_addr);
 }
 
+/*
 enum status modules_kernel_symbol_hashtable_init(struct multiboot_info *info) {
 
 
@@ -70,6 +72,7 @@ enum status modules_kernel_symbol_hashtable_init(struct multiboot_info *info) {
 
     return Ok;
 }
+*/
 
 
 enum status modules_init(struct multiboot_info *info) {
@@ -80,12 +83,17 @@ enum status modules_init(struct multiboot_info *info) {
     logf(Log_Info, "Loading %d module%s\n", info->mods_count,
          info->mods_count == 1 ? "" : "s");
 
+    modules_status = symbol_init();
+    if (modules_status != Ok) {
+        return modules_status;
+    }
+
     struct multiboot_mod_list *modules = slab_alloc_request_physical(info->mods_addr, Page_Small, Memory_No_Attributes);
     if (modules == NULL) {
+        symbol_fini();
         return Error_No_Memory;
     }
 
-    modules_kernel_symbol_hashtable_init(info);
 
     for (size_t i = 0; i < info->mods_count; ++i) {
 
@@ -132,6 +140,10 @@ enum status modules_init(struct multiboot_info *info) {
         new_module->name = module_name;
     }
     slab_free(Page_Small, modules);
+
+    if (modules_status != Ok) {
+        symbol_fini();
+    }
 
     return modules_status;
 }
