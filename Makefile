@@ -33,10 +33,10 @@ CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra \
 
 AS := $(TRIPLE)-gcc
 ASFLAGS := -MP -MMD -ffreestanding -O2 -Wall -Wextra \
-	-I ./include $(MACROS) -D __ASM__
+	-I ./include $(MACROS) -D __ASM__ -mcmodel=kernel
 
 LD := $(TRIPLE)-gcc
-LDFLAGS := -nostdlib -ffreestanding -O2
+LDFLAGS := -nostdlib -ffreestanding -O2 -mcmodel=kernel
 
 OBJCOPY := objcopy
 GRUB_MKRESCUE := grub-mkrescue
