@@ -12,12 +12,13 @@
 #define Page_Medium (2 * MB)
 #define Page_Large  (GB)
 
-#define Memory_Present       (1 << 0)
-#define Memory_Writable      (1 << 1)
-#define Memory_User_Access   (1 << 2)
-#define Memory_No_Execute    (1 << 63)
-#define Memory_Execute_Mask  (0x7fffffffffffffff)
-#define Memory_Writable_Mask (0xfffffffffffffffd)
+#define Memory_Present          (1 << 0)
+#define Memory_Writable         (1 << 1)
+#define Memory_User_Access      (1 << 2)
+#define Memory_No_Execute       (1 << 63)
+#define Memory_Execute_Mask     (0x7fffffffffffffff)
+#define Memory_Writable_Mask    (0xfffffffffffffffd)
+#define Memory_Permissions_Mask (0x8000000000000fff)
 
 #define Lower_Half_Start  (Page_Small)
 #define Lower_Half_End    (0x00007fffffffffff)
@@ -56,6 +57,7 @@ enum memory_attributes {
     Memory_No_Execute    = (1ul << 63),
     Memory_Writable      = (1ul << 1) | Memory_No_Execute,
     Memory_Execute_Mask  = ~Memory_No_Execute,
+	Memory_Permissions_Mask  = (0x8000000000000fff),
 };
 
 #define Lower_Half_Start  ((void *)Page_Small)
