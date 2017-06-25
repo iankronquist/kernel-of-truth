@@ -15,6 +15,7 @@ OBJ += $(BUILD_DIR)/core/random.c.o
 OBJ += $(BUILD_DIR)/core/region_vector.c.o
 OBJ += $(BUILD_DIR)/core/slab.c.o
 OBJ += $(BUILD_DIR)/core/sorted_list.c.o
+OBJ += $(BUILD_DIR)/core/stack_protector.c.o
 OBJ += $(BUILD_DIR)/core/string.c.o
 OBJ += $(BUILD_DIR)/core/scheduler.c.o
 OBJ += $(BUILD_DIR)/core/symbols.c.o
