@@ -105,6 +105,10 @@ struct elf_symbol {
 #define ELF32_ST_TYPE(i) ((i) & 0x0f)
 #define ELF32_ST_INFO(b, t)  (((b) << 4) + ((t) & 0x0f))
 
+#define ELF64_ST_BIND ELF32_ST_BIND
+#define ELF64_ST_TYPE ELF32_ST_TYPE
+#define ELF64_ST_INFO ELF32_ST_INFO
+
 #define STB_LOCAL  0
 #define STB_GLOBAL 1
 #define STB_WEAK   2
