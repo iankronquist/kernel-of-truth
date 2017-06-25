@@ -1,6 +1,7 @@
 #include <truth/elf.h>
 #include <truth/log.h>
 #include <truth/string.h>
+#include <truth/symbols.h>
 #include <truth/types.h>
 
 
@@ -106,9 +107,30 @@ void elf_print_sections(struct elf64_header *header, size_t size) {
 }
 
 
-static const void *elf_get_section(const struct elf64_header *header,
+const struct elf_section_header *elf_get_section_index(
+                                   const struct elf64_header *header,
+                                   const size_t size, size_t index) {
+    const uint8_t *start = (const uint8_t *)header;
+
+    const struct elf_section_header *sections = (const void *)start +
+                                                    header->e_shoff;
+    if ((uint8_t *)(sections + header->e_shnum) > start + size) {
+        log(Log_Error, "Section header out of bounds");
+        return NULL;
+    }
+
+    if ((void *)&sections[index] < (void *)start + size) {
+        return &sections[index];
+    } else {
+        return NULL;
+    }
+}
+
+
+const void *elf_get_section(const struct elf64_header *header,
                                    const size_t size, const char *name,
                                    size_t *section_size) {
+    const void *section;
     const uint8_t *start = (const uint8_t *)header;
 
     const struct elf_section_header *sections = (const void *)start +
@@ -131,11 +153,17 @@ static const void *elf_get_section(const struct elf64_header *header,
             continue;
         }
         if (strncmp(name, section_name, strlen(name)) == 0) {
+            section = start + sections[i].sh_offset;
+            if ((void *)section > (void *)start + size) {
+                logf(Log_Info, "Section %s out of bounds\n", name);
+                return NULL;
+            }
             *section_size = sections[i].sh_size;
-            return start + sections[i].sh_offset;
+            return section;
         }
     }
 
+    logf(Log_Info, "Section %s not found\n", name);
     return NULL;
 }
 
@@ -173,4 +201,87 @@ const char *elf_get_shared_object_name(const struct elf64_header *header,
     }
 
     return NULL;
+}
+
+
+enum status elf_relocate(void *module_start, size_t module_size) {
+    int64_t *pointer;
+    int64_t value;
+    const struct elf_symbol *symbol;
+    size_t rela_size;
+    const struct elf_rela *rela;
+    size_t dynsym_size;
+    const struct elf_symbol *dynsym;
+    size_t dynstr_size;
+    const char *dynstr = elf_get_section(module_start,
+                                         module_size,
+                                         ".dynstr",
+                                         &dynstr_size);
+    if (dynstr == NULL) {
+        log(Log_Error, "Couldn't find section .dynstr");
+        return Error_Invalid;
+    }
+
+    rela = elf_get_section(module_start, module_size, ".rela.dyn", &rela_size);
+    if (rela == NULL) {
+        log(Log_Error, "Couldn't find section .rela.dyn");
+        return Error_Invalid;
+    }
+
+    dynsym = elf_get_section(module_start, module_size, ".dynsym",
+                              &dynsym_size);
+    if (dynsym == NULL) {
+        log(Log_Error, "Couldn't find section .dynsym");
+        return Error_Invalid;
+    }
+
+    rela = elf_get_section(module_start, module_size, ".rela.dyn", &rela_size);
+    if (rela == NULL) {
+        log(Log_Error, "Couldn't find section .rela.dyn");
+        return Error_Invalid;
+    }
+
+    logf(Log_Debug, "Rela size %lx\n", rela_size);
+    for (size_t i = 0; i < rela_size / sizeof(struct elf_rela); ++i) {
+        logf(Log_Debug, "Rela %lx\n", rela[i].r_info);
+        int r_type = ELF64_R_TYPE(rela[i].r_info);
+        switch (r_type) {
+            case R_X86_64_RELATIVE:
+                pointer = module_start + rela[i].r_offset;
+                value = (uintptr_t)module_start + rela[i].r_addend;
+                *pointer = value;
+                break;
+            case R_X86_64_JUMP_SLOT:
+            case R_X86_64_GLOB_DAT:
+            case R_X86_64_64:
+                symbol = &dynsym[ELF64_R_SYM(rela[i].r_info)];
+                if ((void *)(symbol + 1) > module_start + module_size) {
+                    logf(Log_Error, "Symbol out of bounds %lx %p %p %p %p", ELF64_R_SYM(rela[i].r_info), symbol, module_start, module_start + module_size, dynsym);
+                    return Error_Invalid;
+                }
+                logf(Log_Info, "Resloving rela %s\n", &dynstr[symbol->st_name]);
+                pointer = module_start + rela[i].r_offset;
+                if (symbol->st_index == SHN_UNDEF) {
+                    if ((void *)&dynsym[symbol->st_name] > module_start + module_size) {
+                        log(Log_Error, "String out of bounds");
+                        return Error_Invalid;
+                    }
+
+                    value = (uintptr_t)symbol_get(&dynstr[symbol->st_name]);
+                } else if (r_type == R_X86_64_64) {
+                    value = (uintptr_t)module_start + symbol->st_value +
+                                rela[i].r_addend;
+                } else {
+                    value = (uintptr_t)module_start + symbol->st_value;
+                }
+                *pointer = value;
+                break;
+            default:
+                logf(Log_Error, "Unable to resolve rela symbol of type %lx\n",
+                     rela[i].r_info);
+                return Error_Invalid;
+        }
+    }
+
+    return Ok;
 }
