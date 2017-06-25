@@ -354,6 +354,10 @@ void *elf_get_symbol_address(void *elf, size_t size, const char *name) {
     void *location;
     size_t strtab_size;
     const char *strtab = elf_get_section(elf, size, ".strtab", &strtab_size);
+    if (strtab == NULL) {
+        log(Log_Error, "Could not find strtab");
+        return NULL;
+    }
     size_t symtab_size;
     const struct elf_symbol *symtab = elf_get_section(elf, size, ".symtab", &symtab_size);
     if (symtab == NULL) {
