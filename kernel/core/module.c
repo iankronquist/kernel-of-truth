@@ -128,7 +128,7 @@ enum status module_insert_symbols(void *elf, size_t size) {
     }
 
     for (size_t i = 0; i < symtab_size / sizeof(struct elf_symbol); ++i) {
-        if (ELF64_ST_BIND(symtab[i].st_info) == STB_GLOBAL) {
+        if (ELF64_ST_BIND(symtab[i].st_info) == STB_GLOBAL && (ELF64_ST_TYPE(symtab[i].st_info) == STT_FUNC || ELF64_ST_TYPE(symtab[i].st_info) == STT_OBJECT)) {
             section = elf_get_section_index(header, size, symtab[i].st_index);
             if (section == NULL) {
                 status = Error_Invalid;
