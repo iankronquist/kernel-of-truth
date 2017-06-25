@@ -87,3 +87,4 @@ extern uint8_t __kernel_end;
 #define pack __attribute__((packed))
 #define unused(x) x __attribute__((unused))
 #define constructor __attribute__((constructor))
+#define destructor __attribute__((destructor))
