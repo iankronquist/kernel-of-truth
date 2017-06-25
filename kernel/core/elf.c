@@ -122,6 +122,7 @@ const struct elf_section_header *elf_get_section_index(
     if ((void *)&sections[index] < (void *)start + size) {
         return &sections[index];
     } else {
+        logf(Log_Error, "Section %zu out of bounds\n", index);
         return NULL;
     }
 }
@@ -298,9 +299,8 @@ static enum status elf_run_init_fini_helper(void *module_start, size_t module_si
         return Error_Invalid;
     }
 
-
     for (size_t i = 0; i < dynamic_size / sizeof(struct elf_dyn); ++i) {
-        logf(Log_Info, "dynamic symbol %x\n", dynamic[i].d_tag);
+        logf(Log_Info, "dynamic symbol %lx\n", dynamic[i].d_tag);
         if (dynamic[i].d_tag == dt_array) {
             funcs = module_start + dynamic[i].d_un.d_ptr;
         } else if (dynamic[i].d_tag == dt_array_size) {
@@ -322,7 +322,9 @@ static enum status elf_run_init_fini_helper(void *module_start, size_t module_si
     }
 
     for (size_t i = 0; i < funcs_size; ++i) {
+        logf(Log_Info, "Calling function %p %p\n", &funcs[i], funcs[i]);
         enum status status = funcs[i]();
+        logf(Log_Info, "Called function %p %p\n", &funcs[i], funcs[i]);
         if (status != Ok) {
             return status;
         }
