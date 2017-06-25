@@ -85,22 +85,22 @@ enum status module_set_section_permissions(void *elf, size_t size) {
 
     status = paging_update_range(module_rw_start, rw_size, Memory_No_Execute | Memory_Writable);
     if (status != Ok) {
-        status = paging_update_range(module_rw_start, rw_size, Memory_No_Execute | Memory_Writable);
+        paging_update_range(module_rw_start, rw_size, Memory_No_Execute | Memory_Writable);
         return status;
     }
 
     status = paging_update_range(module_rx_start, rx_size, Memory_No_Attributes);
     if (status != Ok) {
-        status = paging_update_range(module_rx_start, rx_size, Memory_No_Execute | Memory_Writable);
-        status = paging_update_range(module_rw_start, rw_size, Memory_No_Execute | Memory_Writable);
+        paging_update_range(module_rx_start, rx_size, Memory_No_Execute | Memory_Writable);
+        paging_update_range(module_rw_start, rw_size, Memory_No_Execute | Memory_Writable);
         return status;
     }
 
     status = paging_update_range(module_ro_start, ro_size, Memory_No_Execute);
     if (status != Ok) {
-        status = paging_update_range(module_ro_start, ro_size, Memory_No_Execute | Memory_Writable);
-        status = paging_update_range(module_rx_start, rx_size, Memory_No_Execute | Memory_Writable);
-        status = paging_update_range(module_rw_start, rw_size, Memory_No_Execute | Memory_Writable);
+        paging_update_range(module_ro_start, ro_size, Memory_No_Execute | Memory_Writable);
+        paging_update_range(module_rx_start, rx_size, Memory_No_Execute | Memory_Writable);
+        paging_update_range(module_rw_start, rw_size, Memory_No_Execute | Memory_Writable);
         return status;
     }
 
