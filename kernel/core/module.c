@@ -182,6 +182,18 @@ enum status modules_init(struct multiboot_info *info) {
             slab_free(Page_Small, module_start);
             modules_status = status;
         }
+
+        status = elf_run_init(module_start, module_size);
+        if (status != Ok) {
+            log(Log_Error, "Error running module init");
+            modules_status = status;
+            status = elf_run_fini(module_start, module_size);
+            if (status != Ok) {
+                log(Log_Error, "Error running module fini after init failed");
+            }
+            slab_free(Page_Small, module_start);
+        }
+
     }
     slab_free(Page_Small, modules);
 
