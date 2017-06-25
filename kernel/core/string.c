@@ -85,6 +85,9 @@ enum order strncmp(const char *s1, const char *s2, size_t n) {
                 return Order_Less;
             }
         }
+        if (s1[i] == '\0' || s2[i] == '\0') {
+            break;
+        }
     }
     return Order_Equal;
 }
