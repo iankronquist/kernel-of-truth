@@ -24,6 +24,8 @@ void unmap_range(void *virt, size_t count, bool free_phys);
 enum status map_range(void *virt, phys_addr phys, size_t count,
                       enum memory_attributes attrs);
 
+enum status paging_update_range(void *virt, size_t count, enum memory_attributes attrs);
+
 void page_table_switch(phys_addr physical_address);
 
 enum status paging_init(void);
