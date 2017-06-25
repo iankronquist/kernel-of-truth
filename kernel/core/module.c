@@ -21,12 +21,6 @@ struct module {
 struct module *Module_List = NULL;
 
 
-enum status module_load(void *start, size_t size) {
-    elf_print_sections(start, size);
-    return Error_Absent;
-}
-
-
 void module_list_free(void) {
     while (Module_List != NULL) {
         struct module *next = Module_List->next;
@@ -40,39 +34,114 @@ void *module_list_offset(phys_addr mods_addr, phys_addr ptr, void *mapped) {
     return mapped + (ptr - mods_addr);
 }
 
-/*
-enum status modules_kernel_symbol_hashtable_init(struct multiboot_info *info) {
+void module_remove_symbols(void *elf, size_t size) {
+    const char *strtab;
+    const struct elf_symbol *symtab;
+    size_t strtab_size;
+    size_t symtab_size;
 
-
-    uintptr_t multiboot_elf_section_header_addr = (uintptr_t)info->u.elf_sec.addr;
-    void *kernel_header = phys_to_virt(multiboot_elf_section_header_addr);
-    map_page(kernel_header, multiboot_elf_section_header_addr, Memory_No_Attributes);
-    logf(Log_Debug, "%x\n", info->flags);
-    assert(info->flags & MULTIBOOT_INFO_ELF_SHDR);
-
-    struct elf_section_header *kernel_symtab = NULL;
-    struct elf_section_header *kernel_sections =
-        phys_to_virt(info->u.elf_sec.addr);
-    char *kernel_strtab = (char *)kernel_sections + kernel_sections[info->u.elf_sec.shndx].sh_offset;
-
-    logf(Log_Debug, "%lx %lx %lx\n", info->u.elf_sec.size, info->u.elf_sec.shndx, info->u.elf_sec.num);
-
-    for (size_t i = 0; i < info->u.elf_sec.num; ++i) {
-        logf(Log_Debug, "%s\n", kernel_strtab + kernel_sections[i].sh_name);
-        if (kernel_sections[i].sh_type == SHT_SYMTAB && strncmp(".strtab", kernel_strtab + kernel_sections[i].sh_name, strlen(".strtab")) == 0) {
-            kernel_symtab = &kernel_sections[i];
-        }
+    strtab = elf_get_section(elf, size, ".strtab", &strtab_size);
+    if (strtab == NULL) {
+        log(Log_Warning, "Failed to get .strtab when removing symbols");
+        return;
     }
 
-    if (kernel_symtab == NULL) {
-        log(Log_Debug, "Invalid kernel symbol table");
+    symtab = elf_get_section(elf, size, ".symtab", &symtab_size);
+    if (symtab == NULL) {
+        log(Log_Warning, "Failed to get .symtab when removing symbols");
+        return;
+    }
+
+    for (size_t i = 0; i < symtab_size / sizeof(struct elf_symbol); ++i) {
+        if (ELF32_ST_BIND(symtab[i].st_info) == STB_GLOBAL) {
+
+            assert_ok(symbol_remove(&strtab[symtab[i].st_name]));
+
+            logf(Log_Info, "Removing symbol '%s'\n",
+                 &strtab[symtab[i].st_name]);
+        }
+    }
+}
+
+enum status module_insert_symbols(void *elf, size_t size) {
+    enum status status = Ok;
+    struct elf64_header *header = elf;
+    const char *strtab;
+    const struct elf_symbol *symtab;
+    const struct elf_section_header *section;
+    size_t strtab_size;
+    size_t symtab_size;
+    void *location;
+
+    strtab = elf_get_section(elf, size, ".strtab", &strtab_size);
+    if (strtab == NULL) {
         return Error_Invalid;
     }
 
+    symtab = elf_get_section(elf, size, ".symtab", &symtab_size);
+    if (symtab == NULL) {
+        return Error_Invalid;
+    }
+
+    for (size_t i = 0; i < symtab_size / sizeof(struct elf_symbol); ++i) {
+        if (ELF32_ST_BIND(symtab[i].st_info) == STB_GLOBAL) {
+            section = elf_get_section_index(header, size, symtab[i].st_index);
+            if (section == NULL) {
+                status = Error_Invalid;
+                goto err;
+            }
+            location = elf + section->sh_offset + symtab[i].st_value;
+
+            status = symbol_put(&strtab[symtab[i].st_name], location);
+            if (status != Ok) {
+                goto err;
+            }
+
+            logf(Log_Info, "Symbol '%s': %p\n", &strtab[symtab[i].st_name], location);
+        }
+    }
+
+    return status;
+err:
+    module_remove_symbols(elf, size);
+
+    return status;
+}
+
+
+enum status module_load(void *module_start, size_t module_size) {
+    if (!elf_verify(module_start, module_size)) {
+        return Error_Invalid;
+    }
+
+    const char *module_name = elf_get_shared_object_name(module_start,
+                                                   module_size);
+    logf(Log_Info, "Loading module %s\n", module_name);
+
+    elf_print_sections(module_start, module_size);
+
+    enum status status = elf_relocate(module_start, module_size);
+    if (status != Ok) {
+        slab_free(Page_Small, module_start);
+        return status;
+    }
+
+    module_insert_symbols(module_start, module_size);
+
+    struct module *new_module = kmalloc(sizeof(struct module));
+    if (new_module == NULL) {
+        slab_free(Page_Small, module_start);
+        return Error_No_Memory;
+    }
+    new_module->virtual_start = module_start;
+    new_module->size = module_size;
+    new_module->next = Module_List;
+    new_module->name = module_name;
+
+    Module_List = new_module;
 
     return Ok;
 }
-*/
 
 
 enum status modules_init(struct multiboot_info *info) {
@@ -98,46 +167,21 @@ enum status modules_init(struct multiboot_info *info) {
     for (size_t i = 0; i < info->mods_count; ++i) {
 
         size_t module_size = modules[i].mod_end - modules[i].mod_start;
+        size_t module_allocation_size = align_as(round_next(module_size, Page_Small), Page_Small);
         void *module_start = slab_alloc_request_physical(
                     modules[i].mod_start,
-                    align_as(round_next(module_size, Page_Small), Page_Small),
+                    module_allocation_size,
                     Memory_Writable);
         if (module_start == NULL) {
             modules_status = Error_Invalid;
             continue;
         }
 
-        if (!elf_verify(module_start, module_size)) {
-            slab_free(Page_Small, module_start);
-            modules_status = Error_Invalid;
-            continue;
-        }
-
-        char *module_name = elf_get_shared_object_name(module_start,
-                                                       module_size);
-        logf(Log_Info, "Loading module %s\n", module_name);
-
-        /*
-        status = elf_relocate(module_start, module_size);
+        enum status status = module_load(module_start, module_size);
         if (status != Ok) {
-            module_list_free();
             slab_free(Page_Small, module_start);
-            modules_status = Error_Invalid;
-            continue;
+            modules_status = status;
         }
-        */
-
-        struct module *new_module = kmalloc(sizeof(struct module));
-        if (new_module == NULL) {
-            slab_free(Page_Small, module_start);
-            modules_status = Error_No_Memory;
-            continue;
-        }
-        new_module->physical_start = modules[i].mod_start;
-        new_module->virtual_start = module_start;
-        new_module->size = module_size;
-        new_module->next = Module_List;
-        new_module->name = module_name;
     }
     slab_free(Page_Small, modules);
 
