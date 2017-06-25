@@ -1,20 +1,50 @@
 SECTIONS {
 
-	.text BLOCK(4K) : ALIGN(4K) {
-		*(.text)
+	. = ALIGN(4K);
+
+	.text : {
+		__module_start = .;
+		__module_rx_start = .;
+		*(.text*)
+		*(.plt*)
 	}
 
-	.data BLOCK(4K) : ALIGN(4K) {
-		*(.data)
+	.init_array : {
+		*(.init_array*)
+		*(.ctors*)
 	}
 
-	.rodata BLOCK(4K) : ALIGN(4K) {
-		*(.rodata)
-	}
-
-	.bss BLOCK(4K) : ALIGN(4K) {
-		*(.bss)
+	.fini_array : {
+		*(.init_array*)
+		*(.dtors*)
 	}
 
 	. = ALIGN(4K);
+    __module_rx_end = .;
+    __module_rw_start = .;
+
+	.data : {
+		*(.data*)
+	}
+
+	. = ALIGN(4K);
+    __module_rw_end = .;
+    __module_ro_start = .;
+
+	.rodata : {
+		*(.rodata*)
+		*(.got*)
+	}
+
+	. = ALIGN(4K);
+    __module_ro_end = .;
+    __module_bss_start = .;
+
+	.bss : {
+		*(.bss*)
+	}
+
+	. = ALIGN(4K);
+    __module_bss_end = .;
+    __module_end = .;
 }
