@@ -48,20 +48,17 @@ void symbol_fini(void) {
     hashtable_destroy(symbol_table);
 }
 
-enum status checked symbol_remove(char *symbol) {
-    union hashtable_key key;
-    key.ptr = symbol;
+enum status symbol_remove(const char *symbol) {
+    const union hashtable_key key = { .ptr = symbol };
     return hashtable_remove(symbol_table, key);
 }
 
-void *symbol_get(char *symbol) {
-    union hashtable_key key;
-    key.ptr = symbol;
+void *symbol_get(const char *symbol) {
+    const union hashtable_key key = { .ptr = symbol };
     return hashtable_get(symbol_table, key);
 }
 
-enum status checked symbol_put(char *symbol, void *location) {
-    union hashtable_key key;
-    key.ptr = symbol;
+enum status checked symbol_put(const char *symbol, void *location) {
+    const union hashtable_key key = { .ptr = symbol };
     return hashtable_put(symbol_table, key, location);
 }
