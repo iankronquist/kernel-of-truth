@@ -285,3 +285,62 @@ enum status elf_relocate(void *module_start, size_t module_size) {
 
     return Ok;
 }
+
+
+static enum status elf_run_init_fini_helper(void *module_start, size_t module_size, int dt_array, int dt_array_size) {
+    size_t funcs_size = 0;
+    bool funcs_size_found = false;
+    enum status (**funcs)(void) = NULL;
+    size_t dynamic_size;
+    const struct elf_dyn *dynamic = elf_get_section(module_start, module_size, ".dynamic", &dynamic_size);
+    if (dynamic == NULL) {
+        log(Log_Error, "Couldn't find section .dynamic\n");
+        return Error_Invalid;
+    }
+
+
+    for (size_t i = 0; i < dynamic_size / sizeof(struct elf_dyn); ++i) {
+        logf(Log_Info, "dynamic symbol %x\n", dynamic[i].d_tag);
+        if (dynamic[i].d_tag == dt_array) {
+            funcs = module_start + dynamic[i].d_un.d_ptr;
+        } else if (dynamic[i].d_tag == dt_array_size) {
+            funcs_size = dynamic[i].d_un.d_val;
+            funcs_size_found = true;
+        }
+
+        if (funcs != NULL && funcs_size_found) {
+            break;
+        }
+    }
+
+    if (funcs == NULL || !funcs_size_found) {
+        log(Log_Info, "Module has no init/fini");
+        return Ok;
+    } else if ((void *)funcs + funcs_size > module_start + module_size) {
+        log(Log_Info, "Module init/fini out of bounds");
+        return Error_Invalid;
+    }
+
+    for (size_t i = 0; i < funcs_size; ++i) {
+        enum status status = funcs[i]();
+        if (status != Ok) {
+            return status;
+        }
+    }
+
+    return Ok;
+}
+
+
+enum status elf_run_init(void *module_start, size_t module_size) {
+    enum status status = elf_run_init_fini_helper(module_start, module_size, DT_INIT_ARRAY, DT_INIT_ARRAYSZ);
+    if (status != Ok) {
+        elf_run_fini(module_start, module_size);
+    }
+    return status;
+}
+
+
+enum status elf_run_fini(void *module_start, size_t module_size) {
+    return elf_run_init_fini_helper(module_start, module_size, DT_FINI_ARRAY, DT_FINI_ARRAYSZ);
+}

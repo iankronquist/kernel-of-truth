@@ -263,3 +263,5 @@ const struct elf_section_header *elf_get_section_index(
                                    const size_t size, size_t index);
 
 enum status elf_relocate(void *module_start, size_t module_size);
+enum status elf_run_init(void *module_start, size_t module_size);
+enum status elf_run_fini(void *module_start, size_t module_size);
