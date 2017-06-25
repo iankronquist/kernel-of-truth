@@ -1,3 +1,4 @@
+#include <arch/x64/paging.h>
 #include <truth/elf.h>
 #include <truth/log.h>
 #include <truth/heap.h>
@@ -61,6 +62,49 @@ void module_remove_symbols(void *elf, size_t size) {
                  &strtab[symtab[i].st_name]);
         }
     }
+}
+
+enum status module_set_section_permissions(void *elf, size_t size) {
+    enum status status;
+    void *module_rw_start = elf_get_symbol_address(elf, size, "__module_rw_start");
+    void *module_rw_end = elf_get_symbol_address(elf, size, "__module_rw_end");
+    size_t rw_size = (module_rw_end - module_rw_start) / Page_Small;
+    void *module_rx_start = elf_get_symbol_address(elf, size, "__module_rx_start");
+    void *module_rx_end = elf_get_symbol_address(elf, size, "__module_rx_end");
+    size_t rx_size = (module_rx_end - module_rx_start) / Page_Small;
+    void *module_ro_start = elf_get_symbol_address(elf, size, "__module_ro_start");
+    void *module_ro_end = elf_get_symbol_address(elf, size, "__module_ro_end");
+    size_t ro_size = (module_ro_end - module_ro_start) / Page_Small;
+    if (module_rw_start == NULL || module_rw_end == NULL ||
+        module_rx_start == NULL || module_rx_end == NULL ||
+        module_ro_start == NULL || module_ro_end == NULL) {
+        log(Log_Error, "Couldn't get module delimiter\n");
+        return Error_Permissions;
+    }
+    logf(Log_Info, "Regions:\nrw %p %p\nrx %p %p\nro %p %p\n", module_rw_start, module_rw_end, module_rx_start, module_rx_end, module_ro_start, module_ro_end);
+
+    status = paging_update_range(module_rw_start, rw_size, Memory_No_Execute | Memory_Writable);
+    if (status != Ok) {
+        status = paging_update_range(module_rw_start, rw_size, Memory_No_Execute | Memory_Writable);
+        return status;
+    }
+
+    status = paging_update_range(module_rx_start, rx_size, Memory_No_Attributes);
+    if (status != Ok) {
+        status = paging_update_range(module_rx_start, rx_size, Memory_No_Execute | Memory_Writable);
+        status = paging_update_range(module_rw_start, rw_size, Memory_No_Execute | Memory_Writable);
+        return status;
+    }
+
+    status = paging_update_range(module_ro_start, ro_size, Memory_No_Execute);
+    if (status != Ok) {
+        status = paging_update_range(module_ro_start, ro_size, Memory_No_Execute | Memory_Writable);
+        status = paging_update_range(module_rx_start, rx_size, Memory_No_Execute | Memory_Writable);
+        status = paging_update_range(module_rw_start, rw_size, Memory_No_Execute | Memory_Writable);
+        return status;
+    }
+
+    return Ok;
 }
 
 enum status module_insert_symbols(void *elf, size_t size) {
@@ -179,8 +223,16 @@ enum status modules_init(struct multiboot_info *info) {
 
         enum status status = module_load(module_start, module_size);
         if (status != Ok) {
+            log(Log_Error, "Error loading module");
             slab_free(Page_Small, module_start);
             modules_status = status;
+        }
+
+        status = module_set_section_permissions(module_start, module_size);
+        if (status != Ok) {
+            log(Log_Error, "Error setting module section permissions");
+            modules_status = status;
+            slab_free(Page_Small, module_start);
         }
 
         status = elf_run_init(module_start, module_size);
