@@ -130,9 +130,31 @@ struct elf_rela {
     int64_t r_addend;
 };
 
+#define ELF64_R_SYM(i)  ((i) >> 32)
+#define ELF64_R_TYPE(i) ((i) & 0xffffffff)
+#define ELF64_R_INFO(s, t) (((s) << 32) + (uint32_t)(t))
+
 #define ELF32_R_SYM(i)  ((i) >> 8)
 #define ELF32_R_TYPE(i) ((unsigned char)(i))
 #define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char)(t))
+
+#define R_X86_64_NONE      0
+#define R_X86_64_64        1
+#define R_X86_64_PC32      2
+#define R_X86_64_GOT32     3
+#define R_X86_64_PLT32     4
+#define R_X86_64_COPY      5
+#define R_X86_64_GLOB_DAT  6
+#define R_X86_64_JUMP_SLOT 7
+#define R_X86_64_RELATIVE  8
+#define R_X86_64_GOTPCREL  9
+#define R_X86_64_32       10
+#define R_X86_64_32S      11
+#define R_X86_64_16       12
+#define R_X86_64_PC16     13
+#define R_X86_64_8        14
+#define R_X86_64_PC8      15
+#define R_X86_64_NUM      16
 
 #define ELF32_386_NONE     0
 #define ELF32_386_32       1
@@ -218,6 +240,15 @@ void elf_info(struct elf64_header *header);
 bool elf_verify(const void *start, size_t size);
 const char *elf_strtab_get_symbol(struct elf64_header *header, size_t size,
                             size_t index);
+const void *elf_get_section(const struct elf64_header *header,
+                                   const size_t size, const char *name,
+                                   size_t *section_size);
 void elf_print_sections(struct elf64_header *header, size_t size);
 const char *elf_get_shared_object_name(const struct elf64_header *header,
                                        const size_t size);
+
+const struct elf_section_header *elf_get_section_index(
+                                   const struct elf64_header *header,
+                                   const size_t size, size_t index);
+
+enum status elf_relocate(void *module_start, size_t module_size);
