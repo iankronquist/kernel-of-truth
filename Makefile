@@ -81,7 +81,7 @@ $(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld
 	nm $(KERNEL)64 | $(PYTHON) build_symbol_table.py $(BUILD_DIR)/symbols.S
 	$(AS) -c $(BUILD_DIR)/symbols.S -o $@ $(ASFLAGS)
 
-$(BUILD_DIR)/modules/%.ko: modules/%
+$(BUILD_DIR)/modules/%.ko: modules/% modules/link.ld
 	mkdir -p $(shell dirname $@)
 	$(MAKE) -C $< OUTFILE='../../$@' CFLAGS='$(MODULE_CFLAGS)' CC='$(CC)' \
 		BUILD_DIR='$(BUILD_DIR)' LD='$(LD)'
