@@ -265,3 +265,4 @@ const struct elf_section_header *elf_get_section_index(
 enum status elf_relocate(void *module_start, size_t module_size);
 enum status elf_run_init(void *module_start, size_t module_size);
 enum status elf_run_fini(void *module_start, size_t module_size);
+void *elf_get_symbol_address(void *elf, size_t size, const char *name);

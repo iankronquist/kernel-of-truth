@@ -344,3 +344,47 @@ enum status elf_run_init(void *module_start, size_t module_size) {
 enum status elf_run_fini(void *module_start, size_t module_size) {
     return elf_run_init_fini_helper(module_start, module_size, DT_FINI_ARRAY, DT_FINI_ARRAYSZ);
 }
+
+
+
+void *elf_get_symbol_address(void *elf, size_t size, const char *name) {
+    const struct elf_section_header *section;
+    void *location;
+    size_t strtab_size;
+    const char *strtab = elf_get_section(elf, size, ".strtab", &strtab_size);
+    size_t symtab_size;
+    const struct elf_symbol *symtab = elf_get_section(elf, size, ".symtab", &symtab_size);
+    if (symtab == NULL) {
+        log(Log_Error, "Could not find symtab");
+        return NULL;
+    }
+
+    for (size_t i = 0; i < symtab_size / sizeof(struct elf_symbol); ++i) {
+
+        if (ELF64_R_TYPE(symtab[i].st_info) != STT_FILE) {
+
+            const char *symbol_name = &strtab[symtab[i].st_name];
+            if ((void *)symbol_name > elf + size) {
+                log(Log_Error, "Symbol name out of bounds");
+                return NULL;
+            }
+
+            section = elf_get_section_index(elf, size, symtab[i].st_index);
+            if (section == NULL) {
+                log(Log_Error, "Bad symbol index");
+                return NULL;
+            }
+
+            if (strncmp(symbol_name, name, strlen(name)) == 0) {
+                location = elf + symtab[i].st_value;
+                if (location > elf + size) {
+                    log(Log_Error, "Location out of bounds");
+                    return NULL;
+                }
+                return location;
+            }
+        }
+    }
+
+    return NULL;
+}
