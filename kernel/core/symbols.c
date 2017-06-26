@@ -18,9 +18,7 @@ enum status checked symbol_init(void) {
     union hashtable_key key;
     log(Log_Debug, "here 0");
     struct symbol_embedded *symbols = &kernel_symbol_table_start;
-    size_t symbol_count = (&kernel_symbol_table_end -
-                           &kernel_symbol_table_start) /
-                                sizeof(struct symbol_embedded);
+    size_t symbol_count = &kernel_symbol_table_end - &kernel_symbol_table_start;
     symbol_table = hashtable_init(symbol_count + SYMBOL_FUDGE_FACTOR, hash_str,
                                   hash_str_comp);
     if (symbol_table == NULL) {
