@@ -57,7 +57,7 @@ enum memory_attributes {
     Memory_No_Execute    = (1ul << 63),
     Memory_Writable      = (1ul << 1) | Memory_No_Execute,
     Memory_Execute_Mask  = ~Memory_No_Execute,
-	Memory_Permissions_Mask  = (0x8000000000000fff),
+    Memory_Permissions_Mask  = (0x8000000000000fff),
 };
 
 #define Lower_Half_Start  ((void *)Page_Small)
