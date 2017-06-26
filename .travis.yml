@@ -5,9 +5,6 @@ dist: trusty
 addons:
     apt:
         packages:
-        # Libraries needed to build cross compiler
-            - libgmp-dev
-            - libmpfr-dev
             - python-virtualenv
             - libclang1-3.4
             - clang
@@ -15,9 +12,6 @@ addons:
             - xorriso
             - grub2
             - llvm
-cache:
-    directories:
-        - compiler/x86_64-none-elf
 
 before_script:
     - virtualenv ~/venv
@@ -25,13 +19,9 @@ before_script:
     - pip install cldoc
 
 script:
-    - if [[ ! -e compiler/x86_64-none-elf/bin/x86_64-elf-gcc ]]; then
-        bash ./scripts/build_cross_compiler.sh;
-      fi
-    - export PATH=$PATH:compiler/x86_64-elf/bin/
-    - make debug
+    - make debug CC=gcc AS=gcc LD=gcc
     - make clean
-    - make release
+    - make release CC=gcc AS=gcc LD=gcc
     - make iso
     - make clean
-    - scan-build --status-bugs make
+    - scan-build --status-bugs make CC=gcc AS=gcc LD=gcc
