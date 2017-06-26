@@ -108,7 +108,7 @@ clean:
 start: debug
 	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio
 
-start-log: $(KERNEL)
+start-log: debug
 	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall \
 		-D $(BUILD_DIR)/qemu.log $(QEMU_FLAGS) -monitor stdio
 
