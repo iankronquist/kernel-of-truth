@@ -517,7 +517,6 @@ err:
 
 enum status paging_update_range(void *virt, size_t count, enum memory_attributes attrs) {
     enum status status;
-    logf(Log_Debug, "Count %zu\n", count);
     for (size_t i = 0; i < count; ++i) {
         status = map_update_page(virt, attrs);
         if (status != Ok) {
