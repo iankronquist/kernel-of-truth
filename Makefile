@@ -54,7 +54,7 @@ MAKE := make
 .PHONY: all clean debug iso release start start-log
 
 all: $(KERNEL)
-	$(MAKE) -C tools/ $(TOOLS_CC)
+	$(MAKE) -C tools/ CC=$(TOOLS_CC)
 
 debug: CFLAGS += -g -fsanitize=undefined
 debug: ASFLAGS += -g
