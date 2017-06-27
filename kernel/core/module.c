@@ -228,7 +228,7 @@ enum status modules_init(struct multiboot_info *info) {
             modules_status = status;
         }
 
-        status = module_set_section_permissions(module_start, module_size);
+        status = module_set_section_permissions(module_start, module_allocation_size);
         if (status != Ok) {
             log(Log_Error, "Error setting module section permissions");
             modules_status = status;
