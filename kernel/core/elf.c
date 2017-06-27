@@ -382,6 +382,7 @@ enum status elf_run_fini(void *module_start, size_t module_size) {
 
 void *elf_get_symbol_address(void *elf, size_t size, const char *name) {
     const struct elf_section_header *section;
+    void *base;
     void *location;
     size_t strtab_size;
     const char *strtab = elf_get_section(elf, size, ".strtab", &strtab_size);
@@ -394,6 +395,12 @@ void *elf_get_symbol_address(void *elf, size_t size, const char *name) {
     if (symtab == NULL) {
         log(Log_Error, "Could not find symtab");
         return NULL;
+    }
+
+    base = elf_get_base_address(elf, size);
+    if (base == NULL) {
+        log(Log_Error, "Bad base");
+        return Error_Invalid;
     }
 
     for (size_t i = 0; i < symtab_size / sizeof(struct elf_symbol); ++i) {
@@ -413,9 +420,9 @@ void *elf_get_symbol_address(void *elf, size_t size, const char *name) {
             }
 
             if (strncmp(symbol_name, name, strlen(name)) == 0) {
-                location = elf + symtab[i].st_value;
+                location = base + symtab[i].st_value;
                 if (location > elf + size) {
-                    log(Log_Error, "Location out of bounds");
+                    logf(Log_Error, "Location out of bound %p %p\n", location, elf + size);
                     return NULL;
                 }
                 return location;
