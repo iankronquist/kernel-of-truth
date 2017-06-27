@@ -2,16 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <truth/crypto.h>
+#include <truth/signature.h>
 
 #define DEBUG 0
-
 #define SIGNATURE_MAGIC_STRING "Kernel of Truth truesign 1.0.0"
-
 
 int usage(char *name) {
     fprintf(stderr,
             "Usage: %s <command> <args>\n"
             "Commands:\n"
+            "\theader pubkey header_file.h  \tGenerate header file from public key\n"
             "\tgenerate privkey pubkey      \tGenerate an ed25519 key pair\n"
             "\tsign privkey in_file out_file\tSign file with public key\n"
             "\tverify pubkey file           \tVerify file with private key\n",
@@ -335,6 +335,81 @@ out:
 }
 
 
+int convert_public_key_to_header_file(char *public_key_name, char *header_name) {
+    int error = 0;
+    FILE *public_key_file = NULL;
+    FILE *header_file = NULL;
+    unsigned char public_key[crypto_sign_ed25519_PUBLICKEYBYTES];
+
+    public_key_file = fopen(public_key_name, "r");
+    if (public_key_file == NULL) {
+        perror("opening public key file");
+        error = -1;
+        goto out;
+    }
+
+    header_file = fopen(header_name, "w");
+    if (header_file == NULL) {
+        perror("opening header file");
+        error = -1;
+        goto out;
+    }
+
+    fread(public_key, 1, sizeof(public_key), public_key_file);
+    if (ferror(public_key_file) != 0) {
+        perror("Reading public key file");
+        error = -1;
+        goto out;
+    }
+
+    char prelude[] =
+        "#pragma once\n"
+        "\n"
+        "#include <truth/crypto.h>\n"
+        "\n"
+        "/* This file was automatically generated. Please do not edit. */\n"
+        "\n";
+
+    char public_key_prelude[] =
+        "const unsigned char Kernel_Public_Key[crypto_sign_ed25519_PUBLICKEYBYTES] = {\n";
+
+    char public_key_postscript[] = "\n};\n";
+
+    fwrite(prelude, strlen(prelude), 1, header_file);
+    if (ferror(header_file) != 0) {
+        perror("writing to header file");
+        error = -1;
+        goto out;
+    }
+
+    fprintf(header_file, "#define %s \"%s\"\n", "SIGNATURE_MAGIC_STRING", SIGNATURE_MAGIC_STRING);
+
+    fwrite(public_key_prelude, strlen(public_key_prelude), 1, header_file);
+    if (ferror(header_file) != 0) {
+        perror("writing to header file");
+        error = -1;
+        goto out;
+    }
+
+    for (size_t i = 0; i < sizeof(public_key); ++i) {
+        fprintf(header_file, "0x%hhx, ", public_key[i]);
+    }
+
+    fwrite(public_key_postscript, strlen(public_key_postscript), 1, header_file);
+    if (ferror(header_file) != 0) {
+        perror("writing to header file");
+        error = -1;
+        goto out;
+    }
+
+out:
+    fclose(header_file);
+    fclose(public_key_file);
+    return error;
+
+}
+
+
 int main(int argc, char *argv[]) {
     if (argc == 4 && strcmp(argv[1], "generate") == 0) {
         return generate_key(argv[2], argv[3]);
@@ -342,7 +417,8 @@ int main(int argc, char *argv[]) {
         return sign_file(argv[2], argv[3], argv[4]);
     } else if (argc == 4 && strcmp(argv[1], "verify") == 0) {
         return verify_file(argv[2], argv[3]);
-        return -1;
+    } else if (argc == 4 && strcmp(argv[1], "header") == 0) {
+        return convert_public_key_to_header_file(argv[2], argv[3]);
     } else {
         return usage(argv[0]);
     }
