@@ -4,6 +4,7 @@
 #include <truth/symbols.h>
 #include <truth/types.h>
 
+#define ELF_BAD_BASE_ADDRESS (~0ul)
 
 static bool elf_verify_x86_64_compatible(const struct elf64_header *header) {
     return header->e_machine == EM_X86_64 &&
@@ -204,6 +205,24 @@ const char *elf_get_shared_object_name(const struct elf64_header *header,
     return NULL;
 }
 
+static void *elf_get_base_address(void *module_start, size_t module_size) {
+    size_t base = ELF_BAD_BASE_ADDRESS;
+    const struct elf64_header *header = module_start;
+    // FIXME bounds check
+    const struct elf_section_header *sections = module_start + header->e_shoff;
+    for (size_t i = 0; i < header->e_shnum; ++i) {
+        if (sections[i].sh_type != SHT_NULL && sections[i].sh_offset < base) {
+            base = sections[i].sh_offset;
+        }
+    }
+
+    if (base == ELF_BAD_BASE_ADDRESS) {
+        return NULL;
+    }
+
+    return module_start + base;
+}
+
 
 enum status elf_relocate(void *module_start, size_t module_size) {
     int64_t *pointer;
@@ -214,6 +233,7 @@ enum status elf_relocate(void *module_start, size_t module_size) {
     size_t dynsym_size;
     const struct elf_symbol *dynsym;
     size_t dynstr_size;
+    void *base;
     const char *dynstr = elf_get_section(module_start,
                                          module_size,
                                          ".dynstr",
@@ -242,14 +262,18 @@ enum status elf_relocate(void *module_start, size_t module_size) {
         return Error_Invalid;
     }
 
-    logf(Log_Debug, "Rela size %lx\n", rela_size);
+    base = elf_get_base_address(module_start, module_size);
+    if (base == NULL) {
+        log(Log_Error, "Bad base");
+        return Error_Invalid;
+    }
+
     for (size_t i = 0; i < rela_size / sizeof(struct elf_rela); ++i) {
-        logf(Log_Debug, "Rela %lx\n", rela[i].r_info);
         int r_type = ELF64_R_TYPE(rela[i].r_info);
         switch (r_type) {
             case R_X86_64_RELATIVE:
                 pointer = module_start + rela[i].r_offset;
-                value = (uintptr_t)module_start + rela[i].r_addend;
+                value = (uintptr_t)base + rela[i].r_addend;
                 *pointer = value;
                 break;
             case R_X86_64_JUMP_SLOT:
@@ -257,11 +281,10 @@ enum status elf_relocate(void *module_start, size_t module_size) {
             case R_X86_64_64:
                 symbol = &dynsym[ELF64_R_SYM(rela[i].r_info)];
                 if ((void *)(symbol + 1) > module_start + module_size) {
-                    logf(Log_Error, "Symbol out of bounds %lx %p %p %p %p", ELF64_R_SYM(rela[i].r_info), symbol, module_start, module_start + module_size, dynsym);
+                    logf(Log_Error, "Symbol out of bounds\n");
                     return Error_Invalid;
                 }
-                logf(Log_Info, "Resloving rela %s\n", &dynstr[symbol->st_name]);
-                pointer = module_start + rela[i].r_offset;
+                pointer = base + rela[i].r_offset;
                 if (symbol->st_index == SHN_UNDEF) {
                     if ((void *)&dynsym[symbol->st_name] > module_start + module_size) {
                         log(Log_Error, "String out of bounds");
@@ -269,17 +292,19 @@ enum status elf_relocate(void *module_start, size_t module_size) {
                     }
 
                     value = (uintptr_t)symbol_get(&dynstr[symbol->st_name]);
+                    if (value == 0) {
+                        logf(Log_Error, "External symbol %s not loaded\n", &dynstr[symbol->st_name]);
+                        return Error_Invalid;
+                    }
                 } else if (r_type == R_X86_64_64) {
-                    value = (uintptr_t)module_start + symbol->st_value +
-                                rela[i].r_addend;
+                    value = (uintptr_t)base + symbol->st_value + rela[i].r_addend;
                 } else {
-                    value = (uintptr_t)module_start + symbol->st_value;
+                    value = (uintptr_t)base + symbol->st_value;
                 }
                 *pointer = value;
                 break;
             default:
-                logf(Log_Error, "Unable to resolve rela symbol of type %lx\n",
-                     rela[i].r_info);
+                logf(Log_Error, "Unable to resolve rela symbol of type %lx\n", rela[i].r_info);
                 return Error_Invalid;
         }
     }
@@ -289,20 +314,26 @@ enum status elf_relocate(void *module_start, size_t module_size) {
 
 
 static enum status elf_run_init_fini_helper(void *module_start, size_t module_size, int dt_array, int dt_array_size) {
+    void *base;
     size_t funcs_size = 0;
     bool funcs_size_found = false;
     enum status (**funcs)(void) = NULL;
     size_t dynamic_size;
     const struct elf_dyn *dynamic = elf_get_section(module_start, module_size, ".dynamic", &dynamic_size);
     if (dynamic == NULL) {
-        log(Log_Error, "Couldn't find section .dynamic\n");
+        log(Log_Error, "Couldn't find section .dynamic");
+        return Error_Invalid;
+    }
+
+    base = elf_get_base_address(module_start, module_size);
+    if (base == NULL) {
+        log(Log_Error, "Bad base");
         return Error_Invalid;
     }
 
     for (size_t i = 0; i < dynamic_size / sizeof(struct elf_dyn); ++i) {
-        logf(Log_Info, "dynamic symbol %lx\n", dynamic[i].d_tag);
         if (dynamic[i].d_tag == dt_array) {
-            funcs = module_start + dynamic[i].d_un.d_ptr;
+            funcs = base + dynamic[i].d_un.d_ptr;
         } else if (dynamic[i].d_tag == dt_array_size) {
             funcs_size = dynamic[i].d_un.d_val;
             funcs_size_found = true;
@@ -313,6 +344,7 @@ static enum status elf_run_init_fini_helper(void *module_start, size_t module_si
         }
     }
 
+
     if (funcs == NULL || !funcs_size_found) {
         log(Log_Info, "Module has no init/fini");
         return Ok;
@@ -321,10 +353,9 @@ static enum status elf_run_init_fini_helper(void *module_start, size_t module_si
         return Error_Invalid;
     }
 
-    for (size_t i = 0; i < funcs_size; ++i) {
-        logf(Log_Info, "Calling function %p %p\n", &funcs[i], funcs[i]);
+
+    for (size_t i = 0; i < funcs_size / sizeof(enum status (*)(void)); ++i) {
         enum status status = funcs[i]();
-        logf(Log_Info, "Called function %p %p\n", &funcs[i], funcs[i]);
         if (status != Ok) {
             return status;
         }
