@@ -226,6 +226,7 @@ enum status modules_init(struct multiboot_info *info) {
             log(Log_Error, "Error loading module");
             slab_free(Page_Small, module_start);
             modules_status = status;
+            continue;
         }
 
         status = module_set_section_permissions(module_start, module_allocation_size);
@@ -233,6 +234,7 @@ enum status modules_init(struct multiboot_info *info) {
             log(Log_Error, "Error setting module section permissions");
             modules_status = status;
             slab_free(Page_Small, module_start);
+            continue;
         }
 
         status = elf_run_init(module_start, module_size);
@@ -244,6 +246,7 @@ enum status modules_init(struct multiboot_info *info) {
                 log(Log_Error, "Error running module fini after init failed");
             }
             slab_free(Page_Small, module_start);
+            continue;
         }
 
     }
