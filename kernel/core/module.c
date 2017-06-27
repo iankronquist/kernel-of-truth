@@ -261,16 +261,11 @@ enum status modules_init(struct multiboot_info *info) {
 
 
 void modules_info(struct multiboot_info *mi) {
-    //enum status status;
-    struct multiboot_mod_list *modules =
-        (struct multiboot_mod_list *)(uintptr_t)mi->mods_addr;
-    //status = map_page(modules, mi->mods_addr, Memory_No_Attributes);
-    //assert_ok(status);
+    struct multiboot_mod_list *modules = (struct multiboot_mod_list *)(uintptr_t)mi->mods_addr;
     logf(Log_Debug, "%p\n", modules);
     for (size_t i = 0; i < mi->mods_count; ++i) {
         logf(Log_Debug, "start %x\n", modules[i].mod_start);
         logf(Log_Debug, "end %x\n", modules[i].mod_end);
         logf(Log_Debug, "file %s\n", (char *)(uintptr_t)modules[i].cmdline);
     }
-    //unmap_page(modules, false);
 }

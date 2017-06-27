@@ -16,7 +16,6 @@ static struct hashtable *symbol_table;
 enum status checked symbol_init(void) {
     enum status status;
     union hashtable_key key;
-    log(Log_Debug, "here 0");
     struct symbol_embedded *symbols = &kernel_symbol_table_start;
     size_t symbol_count = &kernel_symbol_table_end - &kernel_symbol_table_start;
     symbol_table = hashtable_init(symbol_count + SYMBOL_FUDGE_FACTOR, hash_str,
