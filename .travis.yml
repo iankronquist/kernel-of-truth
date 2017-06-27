@@ -29,9 +29,9 @@ script:
         bash ./scripts/build_cross_compiler.sh;
       fi
     - export PATH=$PATH:compiler/x86_64-elf/bin/
-    - PATH=$PATH:compiler/x86_64-elf/bin/ make debug
+    - make debug
     - make clean
-    - PATH=$PATH:compiler/x86_64-elf/bin/ make release
+    - make release
     - make iso
     - make clean
     - scan-build --status-bugs make
