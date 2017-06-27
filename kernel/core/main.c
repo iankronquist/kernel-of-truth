@@ -6,6 +6,7 @@
 #include <truth/slab.h>
 #include <truth/heap.h>
 #include <truth/memory.h>
+#include <truth/module.h>
 #include <truth/physical_allocator.h>
 #include <truth/process.h>
 #include <truth/timer.h>
@@ -21,10 +22,13 @@ void kernel_main(uint32_t multiboot_tables) {
     interrupts_init();
     physical_allocator_init(phys_to_virt(multiboot_tables));
     slab_init();
+    logf(Log_Debug, "slab usage %lx\n", slab_get_usage());
     assert_ok(heap_init());
     assert_ok(paging_init());
     memory_init();
     assert_ok(processes_init());
+    logf(Log_Debug, "slab usage %lx\n", slab_get_usage());
+    assert_ok(modules_init(phys_to_virt(multiboot_tables)));
     timer_init();
     keyboard_init();
     vga_init();

@@ -169,6 +169,7 @@ enum status vga_init(void) {
     }*/
     file_attach(&Dev, &VGA);
     VGA_Framebuffer = slab_alloc_request_physical(VGA_Framebuffer_Phys,
+                                                  Page_Small,
                                                   Memory_Writable);
     if (VGA_Framebuffer == NULL) {
         physical_free(VGA_Framebuffer_Phys);

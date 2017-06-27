@@ -7,7 +7,7 @@
 union hashtable_key {
     unsigned long data;
     unsigned int integer;
-    void *ptr;
+    const void *ptr;
 };
 
 

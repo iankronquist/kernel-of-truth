@@ -247,8 +247,8 @@ static size_t process_hash_pid(union hashtable_key key) {
 
 static enum partial process_comp_pid(union hashtable_key a,
                                      union hashtable_key b) {
-    struct process *proc_a = a.ptr;
-    struct process *proc_b = b.ptr;
+    const struct process *proc_a = a.ptr;
+    const struct process *proc_b = b.ptr;
     if (proc_a == proc_b) {
         return Partial_Equal;
     } else {

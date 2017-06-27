@@ -14,6 +14,8 @@ SECTIONS {
 		__text_end = .;
 		__data_start = .;
 		*(.data)
+		PROVIDE(kernel_symbol_table_start = .);
+		PROVIDE(kernel_symbol_table_end = .);
 	}
 
 	.rodata BLOCK(4K) : ALIGN(4K) {

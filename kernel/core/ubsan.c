@@ -116,3 +116,9 @@ void __ubsan_handle_load_invalid_value(struct source_location *location) {
     log_location(location);
     panic();
 }
+
+void __ubsan_handle_vla_bound_not_positive(struct source_location *location) {
+    log(Log_Error, "Negative array length");
+    log_location(location);
+    panic();
+}
