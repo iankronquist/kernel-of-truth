@@ -30,6 +30,7 @@ include modules/Makefile
 PYTHON := python
 
 
+
 CC := $(TRIPLE)-gcc
 CFLAGS := -std=c11 -O2 -MP -MMD -mcmodel=kernel \
 	-ffreestanding -fstack-protector-all \
@@ -44,6 +45,11 @@ ASFLAGS := -O2 -MP -MMD -mcmodel=kernel \
 
 LD := $(TRIPLE)-gcc
 LDFLAGS := -nostdlib -ffreestanding -O2 -mcmodel=kernel
+
+MODULE_CC := $(CC)
+MODULE_LD := $(TRIPLE)-ld
+MODULE_AS := $(AS)
+
 
 OBJCOPY := objcopy
 GRUB_MKRESCUE := grub-mkrescue
@@ -87,8 +93,9 @@ $(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld
 
 $(BUILD_DIR)/modules/%.ko: modules/% modules/link.ld
 	mkdir -p $(shell dirname $@)
-	$(MAKE) -C $< OUTFILE='../../$@' CFLAGS='$(MODULE_CFLAGS)' CC='$(CC)' \
-		BUILD_DIR='$(BUILD_DIR)' PATH=$(PATH)
+	$(MAKE) -C $< OUTFILE='../../$@' CFLAGS='$(MODULE_CFLAGS)' CC='$(MODULE_CC)' \
+		BUILD_DIR='$(BUILD_DIR)' PATH=$(PATH) LD='$(MODULE_LD)' \
+		AS='$(MODULE_AS)'
 
 tags: kernel/arch/$(ARCH)/*.c kernel/core/*.c kernel/device/*.c \
 		include/arch/$(ARCH)/*.h include/truth/*.h
