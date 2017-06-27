@@ -16,7 +16,6 @@ addons:
             # Userland tools
             - llvm
             - valgrind
-            - gcc-4.8
 cache:
     directories:
         - compiler/x86_64-none-elf
@@ -31,9 +30,9 @@ script:
         bash ./scripts/build_cross_compiler.sh;
       fi
     - export PATH=$PATH:compiler/x86_64-elf/bin/
-    - make debug TOOLS_CC="CC=gcc-4.8"
+    - make debug TOOLS_CC="x86_64-elf-gcc"
     - make clean
-    - make release TOOLS_CC="CC=gcc-4.8"
+    - make release TOOLS_CC="x86_64-elf-gcc"
     - make iso
     - make clean
     - scan-build --status-bugs make TOOLS_CC="CC=gcc-4.8"
