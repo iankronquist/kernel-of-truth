@@ -88,7 +88,7 @@ $(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld
 $(BUILD_DIR)/modules/%.ko: modules/% modules/link.ld
 	mkdir -p $(shell dirname $@)
 	$(MAKE) -C $< OUTFILE='../../$@' CFLAGS='$(MODULE_CFLAGS)' CC='$(CC)' \
-		BUILD_DIR='$(BUILD_DIR)'
+		BUILD_DIR='$(BUILD_DIR)' PATH=$(PATH)
 
 tags: kernel/arch/$(ARCH)/*.c kernel/core/*.c kernel/device/*.c \
 		include/arch/$(ARCH)/*.h include/truth/*.h
