@@ -29,7 +29,7 @@ script:
         bash ./scripts/build_cross_compiler.sh;
       fi
     - for file in $PREFIX/bin/*; do
-        ln -s $file /usr/local/bin/$(basename $file)
+        ln -s $file /usr/local/bin/$(basename $file);
       done
     - export PATH=$PATH:compiler/x86_64-elf/bin/
     - make debug
