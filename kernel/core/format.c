@@ -236,6 +236,7 @@ next_iteration:
         if (top == buf_size) {
             bubble(file->write((uint8_t *)buf, buf_size),
                    "Clearing buffer in vfprintf");
+            top = 0;
         }
     }
     // Flush anything remaining in the buffer.

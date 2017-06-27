@@ -16,6 +16,7 @@ Kernel Features
 - [x] 🔐 Supervisor Memory Access & Execution Protection (SMEP & SMAP).
 - [x] 🔐 Write XOR Execute page permissions AKA Data Execution Prevention.
 - [x] 🔐 Heap red zone protection.
+- [x] 🔐 Stack guard protection.
 - [x] Undefined behavior sanitation (debug builds only).
 - [x] 8259 Programmable Interrupt Controller.
 - [x] 🔐 Process memory isolation.

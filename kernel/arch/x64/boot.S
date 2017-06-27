@@ -202,7 +202,7 @@ higher_half:
 	# Load the Global Descriptor Table pointer register again.
 	lgdt GDT_Register
 
-
+	call set_stack_guard
 
 	# Multiboot information structure pointer.
 	pop %rdi
@@ -237,4 +237,38 @@ cpu_time:
 read_rip:
 	pop %rax
 	push %rax
+	ret
+
+
+.type set_stack_guard, @function
+set_stack_guard:
+	push %rbx
+	# If available, use rdrand. Otherwise use the bottom byte of rdtsc.
+	mov $1, %eax
+	mov $0, %ecx
+	cpuid
+	bt $30, %ecx
+	jnc .use_rdtsc
+
+.use_rdrand:
+	# While random data is unavailable, try to load random data to rbx.
+	pause
+	rdrand %rbx
+	jc .use_rdrand
+	jmp .load_guard
+
+.use_rdtsc:
+	# rdtsc 8 times, each time taking the bottom byte and loading it into rbx.
+	xor %rbx, %rbx
+	mov $8, %rcx
+0:
+	rdtsc
+	and $0xff, %eax
+	shl $8, %rbx
+	or %rax, %rbx
+	loop 0b
+
+.load_guard:
+	mov %rbx, __stack_chk_guard
+	pop %rbx
 	ret
