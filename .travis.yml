@@ -28,10 +28,10 @@ script:
     - if [[ ! -e compiler/x86_64-none-elf/bin/x86_64-elf-gcc ]]; then
         bash ./scripts/build_cross_compiler.sh;
       fi
-    - export PATH=$PATH:compiler/x86_64-elf/bin/
-    - make debug MODULE_CC='../compiler/x86-elf/bin/x86_64-elf-gcc' MODULE_LD='../compiler/x86-elf/bin/x86_64-elf-ld'
+    - export PATH=$PATH:`pwd`/compiler/x86_64-elf/bin/
+    - make debug MODULE_CC='x86_64-elf-gcc' MODULE_LD='x86_64-elf-ld'
     - make clean
-    - make release MODULE_CC='../compiler/x86-elf/bin/x86_64-elf-gcc' MODULE_LD='../compiler/x86-elf/bin/x86_64-elf-ld'
-    - make iso MODULE_CC='../compiler/x86-elf/bin/x86_64-elf-gcc' MODULE_LD='../compiler/x86-elf/bin/x86_64-elf-ld'
+    - make release MODULE_CC='x86_64-elf-gcc' MODULE_LD='x86_64-elf-ld'
+    - make iso MODULE_CC='x86_64-elf-gcc' MODULE_LD='x86_64-elf-ld'
     - make clean
     - scan-build --status-bugs make
