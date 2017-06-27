@@ -400,7 +400,7 @@ void *elf_get_symbol_address(void *elf, size_t size, const char *name) {
     base = elf_get_base_address(elf, size);
     if (base == NULL) {
         log(Log_Error, "Bad base");
-        return Error_Invalid;
+        return NULL;
     }
 
     for (size_t i = 0; i < symtab_size / sizeof(struct elf_symbol); ++i) {
