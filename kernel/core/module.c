@@ -81,7 +81,7 @@ enum status module_set_section_permissions(void *elf, size_t size) {
         log(Log_Error, "Couldn't get module delimiter\n");
         return Error_Permissions;
     }
-    logf(Log_Info, "Regions:\nrw %p %p\nrx %p %p\nro %p %p\n", module_rw_start, module_rw_end, module_rx_start, module_rx_end, module_ro_start, module_ro_end);
+    logf(Log_Info, "Regions:\nrx %p %p\nrw %p %p\nro %p %p\n", module_rx_start, module_rx_end, module_rw_start, module_rw_end, module_ro_start, module_ro_end);
 
     status = paging_update_range(module_rw_start, rw_size, Memory_No_Execute | Memory_Writable);
     if (status != Ok) {
