@@ -67,7 +67,7 @@ struct file *file_find_child_named(struct file *file, const char *name,
     assert(file != NULL);
     assert(name != NULL);
     for (size_t i = 0; i < file->child_count; ++i) {
-        if (strncmp(name, file->children[i]->name, n) == Order_Equal) {
+        if (strncmp(name, file->children[i]->name, n) == 0) {
             object_retain(&file->children[i]->obj);
             return file->children[i];
         }

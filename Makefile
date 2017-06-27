@@ -23,6 +23,7 @@ MODULE_CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra \
 	-fpic -nostdlib -I ../../include -D __C__
 include kernel/arch/$(ARCH)/Makefile
 include kernel/core/Makefile
+include kernel/crypto/Makefile
 include kernel/device/Makefile
 include modules/Makefile
 
@@ -55,13 +56,18 @@ OBJCOPY := objcopy
 GRUB_MKRESCUE := grub-mkrescue
 STRIP := strip
 
+TOOLS_CC :=
+
 QEMU := qemu-system-x86_64
 QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/serial.txt \
 	-cpu Broadwell -initrd "$(strip $(MODULES))"
 
+MAKE := make
+
 .PHONY: all clean debug iso release start start-log
 
 all: $(KERNEL)
+	$(MAKE) -C tools/ CC=$(TOOLS_CC)
 
 debug: CFLAGS += -g -fsanitize=undefined
 debug: ASFLAGS += -g
