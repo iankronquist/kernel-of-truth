@@ -16,7 +16,7 @@ void *memmove(void *, const void *, size_t);
 // Fill a region of kernel memory with a value.
 void *memset(void *, int, size_t);
 // Get the length of a NULL terminated C string in kernel memory.
-size_t strnlen(const char str, size_t size);
+size_t strlen(const char *str);
 // Compare two strings in kernel memory.
 int strncmp(const char *s1, const char *s2, size_t n);
 
@@ -29,7 +29,7 @@ void *user_memcpy(void *, const void *, size_t);
 void *user_memmove(void *, const void *, size_t);
 // Fill a region of memory with a value.
 void *user_memset(void *, int, size_t);
-// Get the length of a NULL terminates C string.
-size_t user_strnlen(const char str, size_t size);
+// Get the length of a NULL terminated C string.
+size_t user_strlen(const char *str);
 // Compare two strings.
 int user_strncmp(const char *s1, const char *s2, size_t n);

@@ -24,15 +24,15 @@ enum cmos_command {
 };
 
 
-#define minutes_to_seconds(x) (x * 60)
-#define hours_to_seconds(x) (minutes_to_seconds(x * 60))
-#define days_to_seconds(x) (hours_to_seconds(x * 24))
+#define minutes_to_seconds(x) ((x) * 60)
+#define hours_to_seconds(x) (minutes_to_seconds((x) * 60))
+#define days_to_seconds(x) (hours_to_seconds((x) * 24))
 #define standard_years_to_seconds(x) (days_to_seconds(365 * x))
-#define leap_days_since_1970(x) (((x - 1972) / 4) - ((x - 1970) / 100))
+#define leap_days_since_1970(x) ((((x) - 1972) / 4) - (((x) - 1970) / 100))
 
-#define CMOS_Convert_BCD(x) ((x & 0x0f) + (x / 16 * 10))
-#define CMOS_Convert_Hours_BCD(x) (((x & 0x0f) + ((x & 0x70) / 16 * 10)) | \
-                                    (x & 0x80))
+#define CMOS_Convert_BCD(x) (((x) & 0x0f) + ((x) / 16 * 10))
+#define CMOS_Convert_Hours_BCD(x) ((((x) & 0x0f) + (((x) & 0x70) / 16 * 10)) |\
+                                    ((x) & 0x80))
 #define CMOS_Format_BCD 0x04
 #define CMOS_Format_24_Hour 0x02
 #define CMOS_Hour_PM_Bit 0x80

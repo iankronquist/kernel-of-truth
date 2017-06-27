@@ -15,13 +15,15 @@
         panic(); \
     }
 
-#define assert_ok(x) \
-    if (x != Ok) { \
-        logf(Log_Error, \
-             "Assertion failed (%s) status: %s, function %s, file %s, " \
-             "line %d.", (#x), status_message(x), __func__, __FILE__, \
-             __LINE__); \
-        panic(); \
+#define assert_ok(x) { \
+        enum status __status = x; \
+        if (__status != Ok) { \
+            logf(Log_Error, \
+                 "Assertion failed (%s) status: %s, function %s, file %s, " \
+                 "line %d.", (#x), status_message(__status), __func__, __FILE__, \
+                 __LINE__); \
+            panic(); \
+        } \
     }
 
 static inline void panic() {

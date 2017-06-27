@@ -11,22 +11,38 @@ static struct lock slab_higher_half_lock = Lock_Clear;
 
 extern struct region_vector slab_higher_half;
 
+size_t Usage = 0;
 
-void *slab_alloc_request_physical(phys_addr phys,
+size_t slab_get_usage(void) {
+    return Usage;
+}
+
+
+void *slab_alloc_request_physical(phys_addr phys, size_t size,
                                   enum memory_attributes attrs) {
+    enum status status;
     void *virt_address;
+    if (!is_aligned(size, Page_Small)) {
+        return NULL;
+    } else if (size == 0) {
+        return NULL;
+    }
 
     lock_acquire_writer(&slab_higher_half_lock);
-    if (region_alloc(&slab_higher_half, Page_Small, &virt_address) != Ok) {
+
+    if (region_alloc(&slab_higher_half, size, &virt_address) != Ok) {
         virt_address = NULL;
         goto out;
     }
 
-    if (map_page(virt_address, phys, attrs) != Ok) {
+    status = map_range(virt_address, phys, size / Page_Small, attrs);
+    if (status != Ok) {
+        region_free(&slab_higher_half, virt_address, size);
         virt_address = NULL;
         goto out;
     }
 
+    Usage -= size;
 out:
     lock_release_writer(&slab_higher_half_lock);
 
@@ -59,10 +75,7 @@ void *slab_alloc_helper(size_t bytes, phys_addr *phys,
         }
         if (map_page(next_virt_address, phys_address,
                      page_attributes) != Ok) {
-            for (size_t j = 0; j < i; ++j) {
-                unmap_page(next_virt_address, true);
-                next_virt_address -= Page_Small;
-            }
+            unmap_range(virt_address, i, true);
             logf(Log_Warning, "Failed to map slab page: %p, %lx\n",
                  next_virt_address, phys_address);
             assert(0);
@@ -70,6 +83,7 @@ void *slab_alloc_helper(size_t bytes, phys_addr *phys,
         }
         next_virt_address += Page_Small;
     }
+    Usage -= bytes;
     return virt_address;
 out:
     region_free(vect, virt_address, bytes / Page_Small);
@@ -84,7 +98,8 @@ void slab_free_helper(size_t bytes, void *address, struct region_vector *vect,
     }
     void *virt_address;
     virt_address  = address;
-    unmap_page(virt_address, free_phys);
+    unmap_range(virt_address, bytes / Page_Small, free_phys);
+    Usage += bytes;
     region_free(vect, virt_address, bytes);
 }
 
@@ -93,7 +108,12 @@ void slab_init(void) {
     void *address;
     region_vector_init(&slab_higher_half);
     address = Kernel_Virtual_End;
-    region_free(&slab_higher_half, address, Higher_Half_Size - Kernel_Image_Size - (4 * MB));
+    Usage += Kernel_Virtual_Start - Kernel_Memory_Start;
+    region_free(&slab_higher_half, address, Kernel_Virtual_Start -
+                Kernel_Memory_Start);
+    Usage += Higher_Half_End - Kernel_Virtual_End;
+    region_free(&slab_higher_half, address, Higher_Half_End -
+                Kernel_Virtual_End);
 }
 
 

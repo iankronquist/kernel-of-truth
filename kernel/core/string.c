@@ -82,6 +82,9 @@ int strncmp(const char *s1, const char *s2, size_t n) {
         if (difference != 0) {
             return difference;
         }
+        if (s1[i] == '\0' || s2[i] == '\0') {
+            break;
+        }
     }
     return 0;
 }

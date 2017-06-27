@@ -30,10 +30,10 @@ script:
     - if [[ ! -e compiler/x86_64-none-elf/bin/x86_64-elf-gcc ]]; then
         bash ./scripts/build_cross_compiler.sh;
       fi
-    - export PATH=$PATH:compiler/x86_64-elf/bin/
-    - make debug TOOLS_CC="x86_64-elf-gcc"
+    - export PATH=$PATH:`pwd`/compiler/x86_64-elf/bin/
+    - make debug MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="x86_64-elf-gcc"
     - make clean
-    - make release TOOLS_CC="x86_64-elf-gcc"
-    - make iso
+    - make release MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="x86_64-elf-gcc"
+    - make iso MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="x86_64-elf-gcc"
     - make clean
-    - scan-build --status-bugs make TOOLS_CC="x86_64-elf-gcc"
+    - scan-build --status-bugs make TOOLS_CC="x86_64-elf-gcc" MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld"
