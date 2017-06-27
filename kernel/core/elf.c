@@ -210,7 +210,7 @@ static void *elf_get_base_address(void *module_start, size_t module_size) {
     const struct elf64_header *header = module_start;
 
     const struct elf_section_header *sections = module_start + header->e_shoff;
-    if (sections + header->e_shentsize * header->e_shnum > module_start + elf) {
+    if ((void *)sections + header->e_shentsize * header->e_shnum > module_start + module_size) {
         return NULL;
     }
 
