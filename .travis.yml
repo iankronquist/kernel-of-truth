@@ -35,4 +35,4 @@ script:
     - make release TOOLS_CC="x86_64-elf-gcc"
     - make iso
     - make clean
-    - scan-build --status-bugs make TOOLS_CC="CC=gcc-4.8"
+    - scan-build --status-bugs make TOOLS_CC="x86_64-elf-gcc"
