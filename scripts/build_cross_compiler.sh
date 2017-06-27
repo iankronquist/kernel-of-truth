@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TARGET=x86_64-elf
-#PREFIX=$(pwd)/compiler/$TARGET
+PREFIX=$(pwd)/compiler/$TARGET
 PATH=$PATH:$PREFIX/bin
 CFLAGS=" -g -O2"
 # if we're on a mac, try our damndest to use real GCC not clang
