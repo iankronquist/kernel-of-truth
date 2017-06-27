@@ -16,6 +16,7 @@ addons:
             # Userland tools
             - llvm
             - valgrind
+            - clang-3.5
 cache:
     directories:
         - compiler/x86_64-none-elf
