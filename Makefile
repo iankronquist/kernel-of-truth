@@ -56,7 +56,7 @@ OBJCOPY := objcopy
 GRUB_MKRESCUE := grub-mkrescue
 STRIP := strip
 
-TOOLS_CC :=
+TOOLS_CC := gcc
 
 QEMU := qemu-system-x86_64
 QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/serial.txt \
