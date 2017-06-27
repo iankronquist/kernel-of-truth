@@ -64,10 +64,14 @@ QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/serial.txt \
 
 MAKE := make
 
-.PHONY: all clean debug iso release start start-log
+.PHONY: all clean debug iso release start start-log tools
 
-all: $(KERNEL)
-	$(MAKE) -C tools/ CC=$(TOOLS_CC)
+all: $(KERNEL) tools
+
+tools: $(BUILD_DIR)/tools/truesign
+
+$(BUILD_DIR)/tools/truesign:
+	$(MAKE) -C tools/ CC=$(TOOLS_CC) ../$@
 
 debug: CFLAGS += -g -fsanitize=undefined
 debug: ASFLAGS += -g
@@ -84,13 +88,19 @@ $(KERNEL): $(KERNEL)64 $(MODULES)
 $(KERNEL)64: kernel/arch/$(ARCH)/link.ld $(BUILD_DIR)/symbols.o
 	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) $(BUILD_DIR)/symbols.o -o $@ $(LDFLAGS)
 
-$(BUILD_DIR)/%.c.o: kernel/%.c
+$(BUILD_DIR)/%.c.o: kernel/%.c include/truth/key.h
 	mkdir -p $(shell dirname $@)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 $(BUILD_DIR)/%.S.o: kernel/%.S
 	mkdir -p $(shell dirname $@)
 	$(AS) -c $< -o $@ $(ASFLAGS)
+
+$(BUILD_DIR)/key.pub: $(BUILD_DIR)/tools/truesign
+	$(BUILD_DIR)/tools/truesign generate $(BUILD_DIR)/key.priv $@
+
+include/truth/key.h: $(BUILD_DIR)/key.pub
+	$(BUILD_DIR)/tools/truesign header $(BUILD_DIR)/key.pub $@
 
 $(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld
 	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $(KERNEL)64 $(LDFLAGS)
