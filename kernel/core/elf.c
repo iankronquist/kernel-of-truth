@@ -208,8 +208,12 @@ const char *elf_get_shared_object_name(const struct elf64_header *header,
 static void *elf_get_base_address(void *module_start, size_t module_size) {
     size_t base = ELF_BAD_BASE_ADDRESS;
     const struct elf64_header *header = module_start;
-    // FIXME bounds check
+
     const struct elf_section_header *sections = module_start + header->e_shoff;
+    if (sections + header->e_shentsize * header->e_shnum > module_start + elf) {
+        return NULL;
+    }
+
     for (size_t i = 0; i < header->e_shnum; ++i) {
         if (sections[i].sh_type != SHT_NULL && sections[i].sh_offset < base) {
             base = sections[i].sh_offset;
