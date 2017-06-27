@@ -28,7 +28,7 @@ script:
     - if [[ ! -e compiler/x86_64-none-elf/bin/x86_64-elf-gcc ]]; then
         bash ./scripts/build_cross_compiler.sh;
       fi
-    - for file in $PREFIX/bin/*; do
+    - for file in compiler/x86_64-elf/bin/*; do
         ln -s $file /usr/local/bin/$(basename $file);
       done
     - export PATH=$PATH:compiler/x86_64-elf/bin/
