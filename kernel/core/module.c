@@ -1,11 +1,14 @@
 #include <arch/x64/paging.h>
+#include <truth/crypto.h>
 #include <truth/elf.h>
 #include <truth/log.h>
+#include <truth/key.h>
 #include <truth/heap.h>
 #include <truth/hashtable.h>
 #include <truth/memory.h>
 #include <truth/panic.h>
 #include <truth/slab.h>
+#include <truth/string.h>
 #include <truth/symbols.h>
 #include <external/multiboot.h>
 
@@ -28,6 +31,28 @@ void module_list_free(void) {
         kfree(Module_List);
         Module_List = next;
     }
+}
+
+
+enum status checked module_verify(void *module_start, size_t module_size) {
+    int error;
+
+    size_t verify_size = module_size - crypto_sign_ed25519_BYTES - sizeof(SIGNATURE_MAGIC_STRING);
+    char *signature_magic = module_start + verify_size;
+    unsigned char *signature = module_start + module_size - crypto_sign_ed25519_BYTES;
+
+    if (strncmp(signature_magic, SIGNATURE_MAGIC_STRING, sizeof(SIGNATURE_MAGIC_STRING)) != Order_Equal) {
+        log(Log_Info, "Bad signature magic");
+        return Error_Invalid;
+    }
+
+    error = crypto_sign_ed25519_verify_detached(signature, module_start, verify_size, Kernel_Public_Key);
+    if (error != 0) {
+        log(Log_Info, "Bad signature");
+        return Error_Invalid;
+    }
+
+    return Ok;
 }
 
 
@@ -154,6 +179,8 @@ err:
 
 
 enum status module_load(void *module_start, size_t module_size) {
+    enum status status;
+
     if (!elf_verify(module_start, module_size)) {
         return Error_Invalid;
     }
@@ -162,19 +189,28 @@ enum status module_load(void *module_start, size_t module_size) {
                                                    module_size);
     logf(Log_Info, "Loading module %s\n", module_name);
 
-    elf_print_sections(module_start, module_size);
-
-    enum status status = elf_relocate(module_start, module_size);
+    status = module_verify(module_start, module_size);
     if (status != Ok) {
-        slab_free(Page_Small, module_start);
+        log(Log_Info, "Failed to verify module signature");
         return status;
     }
 
-    module_insert_symbols(module_start, module_size);
+    status = elf_relocate(module_start, module_size);
+    if (status != Ok) {
+        log(Log_Info, "Failed to relocate ELF");
+        return status;
+    }
+
+    status = module_insert_symbols(module_start, module_size);
+    if (status != Ok) {
+        log(Log_Info, "Failed to insert symbols");
+        return status;
+    }
 
     struct module *new_module = kmalloc(sizeof(struct module));
     if (new_module == NULL) {
-        slab_free(Page_Small, module_start);
+        log(Log_Info, "Failed to allocate module structure");
+        module_remove_symbols(module_start, module_size);
         return Error_No_Memory;
     }
     new_module->virtual_start = module_start;
