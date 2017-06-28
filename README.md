@@ -28,6 +28,7 @@ Kernel Features
 - [x] PS2 keyboard driver.
 - [x] VGA graphics driver.
 - [x] CMOS Real Time Clock.
+- [x] 🔐 Port of Libsodium ed25519 and SHA512 cryptographic algorithms.
 - [x] Elf loader.
 - [x] Loadable kernel modules.
 - [ ] Basic syscalls.

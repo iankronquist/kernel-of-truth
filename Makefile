@@ -23,6 +23,7 @@ MODULE_CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra \
 	-fpic -nostdlib -I ../../include -D __C__
 include kernel/arch/$(ARCH)/Makefile
 include kernel/core/Makefile
+include kernel/crypto/Makefile
 include kernel/device/Makefile
 include modules/Makefile
 
@@ -55,13 +56,22 @@ OBJCOPY := objcopy
 GRUB_MKRESCUE := grub-mkrescue
 STRIP := strip
 
+TOOLS_CC := gcc
+
 QEMU := qemu-system-x86_64
 QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/serial.txt \
 	-cpu Broadwell -initrd "$(strip $(MODULES))"
 
-.PHONY: all clean debug iso release start start-log
+MAKE := make
 
-all: $(KERNEL)
+.PHONY: all clean debug iso release start start-log tools
+
+all: $(KERNEL) tools
+
+tools: $(BUILD_DIR)/tools/truesign
+
+$(BUILD_DIR)/tools/truesign:
+	$(MAKE) -C tools/ CC=$(TOOLS_CC) ../$@
 
 debug: CFLAGS += -g -fsanitize=undefined
 debug: ASFLAGS += -g
@@ -78,7 +88,7 @@ $(KERNEL): $(KERNEL)64 $(MODULES)
 $(KERNEL)64: kernel/arch/$(ARCH)/link.ld $(BUILD_DIR)/symbols.o
 	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) $(BUILD_DIR)/symbols.o -o $@ $(LDFLAGS)
 
-$(BUILD_DIR)/%.c.o: kernel/%.c
+$(BUILD_DIR)/%.c.o: kernel/%.c include/truth/key.h
 	mkdir -p $(shell dirname $@)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
@@ -86,15 +96,21 @@ $(BUILD_DIR)/%.S.o: kernel/%.S
 	mkdir -p $(shell dirname $@)
 	$(AS) -c $< -o $@ $(ASFLAGS)
 
+$(BUILD_DIR)/key.pub: $(BUILD_DIR)/tools/truesign
+	$(BUILD_DIR)/tools/truesign generate $(BUILD_DIR)/key.priv $@
+
+include/truth/key.h: $(BUILD_DIR)/key.pub
+	$(BUILD_DIR)/tools/truesign header $(BUILD_DIR)/key.pub $@
+
 $(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld
 	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $(KERNEL)64 $(LDFLAGS)
 	nm $(KERNEL)64 | $(PYTHON) build_symbol_table.py $(BUILD_DIR)/symbols.S
 	$(AS) -c $(BUILD_DIR)/symbols.S -o $@ $(ASFLAGS)
 
-$(BUILD_DIR)/modules/%.ko: modules/% modules/link.ld
+$(BUILD_DIR)/modules/%.ko: modules/% modules/link.ld $(BUILD_DIR)/key.pub
 	mkdir -p $(shell dirname $@)
 	$(MAKE) -C $< OUTFILE='../../$@' CFLAGS='$(MODULE_CFLAGS)' CC='$(MODULE_CC)' \
-		BUILD_DIR='$(BUILD_DIR)' PATH=$(PATH) LD='$(MODULE_LD)' \
+		BUILD_DIR='../../$(BUILD_DIR)' LD='$(MODULE_LD)' \
 		AS='$(MODULE_AS)'
 
 tags: kernel/arch/$(ARCH)/*.c kernel/core/*.c kernel/device/*.c \

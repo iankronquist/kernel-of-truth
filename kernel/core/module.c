@@ -1,11 +1,14 @@
 #include <arch/x64/paging.h>
+#include <truth/crypto.h>
 #include <truth/elf.h>
 #include <truth/log.h>
+#include <truth/key.h>
 #include <truth/heap.h>
 #include <truth/hashtable.h>
 #include <truth/memory.h>
 #include <truth/panic.h>
 #include <truth/slab.h>
+#include <truth/string.h>
 #include <truth/symbols.h>
 #include <external/multiboot.h>
 
@@ -28,6 +31,28 @@ void module_list_free(void) {
         kfree(Module_List);
         Module_List = next;
     }
+}
+
+
+enum status checked module_verify(void *module_start, size_t module_size) {
+    int error;
+
+    size_t verify_size = module_size - crypto_sign_ed25519_BYTES - sizeof(SIGNATURE_MAGIC_STRING);
+    char *signature_magic = module_start + verify_size;
+    unsigned char *signature = module_start + module_size - crypto_sign_ed25519_BYTES;
+
+    if (strncmp(signature_magic, SIGNATURE_MAGIC_STRING, sizeof(SIGNATURE_MAGIC_STRING)) != Order_Equal) {
+        log(Log_Info, "Bad signature magic");
+        return Error_Invalid;
+    }
+
+    error = crypto_sign_ed25519_verify_detached(signature, module_start, verify_size, Kernel_Public_Key);
+    if (error != 0) {
+        log(Log_Info, "Bad signature");
+        return Error_Invalid;
+    }
+
+    return Ok;
 }
 
 
@@ -154,6 +179,8 @@ err:
 
 
 enum status module_load(void *module_start, size_t module_size) {
+    enum status status;
+
     if (!elf_verify(module_start, module_size)) {
         return Error_Invalid;
     }
@@ -162,19 +189,28 @@ enum status module_load(void *module_start, size_t module_size) {
                                                    module_size);
     logf(Log_Info, "Loading module %s\n", module_name);
 
-    elf_print_sections(module_start, module_size);
-
-    enum status status = elf_relocate(module_start, module_size);
+    status = module_verify(module_start, module_size);
     if (status != Ok) {
-        slab_free(Page_Small, module_start);
+        log(Log_Info, "Failed to verify module signature");
         return status;
     }
 
-    module_insert_symbols(module_start, module_size);
+    status = elf_relocate(module_start, module_size);
+    if (status != Ok) {
+        log(Log_Info, "Failed to relocate ELF");
+        return status;
+    }
+
+    status = module_insert_symbols(module_start, module_size);
+    if (status != Ok) {
+        log(Log_Info, "Failed to insert symbols");
+        return status;
+    }
 
     struct module *new_module = kmalloc(sizeof(struct module));
     if (new_module == NULL) {
-        slab_free(Page_Small, module_start);
+        log(Log_Info, "Failed to allocate module structure");
+        module_remove_symbols(module_start, module_size);
         return Error_No_Memory;
     }
     new_module->virtual_start = module_start;
@@ -226,6 +262,7 @@ enum status modules_init(struct multiboot_info *info) {
             log(Log_Error, "Error loading module");
             slab_free(Page_Small, module_start);
             modules_status = status;
+            continue;
         }
 
         status = module_set_section_permissions(module_start, module_allocation_size);
@@ -233,6 +270,7 @@ enum status modules_init(struct multiboot_info *info) {
             log(Log_Error, "Error setting module section permissions");
             modules_status = status;
             slab_free(Page_Small, module_start);
+            continue;
         }
 
         status = elf_run_init(module_start, module_size);
@@ -244,6 +282,7 @@ enum status modules_init(struct multiboot_info *info) {
                 log(Log_Error, "Error running module fini after init failed");
             }
             slab_free(Page_Small, module_start);
+            continue;
         }
 
     }
@@ -258,16 +297,11 @@ enum status modules_init(struct multiboot_info *info) {
 
 
 void modules_info(struct multiboot_info *mi) {
-    //enum status status;
-    struct multiboot_mod_list *modules =
-        (struct multiboot_mod_list *)(uintptr_t)mi->mods_addr;
-    //status = map_page(modules, mi->mods_addr, Memory_No_Attributes);
-    //assert_ok(status);
+    struct multiboot_mod_list *modules = (struct multiboot_mod_list *)(uintptr_t)mi->mods_addr;
     logf(Log_Debug, "%p\n", modules);
     for (size_t i = 0; i < mi->mods_count; ++i) {
         logf(Log_Debug, "start %x\n", modules[i].mod_start);
         logf(Log_Debug, "end %x\n", modules[i].mod_end);
         logf(Log_Debug, "file %s\n", (char *)(uintptr_t)modules[i].cmdline);
     }
-    //unmap_page(modules, false);
 }

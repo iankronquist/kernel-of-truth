@@ -19,9 +19,9 @@
         enum status __status = x; \
         if (__status != Ok) { \
             logf(Log_Error, \
-                 "Assertion failed (%s) status: %s, function %s, file %s, " \
-                 "line %d.", (#x), status_message(__status), __func__, __FILE__, \
-                 __LINE__); \
+                 "Assertion failed: (%s) did not return Ok.\n" \
+                 "Status: %s, function %s, file %s, line %d.", \
+                 (#x), status_message(__status), __func__, __FILE__, __LINE__); \
             panic(); \
         } \
     }

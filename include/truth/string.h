@@ -18,7 +18,7 @@ void *memset(void *, int, size_t);
 // Get the length of a NULL terminated C string in kernel memory.
 size_t strlen(const char *str);
 // Compare two strings in kernel memory.
-enum order strncmp(const char *s1, const char *s2, size_t n);
+int strncmp(const char *s1, const char *s2, size_t n);
 
 
 // Compare bytes of two regions of memory.
@@ -32,4 +32,4 @@ void *user_memset(void *, int, size_t);
 // Get the length of a NULL terminated C string.
 size_t user_strlen(const char *str);
 // Compare two strings.
-enum order user_strncmp(const char *s1, const char *s2, size_t n);
+int user_strncmp(const char *s1, const char *s2, size_t n);
