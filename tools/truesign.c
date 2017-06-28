@@ -90,8 +90,8 @@ int verify_file(char *public_key_name, char *test_file_name) {
         goto out;
     }
 
-    fread(public_key, 1, sizeof(public_key), public_key_file);
-    if (ferror(public_key_file) != 0) {
+    read = fread(public_key, 1, sizeof(public_key), public_key_file);
+    if (read != 1 || ferror(public_key_file) != 0) {
         perror("Reading public key");
         error = -1;
         goto out;
@@ -104,16 +104,15 @@ int verify_file(char *public_key_name, char *test_file_name) {
         goto out;
     }
 
-    fread(test_file_contents, 1, test_file_size - signature_field_size,
-          test_file);
-    if (ferror(test_file) != 0) {
+    read = fread(test_file_contents, test_file_size - signature_field_size, 1, test_file);
+    if (read != 1 || ferror(test_file) != 0) {
         perror("Reading data from test file");
         error = -1;
         goto out;
     }
 
-    fread(signature_magic, 1, sizeof(signature_magic), test_file);
-    if (ferror(test_file) != 0) {
+    read = fread(signature_magic, sizeof(signature_magic), 1, test_file);
+    if (read != 1 || ferror(test_file) != 0) {
         perror("Reading signature from test file");
         error = -1;
         goto out;
@@ -126,8 +125,8 @@ int verify_file(char *public_key_name, char *test_file_name) {
         goto out;
     }
 
-    fread(signature, 1, sizeof(signature), test_file);
-    if (ferror(test_file) != 0) {
+    read = fread(signature, sizeof(signature), 1, test_file);
+    if (read != 1 || ferror(test_file) != 0) {
         perror("Reading signature from test file");
         error = -1;
         goto out;
@@ -174,6 +173,7 @@ int sign_file(char *secret_key_name, char *file_name, char *out_file_name) {
     unsigned char signature[crypto_sign_ed25519_BYTES];
     size_t file_size;
     size_t read;
+    size_t written;
     FILE *secret_key_file = NULL;
     FILE *target_file = NULL;
     FILE *out_file = NULL;
@@ -213,8 +213,8 @@ int sign_file(char *secret_key_name, char *file_name, char *out_file_name) {
         goto out;
     }
 
-    read = fread(secret_key, 1, sizeof(secret_key), secret_key_file);
-    if (read != sizeof(secret_key)) {
+    read = fread(secret_key, sizeof(secret_key), 1, secret_key_file);
+    if (read != 1) {
         fprintf(stderr, "Invalid secret key file\n");
         error = -1;
         goto out;
@@ -224,14 +224,14 @@ int sign_file(char *secret_key_name, char *file_name, char *out_file_name) {
         goto out;
     }
 
-    read = fread(file_contents, 1, file_size, target_file);
-    if (ferror(target_file) != 0) {
+    read = fread(file_contents, file_size, 1, target_file);
+    if (read != 1 || ferror(target_file) != 0) {
         perror("Reading target file");
         error = -1;
         goto out;
     }
 
-    fwrite(file_contents, 1, read, out_file);
+    written = fwrite(file_contents, read, 1, out_file);
     if (ferror(out_file) != 0) {
         perror("Writing out file");
         error = -1;
@@ -246,16 +246,15 @@ int sign_file(char *secret_key_name, char *file_name, char *out_file_name) {
         goto out;
     }
 
-    fwrite(SIGNATURE_MAGIC_STRING, sizeof(SIGNATURE_MAGIC_STRING), 1,
-           out_file);
-    if (ferror(out_file) != 0) {
+    written = fwrite(SIGNATURE_MAGIC_STRING, sizeof(SIGNATURE_MAGIC_STRING), 1, out_file);
+    if (written != 1 || ferror(out_file) != 0) {
         perror("writing magic string to out file");
         error = -1;
         goto out;
     }
 
-    fwrite(&signature, sizeof(signature), 1, out_file);
-    if (ferror(out_file) != 0) {
+    written = fwrite(&signature, sizeof(signature), 1, out_file);
+    if (written != 1 || ferror(out_file) != 0) {
         perror("writing out file");
         error = -1;
         goto out;
@@ -279,6 +278,7 @@ out:
 
 int generate_key(char *secret_key_name, char *public_key_name) {
     int error = 0;
+    int written;
     unsigned char public_key[crypto_sign_ed25519_PUBLICKEYBYTES];
     unsigned char secret_key[crypto_sign_ed25519_SECRETKEYBYTES];
     FILE *public_key_file = NULL;
@@ -305,15 +305,15 @@ int generate_key(char *secret_key_name, char *public_key_name) {
         goto out;
     }
 
-    fwrite(public_key, sizeof(public_key), 1, public_key_file);
-    if (ferror(public_key_file) != 0) {
+    written = fwrite(public_key, sizeof(public_key), 1, public_key_file);
+    if (written != 1 || ferror(public_key_file) != 0) {
         perror("writing to public key file");
         error = -1;
         goto out;
     }
 
-    fwrite(secret_key, sizeof(secret_key), 1, secret_key_file);
-    if (ferror(secret_key_file) != 0) {
+    written = fwrite(secret_key, sizeof(secret_key), 1, secret_key_file);
+    if (written != 1 || ferror(secret_key_file) != 0) {
         perror("writing to secret key file");
         error = -1;
         goto out;
@@ -336,6 +336,8 @@ out:
 
 int convert_public_key_to_header_file(char *public_key_name, char *header_name) {
     int error = 0;
+    int read;
+    int written;
     FILE *public_key_file = NULL;
     FILE *header_file = NULL;
     unsigned char public_key[crypto_sign_ed25519_PUBLICKEYBYTES];
@@ -354,8 +356,8 @@ int convert_public_key_to_header_file(char *public_key_name, char *header_name) 
         goto out;
     }
 
-    fread(public_key, 1, sizeof(public_key), public_key_file);
-    if (ferror(public_key_file) != 0) {
+    read = fread(public_key, sizeof(public_key), 1, public_key_file);
+    if (read != 1 || ferror(public_key_file) != 0) {
         perror("Reading public key file");
         error = -1;
         goto out;
@@ -374,28 +376,36 @@ int convert_public_key_to_header_file(char *public_key_name, char *header_name) 
 
     char public_key_postscript[] = "\n};\n";
 
-    fwrite(prelude, strlen(prelude), 1, header_file);
-    if (ferror(header_file) != 0) {
+    written = fwrite(prelude, strlen(prelude), 1, header_file);
+    if (written != 1 || ferror(header_file) != 0) {
         perror("writing to header file");
         error = -1;
         goto out;
     }
 
-    fprintf(header_file, "#define %s \"%s\"\n", "SIGNATURE_MAGIC_STRING", SIGNATURE_MAGIC_STRING);
+    written = fprintf(header_file, "#define %s \"%s\"\n", "SIGNATURE_MAGIC_STRING", SIGNATURE_MAGIC_STRING);
+    if (written < 0) {
+        error = -1;
+        goto out;
+    }
 
-    fwrite(public_key_prelude, strlen(public_key_prelude), 1, header_file);
-    if (ferror(header_file) != 0) {
+    written = fwrite(public_key_prelude, strlen(public_key_prelude), 1, header_file);
+    if (written != 1 || ferror(header_file) != 0) {
         perror("writing to header file");
         error = -1;
         goto out;
     }
 
     for (size_t i = 0; i < sizeof(public_key); ++i) {
-        fprintf(header_file, "0x%hhx, ", public_key[i]);
+        written = fprintf(header_file, "0x%hhx, ", public_key[i]);
+        if (written < 0) {
+            error = -1;
+            goto out;
+        }
     }
 
-    fwrite(public_key_postscript, strlen(public_key_postscript), 1, header_file);
-    if (ferror(header_file) != 0) {
+    written = fwrite(public_key_postscript, strlen(public_key_postscript), 1, header_file);
+    if (written != 1 || ferror(header_file) != 0) {
         perror("writing to header file");
         error = -1;
         goto out;
