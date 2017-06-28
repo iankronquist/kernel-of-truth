@@ -31,9 +31,9 @@ script:
         bash ./scripts/build_cross_compiler.sh;
       fi
     - export PATH=$PATH:`pwd`/compiler/x86_64-elf/bin/
-    - make debug MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="x86_64-elf-gcc"
+    - make debug MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld"
     - make clean
-    - make release MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="x86_64-elf-gcc"
-    - make iso MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="x86_64-elf-gcc"
+    - make release MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld"
+    - make iso MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld"
     - make clean
-    - scan-build --status-bugs make TOOLS_CC="x86_64-elf-gcc" MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld"
+    - scan-build --status-bugs make MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld"
