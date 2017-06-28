@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <truth/crypto.h>
-#include <truth/signature.h>
 
 #define DEBUG 0
 #define SIGNATURE_MAGIC_STRING "Kernel of Truth truesign 1.0.0"
