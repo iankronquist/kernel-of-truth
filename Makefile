@@ -107,10 +107,10 @@ $(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld
 	nm $(KERNEL)64 | $(PYTHON) build_symbol_table.py $(BUILD_DIR)/symbols.S
 	$(AS) -c $(BUILD_DIR)/symbols.S -o $@ $(ASFLAGS)
 
-$(BUILD_DIR)/modules/%.ko: modules/% modules/link.ld
+$(BUILD_DIR)/modules/%.ko: modules/% modules/link.ld $(BUILD_DIR)/key.pub
 	mkdir -p $(shell dirname $@)
 	$(MAKE) -C $< OUTFILE='../../$@' CFLAGS='$(MODULE_CFLAGS)' CC='$(MODULE_CC)' \
-		BUILD_DIR='$(BUILD_DIR)' PATH=$(PATH) LD='$(MODULE_LD)' \
+		BUILD_DIR='../../$(BUILD_DIR)' LD='$(MODULE_LD)' \
 		AS='$(MODULE_AS)'
 
 tags: kernel/arch/$(ARCH)/*.c kernel/core/*.c kernel/device/*.c \
