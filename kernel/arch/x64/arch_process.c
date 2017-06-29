@@ -19,6 +19,7 @@ extern void _thread_switch(uint64_t *new_stack, uint64_t **old_stack,
 void thread_switch(struct thread *old_thread,
                           struct thread *new_thread) {
     assert(new_thread != old_thread);
+    thread_set_data(new_thread);
     tss_set_stack((uint8_t *)new_thread->kernel_stack +
                   new_thread->kernel_stack_size);
     _thread_switch(new_thread->current_stack_pointer,

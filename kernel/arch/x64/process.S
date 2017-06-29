@@ -72,3 +72,23 @@ _thread_switch:
     pop %rax
     sti
     ret
+
+
+# struct thread *thread_get_data(void)
+.global thread_get_data
+.type thread_get_data, @function
+thread_get_data:
+    movq %gs:Thread_Self_GS_Offset, %rax
+    ret
+
+
+# void thread_set_data(struct thread *)
+.global thread_set_data
+.type thread_set_data, @function
+thread_set_data:
+    movq %rsi, %rax
+    movq %rsi, %rdx
+    shlq $32, %rdx
+    movl $MSR_GS_BASE, %ecx
+    wrmsr
+    ret
