@@ -231,7 +231,7 @@ int sign_file(char *secret_key_name, char *file_name, char *out_file_name) {
         goto out;
     }
 
-    written = fwrite(file_contents, read, 1, out_file);
+    written = fwrite(file_contents, file_size, 1, out_file);
     if (ferror(out_file) != 0) {
         perror("Writing out file");
         error = -1;
