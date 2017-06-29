@@ -75,7 +75,7 @@ void interrupts_fini(void) {
 }
 
 
-enum status interrupt_register_handler(int interrupt_number, interrupt_handler_f handler) {
+enum status interrupt_register_handler(unsigned int interrupt_number, interrupt_handler_f handler) {
     enum status status;
     lock_acquire_writer(&dispatch_table_lock);
     for (size_t i = 0; i < Interrupt_Handlers_Count; ++i) {
@@ -92,8 +92,11 @@ out:
 }
 
 
-enum status interrupt_unregister_handler(int interrupt_number, interrupt_handler_f handler) {
+enum status interrupt_unregister_handler(unsigned int interrupt_number, interrupt_handler_f handler) {
     enum status status;
+    if (interrupt_number > IDT_Size) {
+        return Error_Range;
+    }
     lock_acquire_writer(&dispatch_table_lock);
     for (size_t i = 0; i < Interrupt_Handlers_Count; ++i) {
         if (Interrupt_Dispatch[interrupt_number][i] == handler) {
