@@ -34,6 +34,7 @@ enum status {
     Error_Absent,
     Error_Full,
     Error_Empty,
+    Error_Range,
     // Not an error message, but rather the number of error messages.
     Error_Count,
 };
