@@ -20,7 +20,7 @@ KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
 OBJ :=
 MODULES :=
 MODULE_CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra \
-	-fpic -nostdlib -I ../../include -D __C__
+	-fpic -nostdlib -I ../../include -D __C__ -fstack-protector-strong
 include kernel/arch/$(ARCH)/Makefile
 include kernel/core/Makefile
 include kernel/crypto/Makefile
@@ -34,7 +34,7 @@ PYTHON := python
 
 CC := $(TRIPLE)-gcc
 CFLAGS := -std=c11 -O2 -MP -MMD -mcmodel=kernel \
-	-ffreestanding -fstack-protector-all \
+	-ffreestanding -fstack-protector-strong \
 	-Wall -Wextra \
 	-I ./include $(MACROS) -D __C__
 
@@ -102,7 +102,7 @@ $(BUILD_DIR)/key.pub: $(BUILD_DIR)/tools/truesign
 include/truth/key.h: $(BUILD_DIR)/key.pub
 	$(BUILD_DIR)/tools/truesign header $(BUILD_DIR)/key.pub $@
 
-$(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld
+$(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld $(OBJ)
 	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $(KERNEL)64 $(LDFLAGS)
 	nm $(KERNEL)64 | $(PYTHON) build_symbol_table.py $(BUILD_DIR)/symbols.S
 	$(AS) -c $(BUILD_DIR)/symbols.S -o $@ $(ASFLAGS)
