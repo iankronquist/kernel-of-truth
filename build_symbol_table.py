@@ -1,7 +1,7 @@
 import sys
 
 def is_global_function(symbol_type):
-    return symbol_type == 'T'
+    return symbol_type.isupper()
 
 def write_assembly(symbols, file_name):
     with open(file_name, 'w') as f:
