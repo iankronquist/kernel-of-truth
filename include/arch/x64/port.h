@@ -9,12 +9,13 @@ static inline void write_port(uint8_t data, uint16_t port) {
     __asm__ volatile ("outb %1, %0" : : "dN" (port), "a" (data));
 }
 
+
 /* Write two bytes to an I/O port. */
 static inline void write_port16(uint16_t data, uint16_t port) {
     __asm__ volatile ("outw %1, %0" : : "dn" (port), "a" (data));
 }
 
-/* Write a word to an I/O port. */
+/* Write a dword to an I/O port. */
 static inline void write_port32(uint32_t data, uint16_t port) {
     __asm__ volatile ("outl %1, %0" : : "dn" (port), "a" (data));
 }
@@ -35,9 +36,21 @@ static inline uint16_t read_port16(uint16_t port) {
     return ret;
 }
 
-/* Read a word from an I/O port. */
+/* Read a dword from an I/O port. */
 static inline uint32_t read_port32(uint16_t port) {
     uint32_t ret;
     __asm__ volatile ("inl %1, %0" : "=a" (ret) : "dN" (port));
     return ret;
+}
+
+
+/* Read a buffer from an I/O port in 32 bit increments. */
+static inline void read_port_buffer32(void *addr, size_t size, const uint16_t port) {
+  __asm__ volatile("cld; rep insl" : "=D" (addr), "=c" (size) : "d" (port), "0" (addr), "1" (size) : "memory", "cc");
+}
+
+
+/* Write a buffer to an I/O port in 32 bit increments. */
+static inline void write_port_buffer32(const void *addr, size_t size, const uint16_t port) {
+  __asm__ volatile("cld; rep outsl" : "=S" (addr), "=c" (size) : "d" (port), "0" (addr), "1" (size) : "cc");
 }
