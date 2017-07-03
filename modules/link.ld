@@ -25,6 +25,7 @@ SECTIONS {
 
 	.data : {
 		*(.data*)
+		/* FIXME allocate dedicated BSS for modules in elf.c */
 		*(.bss*)
 	}
 
