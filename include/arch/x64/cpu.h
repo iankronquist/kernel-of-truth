@@ -26,6 +26,10 @@ static inline void cpu_flags_clear_ac(void) {
     __asm__ volatile ("clac" ::: "cc");
 }
 
+static inline void cpu_pause(void) {
+    __asm__ volatile ("pause");
+}
+
 static inline void cpu_cr4_set_bit(int bit) {
     __asm__ volatile ("push %%rax\n"
                       "movq %%cr4, %%rax\n"
@@ -38,4 +42,10 @@ static inline void cpu_cr4_set_bit(int bit) {
 static inline void cpu_cr4_clear_bit(int bit) {
     int mask = ~(1 << bit);
     __asm__ volatile ("andq %0, %%cr4" : : "a"(mask));
+}
+
+static inline uint64_t cpu_read_ticks(void) {
+    uint32_t eax, edx;
+    __asm__ volatile ("rdtsc" : "=eax"(eax), "=edx"(edx));
+    return (((uint64_t)edx) << 32) | eax;
 }
