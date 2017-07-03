@@ -4,6 +4,9 @@ build
 compiler
 qemu.log
 
+*.d
+include/truth/key.h
+
 tags
 
 *.gcda
