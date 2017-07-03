@@ -49,7 +49,7 @@ static void idt_set_gate(uint8_t num, uintptr_t base,
 
 void idt_init(void) {
     for (size_t i = 0; i < static_array_count(ISRs); ++i) {
-        idt_set_gate(i, (uintptr_t)ISRs[i], Segment_Kernel_Code, 0x8e);
+        idt_set_gate(i, (uintptr_t)ISRs[i], Segment_Kernel_Code, IDT_Entry_Present | IDT_32_Bit_Interrupt_Gate);
     }
 
     struct idt_ptr idtp;
