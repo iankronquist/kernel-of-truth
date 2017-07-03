@@ -25,6 +25,7 @@ SECTIONS {
 
 	.data : {
 		*(.data*)
+		*(.bss*)
 	}
 
 	. = ALIGN(4K);
@@ -39,10 +40,6 @@ SECTIONS {
 	. = ALIGN(4K);
     __module_ro_end = .;
     __module_bss_start = .;
-
-	.bss : {
-		*(.bss*)
-	}
 
 	. = ALIGN(4K);
     __module_bss_end = .;
