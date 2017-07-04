@@ -72,14 +72,16 @@ static void ata_use_drive(int drive) {
 
 
 static enum status ata_wait(int drive, bool check_error) {
-    uint8_t r;
+    uint8_t drive_status;
 
-    while (((r = read_port(ATA_Data1 + ATA_Register_Status)) & (ATA_Busy | ATA_Drive_Ready)) != ATA_Drive_Ready) {
+    while (((drive_status = read_port(ATA_Data1 + ATA_Register_Status)) & (ATA_Busy | ATA_Drive_Ready)) != ATA_Drive_Ready) {
         cpu_pause();
     }
-    if (check_error && (r & (ATA_Disk_Fault | ATA_Error)) != 0) {
+
+    if (check_error && (drive_status & (ATA_Disk_Fault | ATA_Error)) != 0) {
         return Error_IO;
     }
+
     return Ok;
 }
 
@@ -218,7 +220,6 @@ static void ata_test_read(void) {
 constructor enum status ata_init(void) {
 
     for (size_t drive = 0; drive < ATA_Drive_Max; ++drive) {
-        //write_port(0xe0 | (drive << 4), 0x1f6);
         ata_use_drive(drive);
         for (size_t i = 0; i < ATA_Max_Drive_Probe; ++i) {
             if (read_port(ATA_Data1 + ATA_Register_Status) != 0){
