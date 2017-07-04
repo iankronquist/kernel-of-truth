@@ -230,7 +230,7 @@ constructor enum status ata_init(void) {
         logf(Log_Info, "Drive %zu is %spresent\n", drive, Drives[drive] ? "" : "not ");
     }
 
-    interrupt_register_handler(ATA_IRQ_Number, ata_handler);
+    interrupt_register_handler(Interrupt_Number_ATA0, ata_handler);
 #ifdef TEST
     ata_test_read();
 #endif
