@@ -69,7 +69,6 @@ struct ext2_superblock {
     uint32_t s_wtime;
     uint32_t s_mnt_count;
     uint16_t s_max_mnt_count;
-    uint16_t s_max_mnt_count;
     uint16_t s_magic;
     uint16_t s_state;
     uint16_t s_errors;
