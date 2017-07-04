@@ -79,6 +79,7 @@ debug: all
 
 release: CFLAGS += -Werror
 release: AFLAGS += -Werror
+release: MODULE_CFLAGS += -Werror
 release: all
 	$(STRIP) -s $(KERNEL)
 
