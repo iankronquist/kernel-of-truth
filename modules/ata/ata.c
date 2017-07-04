@@ -56,18 +56,28 @@
 #define ATA_Control1 0x3f6
 #define ATA_Data0 0x170
 #define ATA_Data1 0x1f0
+
+#define ATA_Drive_Number(x) (((x) & 1) << 4)
+
+
 static struct lock ata_lock = Lock_Clear;
 static struct drive_buffer *ata_queue = NULL;
 
 static bool Drives[ATA_Drive_Max];
 
-static enum status ata_wait(bool check_error) {
+
+static void ata_use_drive(int drive) {
+    write_port(0xe0 | ATA_Drive_Number(drive), ATA_Data1 + ATA_Register_Drive_Sel);
+}
+
+
+static enum status ata_wait(int drive, bool check_error) {
     uint8_t r;
 
-    while (((r = read_port(0x1f7)) & (ATA_Busy|ATA_Drive_Ready)) != ATA_Drive_Ready) {
+    while (((r = read_port(ATA_Data1 + ATA_Register_Status)) & (ATA_Busy | ATA_Drive_Ready)) != ATA_Drive_Ready) {
         cpu_pause();
     }
-    if (check_error && (r & (ATA_Disk_Fault|ATA_Error)) != 0) {
+    if (check_error && (r & (ATA_Disk_Fault | ATA_Error)) != 0) {
         return Error_IO;
     }
     return Ok;
@@ -86,22 +96,23 @@ static void ata_issue_request(struct drive_buffer *b) {
 
     assert(sectors_per_block < 8);
 
-    ata_wait(false);
+    ata_use_drive(b->dev);
+    ata_wait(b->dev, false);
 
-    write_port(ATA_Interrupt_Enable, 0x3f6);  // generate interrupt
-    write_port(sectors_per_block, 0x1f2);
+    write_port(ATA_Interrupt_Enable, ATA_Control1);
+    write_port(sectors_per_block, ATA_Data1 + ATA_Register_Sec_Count0);
 
-    write_port(sector & 0xff, 0x1f3);
-    write_port((sector >> 8) & 0xff, 0x1f4);
+    write_port(sector & 0xff, ATA_Data1 + ATA_Register_LBA0);
+    write_port((sector >> 8) & 0xff, ATA_Data1 + ATA_Register_LBA1);
 
-    write_port((sector >> 16) & 0xff, 0x1f5);
-    write_port(0xe0 | ((b->dev&1)<<4) | ((sector >> 24) & 0x0f), 0x1f6);
+    write_port((sector >> 16) & 0xff, ATA_Data1 + ATA_Register_LBA2);
+    write_port(0xe0 | ATA_Drive_Number(b->dev) | ((sector >> 24) & 0x0f), ATA_Data1 + ATA_Register_Drive_Sel);
 
     if (b->flags & Drive_Buffer_Dirty){
-        write_port(write_cmd, 0x1f7);
-        write_port_buffer32(b->data, Drive_Buffer_Size/sizeof(uint32_t), 0x1f0);
+        write_port(write_cmd, ATA_Data1 + ATA_Register_Command);
+        write_port_buffer32(b->data, Drive_Buffer_Size/sizeof(uint32_t), ATA_Data1 + ATA_Register_Data);
     } else {
-        write_port(read_cmd, 0x1f7);
+        write_port(read_cmd, ATA_Data1 + ATA_Register_Command);
     }
 }
 
@@ -144,13 +155,16 @@ static bool ata_handler(struct interrupt_cpu_state *unused(_)) {
 
     lock_acquire_writer(&ata_lock);
 
-    drive_status = read_port(0x1f7);
     b = ata_queue;
     if (b == NULL){
         log(Log_Warning, "Spurious ATA interrupt");
         handled = false;
         goto out;
-    } else if ((drive_status & ATA_Status_Drive_Ready) == 0) {
+    }
+
+    ata_use_drive(b->dev);
+    drive_status = read_port(ATA_Data1 + ATA_Register_Status);
+    if ((drive_status & ATA_Status_Drive_Ready) == 0) {
         log(Log_Info, "ATA interrupt handler passing");
         handled = false;
         goto out;
@@ -165,8 +179,8 @@ static bool ata_handler(struct interrupt_cpu_state *unused(_)) {
         goto out;
     }
 
-    if (!(b->flags & Drive_Buffer_Dirty) && ata_wait(true) == Ok) {
-        read_port_buffer32(b->data, Drive_Buffer_Size/sizeof(uint32_t), 0x1f0);
+    if (!(b->flags & Drive_Buffer_Dirty) && ata_wait(b->dev, true) == Ok) {
+        read_port_buffer32(b->data, Drive_Buffer_Size/sizeof(uint32_t), ATA_Data1 + ATA_Register_Data);
     }
 
     b->flags |= Drive_Buffer_Read;
@@ -203,17 +217,16 @@ static void ata_test_read(void) {
 
 constructor enum status ata_init(void) {
 
-    ata_wait(false);
-
     for (size_t drive = 0; drive < ATA_Drive_Max; ++drive) {
-        write_port(0xe0 | (drive << 4), 0x1f6);
+        //write_port(0xe0 | (drive << 4), 0x1f6);
+        ata_use_drive(drive);
         for (size_t i = 0; i < ATA_Max_Drive_Probe; ++i) {
-            if (read_port(0x1f7) != 0){
+            if (read_port(ATA_Data1 + ATA_Register_Status) != 0){
                 Drives[drive] = true;
-                logf(Log_Info, "Drive %zu present\n", drive);
                 break;
             }
         }
+        logf(Log_Info, "Drive %zu is %spresent\n", drive, Drives[drive] ? "" : "not ");
     }
 
     interrupt_register_handler(ATA_IRQ_Number, ata_handler);
