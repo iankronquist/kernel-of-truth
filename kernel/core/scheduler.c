@@ -1,10 +1,22 @@
 #include <truth/lock.h>
+#include <truth/interrupts.h>
+#include <arch/x64/interrupts.h>
 #include <truth/scheduler.h>
 #include <truth/panic.h>
 
 static struct lock Current_Thread_Lock = Lock_Clear;
 static struct thread *Current_Thread = NULL;
 
+
+static bool scheduler_interrupt_handler(struct interrupt_cpu_state *r) {
+    if (Current_Thread == NULL) {
+        interrupts_end_interrupt(r->interrupt_number);
+        cpu_sleep_state();
+    } else {
+        scheduler_yield();
+    }
+    return true;
+}
 
 enum status scheduler_init(struct process *init) {
     assert(init != NULL);
@@ -13,6 +25,7 @@ enum status scheduler_init(struct process *init) {
     Current_Thread->next = Current_Thread;
     Current_Thread->prev = Current_Thread;
     object_retain(&Current_Thread->obj);
+    interrupt_register_handler(Interrupt_Number_Timer, scheduler_interrupt_handler);
     return Ok;
 }
 
@@ -27,16 +40,12 @@ void scheduler_fini(void) {
     }
     scheduler_remove_thread(Current_Thread);
     lock_release_writer(&Current_Thread_Lock);
+    interrupt_unregister_handler(Interrupt_Number_Timer, scheduler_interrupt_handler);
 }
 
 
 void scheduler_yield(void) {
-    if (Current_Thread == NULL) {
-        // FIXME: Reaches into private APIs for no good reason.
-        //pic_end_of_interrupt(0x20);
-        interrupts_enable();
-        cpu_sleep_state();
-    } else if (Current_Thread != Current_Thread->next) {
+    if (Current_Thread != Current_Thread->next) {
         logf(Log_Debug, "Switching from process %d:%d to %d:%d\n",
             Current_Thread->process->id, Current_Thread->id,
             Current_Thread->next->process->id, Current_Thread->next->id);

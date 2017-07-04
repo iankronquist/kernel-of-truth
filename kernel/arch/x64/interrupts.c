@@ -75,7 +75,13 @@ void interrupts_fini(void) {
 }
 
 
-enum status interrupt_register_handler(int interrupt_number, interrupt_handler_f handler) {
+void interrupts_end_interrupt(enum interrupt_number interrupt_number) {
+    pic_end_of_interrupt(interrupt_number);
+    interrupts_enable();
+}
+
+
+enum status interrupt_register_handler(enum interrupt_number interrupt_number, interrupt_handler_f handler) {
     enum status status;
     lock_acquire_writer(&dispatch_table_lock);
     for (size_t i = 0; i < Interrupt_Handlers_Count; ++i) {
@@ -92,7 +98,7 @@ out:
 }
 
 
-enum status interrupt_unregister_handler(int interrupt_number, interrupt_handler_f handler) {
+enum status interrupt_unregister_handler(enum interrupt_number interrupt_number, interrupt_handler_f handler) {
     enum status status;
     lock_acquire_writer(&dispatch_table_lock);
     for (size_t i = 0; i < Interrupt_Handlers_Count; ++i) {

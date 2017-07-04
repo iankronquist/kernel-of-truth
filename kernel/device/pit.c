@@ -5,7 +5,6 @@
 #include <truth/log.h>
 #include <truth/scheduler.h>
 
-#define Timer_IRQ_Number 0x20
 
 #define Timer_Magic_Number 1193180
 
@@ -15,13 +14,7 @@
 #define Timer_Command_Reg 0x43
 #define RW_Oneshot_Square 0x36
 
-static bool timer_interrupt_handler(struct interrupt_cpu_state *unused(r)) {
-    scheduler_yield();
-    return true;
-}
-
 void timer_init(void) {
-    interrupt_register_handler(Timer_IRQ_Number, timer_interrupt_handler);
 }
 
 void timer_set_phase(uint8_t hertz) {
@@ -29,9 +22,8 @@ void timer_set_phase(uint8_t hertz) {
     write_port(Timer_Command_Reg, RW_Oneshot_Square);
     write_port(Timer_Chan_0, divisor & 0xff);
     write_port(Timer_Chan_0, divisor >> 8);
-    pic_enable(Timer_IRQ_Number);
+    pic_enable(Interrupt_Number_Timer);
 }
 
 void timer_fini(void) {
-    interrupt_unregister_handler(Timer_IRQ_Number, timer_interrupt_handler);
 }
