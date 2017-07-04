@@ -6,10 +6,10 @@
 #include <truth/scheduler.h>
 #include <truth/log.h>
 #include <truth/panic.h>
+#include <truth/slab.h>
 
 #define TEST 0
 
-#define ATA_IRQ_Number 0x2e
 #define ATA_Max_Drive_Probe 1000
 
 #define ATA_Busy        0x80
@@ -150,6 +150,7 @@ void ata_request(struct drive_buffer *b) {
 }
 
 
+
 static bool ata_handler(struct interrupt_cpu_state *unused(_)) {
     bool handled = true;
     uint8_t drive_status;
@@ -197,23 +198,28 @@ out:
     return handled;
 }
 
-#ifdef TEST
+#if TEST
 static void ata_test_read(void) {
+    char *data = slab_alloc(Drive_Buffer_Size, Memory_Writable);
+    assert(data != NULL);
     struct drive_buffer b = {
         .flags = 0,
-        .dev = 1,
-        .block_number = 2,
+        .dev = 0,
+        .block_number = 0,
         .next = NULL,
-        .data = {'Z'},
+        .data = data,
     };
+    for (size_t i = 0; i < Drive_Buffer_Size; ++i) {
+        data[i] = 'A';
+    }
 
     ata_request(&b);
     while ((b.flags & Drive_Buffer_Dirty) != 0) {
         cpu_pause();
     }
 
-    b.data[sizeof(b.data)-1] = '\0';
-    logf(Log_Info, "data %s\n", b.data);
+    log_hex_dump(Log_Info, "data: ", data, Drive_Buffer_Size);
+    slab_free(Drive_Buffer_Size, data);
 }
 #endif // TEST
 
