@@ -159,11 +159,11 @@ struct inode_table {
 #define EXT2_S_IFDIR    0x4000
 #define EXT2_S_IFCHR    0x2000
 #define EXT2_S_IFIFO    0x1000
-#define // -- process execution user/group override --
+// -- process execution user/group override --
 #define EXT2_S_ISUID    0x0800
 #define EXT2_S_ISGID    0x0400
 #define EXT2_S_ISVTX    0x0200
-#define // -- access rights --
+// -- access rights --
 #define EXT2_S_IRUSR    0x0100
 #define EXT2_S_IWUSR    0x0080
 #define EXT2_S_IXUSR    0x0040
