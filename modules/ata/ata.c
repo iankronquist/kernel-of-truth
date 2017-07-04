@@ -7,6 +7,8 @@
 #include <truth/log.h>
 #include <truth/panic.h>
 
+#define TEST 0
+
 #define ATA_IRQ_Number 0x2e
 #define ATA_Max_Drive_Probe 1000
 
@@ -32,7 +34,28 @@
 #define ATA_Status_Index               0x02
 #define ATA_Status_Error               0x01
 
+#define ATA_Register_Data       0x00
+#define ATA_Register_Error      0x01
+#define ATA_Register_Features   0x01
+#define ATA_Register_Sec_Count0 0x02
+#define ATA_Register_LBA0       0x03
+#define ATA_Register_LBA1       0x04
+#define ATA_Register_LBA2       0x05
+#define ATA_Register_Drive_Sel  0x06
+#define ATA_Register_Command    0x07
+#define ATA_Register_Status     0x07
+#define ATA_Register_Sec_Count1 0x08
+#define ATA_Register_LBA3       0x09
+#define ATA_Register_LBA4       0x0a
+#define ATA_Register_LBA5       0x0b
+#define ATA_Register_Control    0x0c
+#define ATA_Register_Alt_Status 0x0c
+#define ATA_Register_Address    0x0d
 
+#define ATA_Control0 0x376
+#define ATA_Control1 0x3f6
+#define ATA_Data0 0x170
+#define ATA_Data1 0x1f0
 static struct lock ata_lock = Lock_Clear;
 static struct drive_buffer *ata_queue = NULL;
 
@@ -158,8 +181,8 @@ out:
     return handled;
 }
 
-
-void ata_test_read(void) {
+#ifdef TEST
+static void ata_test_read(void) {
     struct drive_buffer b = {
         .flags = 0,
         .dev = 1,
@@ -176,6 +199,7 @@ void ata_test_read(void) {
     b.data[sizeof(b.data)-1] = '\0';
     logf(Log_Info, "data %s\n", b.data);
 }
+#endif // TEST
 
 constructor enum status ata_init(void) {
 
@@ -193,6 +217,8 @@ constructor enum status ata_init(void) {
     }
 
     interrupt_register_handler(ATA_IRQ_Number, ata_handler);
-    //ata_test_read();
+#ifdef TEST
+    ata_test_read();
+#endif
     return Ok;
 }
