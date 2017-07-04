@@ -127,8 +127,6 @@ static void ata_queue_append(struct drive_buffer *b) {
 
 void ata_request(struct drive_buffer *b) {
 
-    //assert(lock_is_writer_acquired(&b->lock));
-
     assert((b->flags & (Drive_Buffer_Read | Drive_Buffer_Dirty)) != Drive_Buffer_Read);
     assert(b->dev < ATA_Drive_Max);
     assert(Drives[b->dev] == true);
