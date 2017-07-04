@@ -71,7 +71,7 @@ static void ata_use_drive(int drive) {
 }
 
 
-static enum status ata_wait(int drive, bool check_error) {
+static enum status ata_wait(bool check_error) {
     uint8_t drive_status;
 
     while (((drive_status = read_port(ATA_Data1 + ATA_Register_Status)) & (ATA_Busy | ATA_Drive_Ready)) != ATA_Drive_Ready) {
@@ -99,7 +99,7 @@ static void ata_issue_request(struct drive_buffer *b) {
     assert(sectors_per_block < 8);
 
     ata_use_drive(b->dev);
-    ata_wait(b->dev, false);
+    ata_wait(false);
 
     write_port(ATA_Interrupt_Enable, ATA_Control1);
     write_port(sectors_per_block, ATA_Data1 + ATA_Register_Sec_Count0);
@@ -182,7 +182,7 @@ static bool ata_handler(struct interrupt_cpu_state *unused(_)) {
         goto out;
     }
 
-    if (!(b->flags & Drive_Buffer_Dirty) && ata_wait(b->dev, true) == Ok) {
+    if (!(b->flags & Drive_Buffer_Dirty) && ata_wait(true) == Ok) {
         read_port_buffer32(b->data, Drive_Buffer_Size/sizeof(uint32_t), ATA_Data1 + ATA_Register_Data);
     }
 
