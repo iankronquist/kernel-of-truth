@@ -26,6 +26,25 @@ enum status log_init(enum log_level level, const char *name) {
 }
 
 
+void log_hex_dump(enum log_level level, const char *message, void *start, size_t size) {
+    uint8_t *bytes = start;
+    if (level >= Log_Global_Level) {
+        log(level, message);
+        fprintf(Log_File, "%s%s\n", Log_Prefix[level], message);
+        for (size_t i = 0; i < size; ++i) {
+            if ((i % 16) == 0) {
+                logf(Log_None, "\n%x:", i);
+            }
+            if ((i % 2) == 0) {
+                logf(Log_None, " ");
+            }
+            logf(Log_None, "%hhx", bytes[i]);
+        }
+        logf(Log_None, "\n");
+    }
+}
+
+
 void log(enum log_level level, const char *message) {
     if (level >= Log_Global_Level) {
         fprintf(Log_File, "%s%s\n", Log_Prefix[level], message);
