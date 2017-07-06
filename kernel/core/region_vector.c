@@ -1,10 +1,11 @@
 #include <arch/x64/paging.h>
 #include <external/multiboot.h>
-#include <truth/types.h>
 #include <truth/panic.h>
 #include <truth/physical_allocator.h>
+#include <truth/random.h>
 #include <truth/region_vector.h>
 #include <truth/slab.h>
+#include <truth/types.h>
 
 struct region {
     void *address;
@@ -16,6 +17,8 @@ struct region_vector {
     struct region_vector *next;
     struct region regions[];
 };
+
+#define Region_Vector_Max_Random_Addresses 5
 
 #define regions_count ( \
         (Page_Small - sizeof(struct region_vector)) / \
@@ -57,8 +60,38 @@ struct region_vector *region_vector_new(void *addr, size_t size) {
     return vect;
 }
 
-enum status checked region_alloc(struct region_vector *vect, size_t size,
-                                 void **out) {
+enum status checked region_alloc_random(struct region_vector *vect, size_t size, void **out) {
+    assert(vect != NULL);
+    assert(out != NULL);
+    for (size_t addresses_tried = 0; addresses_tried < Region_Vector_Max_Random_Addresses; ++addresses_tried) {
+        void *addr = random_address(true, Page_Small);
+        struct region_vector *v = vect;
+        do {
+            for (size_t i = 0; i < v->regions_used && i < regions_count; ++i) {
+                if (v->regions[i].address >= addr && v->regions[i].size > size) {
+                    void *address = v->regions[i].address;
+                    size_t new_size = v->regions[i].size - size;
+                    if (new_size == 0) {
+                        v->regions_used--;
+                        if (i != v->regions_used) {
+                            v->regions[i] = v->regions[v->regions_used];
+                        }
+                    } else {
+                        v->regions[i].size = new_size;
+                        v->regions[i].address += size;
+                    }
+                    *out = address;
+                    return Ok;
+                }
+            }
+            v = v->next;
+        } while (v != NULL);
+
+    }
+    return Error_No_Memory;
+}
+
+enum status checked region_alloc(struct region_vector *vect, size_t size, void **out) {
     assert(vect != NULL);
     assert(out != NULL);
     do {
