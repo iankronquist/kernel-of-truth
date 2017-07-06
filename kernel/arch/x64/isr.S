@@ -32,6 +32,11 @@ _service_interrupt:
 	mov fs, ax
 	mov gs, ax
 
+	rdtsc
+	mov di, ax
+	.extern entropy_pool_seed
+	call entropy_pool_seed
+
 	.extern interrupts_dispatcher
 	call interrupts_dispatcher
 

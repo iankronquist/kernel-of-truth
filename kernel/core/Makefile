@@ -1,5 +1,6 @@
 OBJ += $(BUILD_DIR)/core/bitmap.c.o
 OBJ += $(BUILD_DIR)/core/elf.c.o
+OBJ += $(BUILD_DIR)/core/entropy.c.o
 OBJ += $(BUILD_DIR)/core/file.c.o
 OBJ += $(BUILD_DIR)/core/format.c.o
 OBJ += $(BUILD_DIR)/core/hashtable.c.o
