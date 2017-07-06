@@ -24,3 +24,16 @@ void random_bytes(void *buf, size_t size) {
         }
     }
 }
+
+
+void *random_address(bool kernel_space, uint64_t alignment) {
+    assert(is_power_of_two(alignment));
+    uint64_t random = ((uint64_t)randombytes_random() << 32) | randombytes_random();
+    random = align_as(random, alignment);
+    if (kernel_space) {
+        random |= Memory_Kernel_Set_Mask;
+    } else {
+        random &= Memory_User_Clear_Mask;
+    }
+    return (void *)random;
+}
