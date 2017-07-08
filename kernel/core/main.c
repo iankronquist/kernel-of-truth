@@ -9,6 +9,7 @@
 #include <truth/module.h>
 #include <truth/physical_allocator.h>
 #include <truth/process.h>
+#include <truth/random.h>
 #include <truth/timer.h>
 #include <arch/x64/paging.h>
 #include <truth/device/vga.h>
