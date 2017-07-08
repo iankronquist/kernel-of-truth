@@ -8,6 +8,8 @@
 #define CPU_CR4_SMEP_BIT 20
 #define CPU_CR4_SMAP_BIT 21
 
+#define CPU_RDRAND (1 << 30)
+
 static inline void cpuid(uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx) {
     __asm__ volatile ("cpuid" :
             "=a"(*eax),
