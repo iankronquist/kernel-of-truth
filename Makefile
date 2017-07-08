@@ -20,7 +20,7 @@ KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
 OBJ :=
 MODULES :=
 MODULE_CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra \
-	-fpic -nostdlib -I ../../include -D __C__
+	-fpic -nostdlib -I ../../include -D __C__ -mno-sse
 include kernel/arch/$(ARCH)/Makefile
 include kernel/core/Makefile
 include kernel/crypto/Makefile
@@ -36,7 +36,7 @@ CC := $(TRIPLE)-gcc
 CFLAGS := -std=c11 -O2 -MP -MMD -mcmodel=kernel \
 	-ffreestanding -fstack-protector-all \
 	-Wall -Wextra \
-	-I ./include $(MACROS) -D __C__
+	-I ./include $(MACROS) -D __C__ -mno-sse
 
 AS := $(TRIPLE)-gcc
 ASFLAGS := -O2 -MP -MMD -mcmodel=kernel \
