@@ -27,6 +27,7 @@ void kernel_main(uint32_t multiboot_tables) {
     assert_ok(paging_init());
     memory_init();
     assert_ok(processes_init());
+    assert_ok(random_init());
     logf(Log_Debug, "slab usage %lx\n", slab_get_usage());
     assert_ok(modules_init(phys_to_virt(multiboot_tables)));
     timer_init();
