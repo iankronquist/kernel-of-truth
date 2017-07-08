@@ -28,13 +28,14 @@ Kernel Features
 - [x] PS2 keyboard driver.
 - [x] VGA graphics driver.
 - [x] CMOS Real Time Clock.
-- [x] 🔐 Port of Libsodium ed25519 and SHA512 cryptographic algorithms.
+- [x] 🔐 Port of Libsodium ed25519 & SHA512 cryptographic algorithms.
 - [x] Elf loader.
 - [x] Loadable kernel modules.
+- [x] 🔐 Kernel module Address Space Layout Randomization (ASLR) & signature verification.
 - [ ] Basic syscalls.
 - [ ] POSIX syscall layer.
-- [ ] FAT filesystem.
-- [ ] AHCI.
+- [ ] EXT2 filesystem.
+- [ ] ATA.
 - [ ] Symmetric Multiprocessing (SMP).
 
 
