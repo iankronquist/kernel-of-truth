@@ -9,6 +9,7 @@
 #include <truth/module.h>
 #include <truth/physical_allocator.h>
 #include <truth/process.h>
+#include <truth/random.h>
 #include <truth/timer.h>
 #include <arch/x64/paging.h>
 #include <truth/device/vga.h>
@@ -27,6 +28,7 @@ void kernel_main(uint32_t multiboot_tables) {
     assert_ok(paging_init());
     memory_init();
     assert_ok(processes_init());
+    assert_ok(random_init());
     logf(Log_Debug, "slab usage %lx\n", slab_get_usage());
     assert_ok(modules_init(phys_to_virt(multiboot_tables)));
     timer_init();

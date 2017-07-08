@@ -1,12 +1,15 @@
 OBJ += $(BUILD_DIR)/core/bitmap.c.o
 OBJ += $(BUILD_DIR)/core/elf.c.o
+OBJ += $(BUILD_DIR)/core/entropy.c.o
 OBJ += $(BUILD_DIR)/core/file.c.o
 OBJ += $(BUILD_DIR)/core/format.c.o
 OBJ += $(BUILD_DIR)/core/hashtable.c.o
 OBJ += $(BUILD_DIR)/core/heap.c.o
+OBJ += $(BUILD_DIR)/core/jitter.c.o
 OBJ += $(BUILD_DIR)/core/lock.c.o
 OBJ += $(BUILD_DIR)/core/log.c.o
 OBJ += $(BUILD_DIR)/core/main.c.o
+OBJ += $(BUILD_DIR)/core/mt19937_64.c.o
 OBJ += $(BUILD_DIR)/core/module.c.o
 OBJ += $(BUILD_DIR)/core/object.c.o
 OBJ += $(BUILD_DIR)/core/process.c.o

@@ -248,7 +248,7 @@ enum status modules_init(struct multiboot_info *info) {
 
         size_t module_size = modules[i].mod_end - modules[i].mod_start;
         size_t module_allocation_size = align_as(round_next(module_size, Page_Small), Page_Small);
-        void *module_start = slab_alloc_request_physical(
+        void *module_start = slab_alloc_request_physical_random(
                     modules[i].mod_start,
                     module_allocation_size,
                     Memory_Writable);
