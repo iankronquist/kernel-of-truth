@@ -1,4 +1,5 @@
 #include <arch/x64/cpu.h>
+#include <truth/entropy.h>
 #include <truth/mt19937_64.h>
 #include <truth/memory.h>
 #include <truth/random.h>
@@ -22,6 +23,7 @@ uint64_t random_number(void) {
 
 enum status random_init(void) {
     uint32_t eax, ebx, ecx, edx;
+    eax = 1;
     cpuid(&eax, &ebx, &ecx, &edx);
     if (ecx & CPU_RDRAND) {
         random_number_function = rdrand;
@@ -36,6 +38,7 @@ enum status random_init(void) {
         mt19937_64_seed(seed.qword);
         random_number_function = mt19937_64_get_random_number;
     }
+    return Ok;
 }
 
 void random_bytes(void *buf, size_t size) {
