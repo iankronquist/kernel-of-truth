@@ -50,6 +50,39 @@ out:
 }
 
 
+void *slab_alloc_request_physical_random(phys_addr phys, size_t size, enum memory_attributes attrs) {
+    enum status status;
+    void *virt_address;
+    if (!is_aligned(size, Page_Small)) {
+        return NULL;
+    } else if (size == 0) {
+        return NULL;
+    }
+
+    lock_acquire_writer(&slab_higher_half_lock);
+
+    if (region_alloc_random(&slab_higher_half, size, &virt_address) != Ok) {
+        virt_address = NULL;
+        goto out;
+    }
+
+    status = map_range(virt_address, phys, size / Page_Small, attrs);
+    if (status != Ok) {
+        region_free(&slab_higher_half, virt_address, size);
+        virt_address = NULL;
+        goto out;
+    }
+
+    Usage -= size;
+out:
+    lock_release_writer(&slab_higher_half_lock);
+
+    return virt_address;
+}
+
+
+
+
 void *slab_alloc_helper(size_t bytes, phys_addr *phys,
                         enum memory_attributes page_attributes,
                         struct region_vector *vect) {
