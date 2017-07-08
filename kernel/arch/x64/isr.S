@@ -1,88 +1,106 @@
-.intel_syntax noprefix
-
 .text
+
+#define PIT_Interrupt_Number 0x20
 
 .extern interrupts_dispatcher
 .global _service_interrupt
 .type _service_interrupt, @function
 _service_interrupt:
-	push rax
-	push rbx
-	push rcx
-	push rdx
-	push rbp
-	push rsi
-	push rdi
-	push r8
-	push r9
-	push r10
-	push r11
-	push r12
-	push r13
-	push r14
-	push r15
+	# Save all registers.
+	push %rax
+	push %rbx
+	push %rcx
+	push %rdx
+	push %rbp
+	push %rsi
+	push %rdi
+	push %r8
+	push %r9
+	push %r10
+	push %r11
+	push %r12
+	push %r13
+	push %r14
+	push %r15
 
-	xor rax, rax
-	mov ax, ds
-	push rax
+	# Makes logging nice, not really necessary.
+	xor %rax, %rax
+	# Save data segment.
+	mov %ds, %ax
+	push %rax
 
-	mov ax, 0x10
-	mov ds, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
+	# Load kernel data segment.
+	mov $0x10, %ax
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %fs
+	mov %ax, %gs
 
+	# If this isn't a timer interrupt, feed the entropy pool with the last
+	# byte of the tick counter.
+	testq $PIT_Interrupt_Number, 16*8(%rsp)
+	jne .dispatch
 	rdtsc
-	mov di, ax
+	mov 16*8(%rsp), %rsi
+	mov %di, %ax
 	.extern entropy_pool_seed
 	call entropy_pool_seed
 
+	# Call interrupt dispatcher.
+.dispatch:
 	.extern interrupts_dispatcher
 	call interrupts_dispatcher
 
-	pop rax
+	# Restore data segment.
+	pop %rax
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %fs
+	mov %ax, %gs
 
-	mov ds, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
+	# Restore all registers.
+	pop %r15
+	pop %r14
+	pop %r13
+	pop %r12
+	pop %r11
+	pop %r10
+	pop %r9
+	pop %r8
+	pop %rdi
+	pop %rsi
+	pop %rbp
+	pop %rdx
+	pop %rcx
+	pop %rbx
+	pop %rax
 
-	pop r15
-	pop r14
-	pop r13
-	pop r12
-	pop r11
-	pop r10
-	pop r9
-	pop r8
-	pop rdi
-	pop rsi
-	pop rbp
-	pop rdx
-	pop rcx
-	pop rbx
-	pop rax
-
-	add rsp, 16
+	# Add back extra bit pushed to the stack by the interrupt handler.
+	add $16, %rsp
 	iretq
 
 
+# Certain interrupts push an error code to the stack.
+# When one of these interrupts happens, push the interrupt number after
+# the error code which is already on the stack.
 .macro interrupt number
 	.global isr\number
 	.type isr\number, @function
 	isr\number:
 		cli
-		push \number
+		push $\number
 		jmp _service_interrupt
 .endm
 
+# Other interrupts don't push an error code to the stack. In the name of
+# consistency, push a dummy value, and then the interrupt number
 .macro no_error_code_interrupt number
 	.global isr\number
 	.type isr\number, @function
 	isr\number:
 		cli
-		push 0
-		push \number
+		push $0
+		push $\number
 		jmp _service_interrupt
 .endm
 
