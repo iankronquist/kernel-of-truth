@@ -1,0 +1,268 @@
+#include <arch/x64/boot.h>
+#include <arch/x64/asm.h>
+
+#define Boot_VGA_Window_Start 0xb8000
+#define CPU_Flags_ID 0x00200000
+#define CPUId_Leaf_Manufacturer   0x0
+#define CPUId_Leaf_Processor_Info 0x80000001
+#define CPUId_EDX_Long_Mode (1 << 29)
+#define CPUId_EDX_Time_Step_Counter (1 << 4)
+#define CPUId_EDX_Not_Executable_Pages (1 << 20)
+#define CPUId_EDX_Syscall (1 << 11)
+#define MSR_IA32_EFER_Long_Mode 0x100
+#define MSR_IA32_EFER_Execute_Disable 0x800
+.section .text
+
+# MB header.
+.align MB_Alignment
+.long MB_Magic
+.long MB_Flags
+.long MB_Checksum
+
+.section .bss, "aw", @nobits
+.align Page_Small
+
+.global init_pl4
+init_pl4:
+	.skip Page_Small
+
+.global init_pl3
+init_pl3:
+	.skip Page_Small
+
+.global init_pl2
+init_pl2:
+	.skip Page_Small
+
+.global init_pl1
+init_pl1:
+	.skip Page_Small
+
+.global _init_stack_top
+init_stack:
+	.skip (16 * KB)
+_init_stack_top:
+
+.section .text
+
+.code32
+
+Function(_start)
+	# Initialize stack pointer.
+	movl $_init_stack_top, %esp
+
+	# Save Multiboot info table physical address.
+	pushl %ebx
+
+	# Is this a multiboot compatible bootloader?
+	cmpl $Multiboot_Register_Magic, %eax
+	je .compat_multiboot_magic_ok
+	# If not, clear the screen, print an error message, and hang.
+	call boot_vga_clear
+	movl $Boot_Bad_Multiboot_Magic_String, %edi
+	jmp .bad_boot
+
+
+.compat_multiboot_magic_ok:
+
+	call boot_vga_clear
+
+	# Is cpuid supported? It is if the eax register is not 0.
+	call boot_cpuid_available
+	testl %eax, %eax
+	jnz .compat_cpuid_available
+	movl $Boot_No_CPUId, %edi
+	jmp .bad_boot
+
+.compat_cpuid_available:
+	movl $CPUId_Leaf_Processor_Info, %eax
+	cpuid
+
+	movl %edx, %edi
+	andl $CPUId_EDX_Long_Mode, %edi
+	jnz .compat_long_mode_supported
+	movl $Boot_No_Long_Mode_String, %edi
+	jmp .bad_boot
+
+.compat_long_mode_supported:
+	movl %edx, %edi
+	andl $CPUId_EDX_Time_Step_Counter, %edi
+	jnz .compat_time_step_counter_available
+	movl $Boot_No_RDTSC_String, %edi
+	jmp .bad_boot
+
+.compat_time_step_counter_available:
+	movl %edx, %edi
+	andl $CPUId_EDX_Not_Executable_Pages, %edi
+	jnz .compat_nx_bit_available
+	movl $Boot_No_NX_Bit_String, %edi
+	jmp .bad_boot
+
+.compat_nx_bit_available:
+	movl %edx, %edi
+	andl $CPUId_EDX_Syscall, %edi
+	jnz .compat_syscall_available
+	movl $Boot_No_Syscall_String, %edi
+	jmp .bad_boot
+
+.compat_syscall_available:
+	call boot_map_page_table
+
+	# Enable PAE.
+	movl %cr4, %eax
+	orl $CR4_PAE, %eax
+	movl %eax, %cr4
+
+
+	# Enable long mode and the No-Execute bit.
+	movl $IA32_EFER_MSR, %ecx
+	rdmsr
+	orl $(MSR_IA32_EFER_Long_Mode | MSR_IA32_EFER_Execute_Disable), %eax
+	wrmsr
+
+	# Enable paging (with write protection) and enter long mode.
+	# Note that we are still in a 32 bit code segment.
+	movl %cr0, %eax
+	orl $(CR0_Paging | CR0_Write_Protect), %eax
+	movl %eax, %cr0
+
+
+	lgdt Boot_GDT_Register
+	ljmp $Segment_Kernel_Code, $long_mode
+
+.code64
+long_mode:
+	# Clear upper 32 bits of stack pointer.
+	movl %esp, %esp
+
+	# Load kernel data segment.
+	movw $Segment_Kernel_Data, %cx
+	movw %cx, %ds
+	movw %cx, %es
+	movw %cx, %ss
+
+	movl $Boot_Loader_String, %edi
+	call boot_vga_log64
+	jmp boot_halt
+.bad_boot:
+	call boot_vga_log
+	jmp boot_halt
+
+# void boot_vga_log64(char *edi);
+Function(boot_vga_log64)
+	movl (Boot_VGA_Pointer), %ebx
+.write_char64:
+	movl (%edi), %eax
+	testb %al, %al
+	jz .out64
+	movb $0x0f, %ah
+	movw %ax, (%ebx)
+	addl $2, %ebx
+	inc %edi
+	jmp .write_char64
+.out64:
+	movl %ebx, (Boot_VGA_Pointer)
+	ret
+
+
+.code32
+
+Function(boot_map_page_table)
+	movl $init_pl4, %edi
+	movl %edi, %cr3
+
+	movl $(init_pl3 + (Page_User | Page_Write | Page_Present)), init_pl4
+
+	movl $(init_pl2 + (Page_User | Page_Write | Page_Present)), init_pl3
+
+	movl $(init_pl1 + (Page_Write | Page_Present)), init_pl2
+
+	# Fractal mapping.
+	movl $(init_pl4 + (Page_Write | Page_Present)), init_pl4 + Kernel_Fractal_Page_Table_Index * 8
+	# Map first 4 MB except for the NULL page.
+	movl $(init_pl1 + 8), %edi
+	movl $(0x1000 | Page_Present | Page_Write), %esi
+	movl $0x1ff, %ecx
+1:
+	movl %esi, (%edi)
+	addl $8, %edi
+	addl $Page_Small, %esi
+	loop 1b
+	ret
+
+
+Function(boot_vga_clear)
+	movl $(80*24), %ecx
+	movl $Boot_VGA_Window_Start, %eax
+1:
+	movl $0, (%eax)
+	addl $4, %eax
+	loop 1b
+	ret
+
+# void boot_vga_log(char *edi);
+Function(boot_vga_log)
+	movl (Boot_VGA_Pointer), %ebx
+.write_char:
+	movl (%edi), %eax
+	testb %al, %al
+	jz .out
+	movb $0x0f, %ah
+	movw %ax, (%ebx)
+	addl $2, %ebx
+	inc %edi
+	jmp .write_char
+.out:
+	movl %ebx, (Boot_VGA_Pointer)
+	ret
+
+Function(boot_halt)
+	cli
+	hlt
+	pause
+	jmp boot_halt
+
+
+Function(boot_cpuid_available)
+	# Save original flags.
+	pushf
+	# Save them again. We'll manipulate these ones.
+	pushf
+	# Flip the ID bit.
+	xorl $CPU_Flags_ID, (%esp)
+	# Restore the manipulated flags. If cpuid is supported the bit will be set.
+	popf
+	# Move flags to eax.
+	pushf
+	pop %eax
+	# Mask everything but the id bit.
+	andl $CPU_Flags_ID, %eax
+	# Restore original flags.
+	popf
+	ret
+
+.section .data
+Boot_VGA_Pointer:
+.long Boot_VGA_Window_Start
+
+
+Boot_Loader_String:
+.asciz "Kernel of Truth Loader"
+
+Boot_Bad_Multiboot_Magic_String:
+.asciz "Bad multiboot magic. Incompatible bootloader."
+
+Boot_No_CPUId:
+.asciz "cpuid instruction not supported. Incompatible hardware."
+
+Boot_No_Long_Mode_String:
+.asciz "64 bit not supported. Incompatible hardware."
+
+Boot_No_RDTSC_String:
+.asciz "Time Step Counter not supported. Incompatible hardware."
+
+Boot_No_NX_Bit_String:
+.asciz "Non-executable pages not supported. Incompatible hardware."
+
+Boot_No_Syscall_String:
+.asciz "Syscall instruction not supported. Incompatible hardware."

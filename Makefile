@@ -18,9 +18,11 @@ BUILD_DIR := build
 KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
 
 OBJ :=
+LOADER_OBJS :=
 MODULES :=
 MODULE_CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra \
 	-fpic -nostdlib -I ../../include -D __C__ -mno-sse
+include loader/$(ARCH)/Makefile
 include kernel/arch/$(ARCH)/Makefile
 include kernel/core/Makefile
 include kernel/crypto/Makefile
@@ -29,6 +31,14 @@ include modules/Makefile
 
 
 PYTHON := python
+
+LOADER_FLAGS := -O2 -MP -MMD \
+	-ffreestanding \
+	-Wall -Wextra \
+	-I ./include -mno-sse
+
+LOADER_CFLAGS := $(LOADER_FLAGS) -D __C__ -std=c11
+LOADER_ASFLAGS := $(LOADER_FLAGS) -D __ASM__
 
 
 
@@ -68,6 +78,16 @@ MAKE := make
 
 all: $(KERNEL) tools
 
+include/loader/kernel.h: $(KERNEL)
+	$(PYTHON) loader/generate_kernel_header.py $@ $<
+
+$(BUILD_DIR)/truth_loader.$(ARCH).elf64: loader/$(ARCH)/link.ld $(KERNEL)64 $(LOADER_OBJS)
+	$(CC) -T loader/$(ARCH)/link.ld $(LOADER_OBJS) $(LOADER_CFLAGS) -o $@ $< -nostdlib
+
+$(BUILD_DIR)/truth_loader.$(ARCH).elf: $(BUILD_DIR)/truth_loader.$(ARCH).elf64
+	$(OBJCOPY) $< -O elf32-i386 $@
+
+
 tools: $(BUILD_DIR)/tools/truesign
 
 $(BUILD_DIR)/tools/truesign:
@@ -95,6 +115,15 @@ $(BUILD_DIR)/%.c.o: kernel/%.c include/truth/key.h
 $(BUILD_DIR)/%.S.o: kernel/%.S
 	mkdir -p $(shell dirname $@)
 	$(AS) -c $< -o $@ $(ASFLAGS)
+
+$(BUILD_DIR)/loader/%.S.o: loader/%.S
+	mkdir -p $(shell dirname $@)
+	$(AS) -c $< -o $@ $(LOADER_ASFLAGS)
+
+$(BUILD_DIR)/loader/%.c.o: loader/%.c
+	mkdir -p $(shell dirname $@)
+	$(CC) -c $< -o $@ $(LOADER_CFLAGS)
+
 
 $(BUILD_DIR)/key.pub: $(BUILD_DIR)/tools/truesign
 	$(BUILD_DIR)/tools/truesign generate $(BUILD_DIR)/key.priv $@
