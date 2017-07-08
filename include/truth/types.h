@@ -34,6 +34,7 @@ enum status {
     Error_Absent,
     Error_Full,
     Error_Empty,
+    Error_Go_Sit_By_A_Lake,
     // Not an error message, but rather the number of error messages.
     Error_Count,
 };
@@ -48,6 +49,7 @@ static inline const char *status_message(enum status status) {
         "Absent",
         "Full",
         "Empty",
+        "Go sit by a lake",
     };
     if (status >= Error_Count) {
         return "Bad error";
