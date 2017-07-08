@@ -63,31 +63,48 @@ struct region_vector *region_vector_new(void *addr, size_t size) {
 enum status checked region_alloc_random(struct region_vector *vect, size_t size, void **out) {
     assert(vect != NULL);
     assert(out != NULL);
+    // Randomness has some element of luck. We could pick an address we can't fit in multiple times in a row, so try this multiple times.
     for (size_t addresses_tried = 0; addresses_tried < Region_Vector_Max_Random_Addresses; ++addresses_tried) {
         void *addr = random_address(true, Page_Small);
         struct region_vector *v = vect;
+        // For section in region vector.
         do {
+            // For region in region vector section;
             for (size_t i = 0; i < v->regions_used && i < regions_count; ++i) {
-                if (v->regions[i].address >= addr && v->regions[i].size > size) {
-                    void *address = v->regions[i].address;
-                    size_t new_size = v->regions[i].size - size;
-                    if (new_size == 0) {
-                        v->regions_used--;
-                        if (i != v->regions_used) {
-                            v->regions[i] = v->regions[v->regions_used];
-                        }
-                    } else {
-                        v->regions[i].size = new_size;
-                        v->regions[i].address += size;
+                size_t prefix_size = addr - v->regions[i].address;
+                size_t after_random_addr_size = v->regions[i].size - prefix_size;
+                // If the random address is in this region.
+                if (v->regions[i].address <= addr && v->regions[i].address + v->regions[i].size >= addr && v->regions[i].address) {
+                    // If there isn't enough room to fit this region, pick a new address.
+                    if (after_random_addr_size < size) {
+                        // Break out of while loop.
+                        v = NULL;
+                        // Break out of for loop.
+                        break;
                     }
-                    *out = address;
+                    size_t suffix_size = after_random_addr_size - size;
+                    // If there is no suffix, adjust the size of the prefix and we're done.
+                    if (suffix_size == 0) {
+                        v->regions[i].size -= size;
+                    } else {
+                        // If there is not a prefix, make the current region a suffix.
+                        if (addr != v->regions[i].address) {
+                            v->regions[i].address += size;
+                            v->regions[i].size= suffix_size;
+                        } else { // There is both a prefix and a suffix
+                            v->regions[i].size = prefix_size;
+                            // Insert the suffix.
+                            region_free(vect, addr + size, suffix_size);
+                        }
+                    }
+                    *out = addr;
                     return Ok;
                 }
             }
             v = v->next;
         } while (v != NULL);
-
     }
+    // Either there isn't enough memory, it's too fragmented, or we're just plain unlucky.
     return Error_No_Memory;
 }
 
