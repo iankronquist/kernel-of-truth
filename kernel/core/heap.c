@@ -114,7 +114,7 @@ void kfree(void *addr) {
     assert((uint8_t *)addr + size > heap);
     assert((uint8_t *)addr + size <= heap + Heap_Size);
 
-    memset(heap, (int)Heap_Red_Zone_Fill, Page_Small);
+    memset(addr, (int)Heap_Red_Zone_Fill, size);
     Used -= size;
     region_free(heap_metadata_free, addr, size);
 }
