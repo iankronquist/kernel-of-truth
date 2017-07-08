@@ -10,7 +10,7 @@ int Entropy_Pool_Index = 0;
 uint8_t Entropy_Pool[Entropy_Pool_Size];
 
 
-void entropy_pool_seed(uint8_t byte, uint64_t i) {
+void entropy_pool_seed(uint8_t byte) {
     lock_acquire_writer(&entropy_lock);
     Entropy_Pool_Index++;
     Entropy_Pool[Entropy_Pool_Index] = byte;
@@ -25,7 +25,7 @@ uint8_t entropy_pool_consume(void) {
         lock_release_writer(&entropy_lock);
         uint64_t memory_jitter_entropy = memory_jitter_calculate();
         for (size_t i = 0; i < sizeof(memory_jitter_entropy); ++i) {
-            entropy_pool_seed(memory_jitter_entropy & 0xff, 0xdeadbeef);
+            entropy_pool_seed(memory_jitter_entropy & 0xff);
             memory_jitter_entropy >>= 8;
         }
         lock_acquire_writer(&entropy_lock);

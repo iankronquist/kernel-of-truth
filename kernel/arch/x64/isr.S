@@ -41,7 +41,6 @@ _service_interrupt:
 	testq $PIT_Interrupt_Number, 16*8(%rsp)
 	jne .dispatch
 	rdtsc
-	mov 16*8(%rsp), %rsi
 	mov %di, %ax
 	.extern entropy_pool_seed
 	call entropy_pool_seed
