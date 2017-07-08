@@ -8,13 +8,15 @@
 #define CPU_CR4_SMEP_BIT 20
 #define CPU_CR4_SMAP_BIT 21
 
+#define CPU_RDRAND (1 << 30)
+
 static inline void cpuid(uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx) {
     __asm__ volatile ("cpuid" :
             "=a"(*eax),
             "=b"(*ebx),
             "=c"(*ecx),
             "=d"(*edx)
-            : "0" (*eax), "2" (*ecx)
+            : "0" (*eax)
             :);
 }
 
@@ -24,6 +26,12 @@ static inline void cpu_flags_set_ac(void) {
 
 static inline void cpu_flags_clear_ac(void) {
     __asm__ volatile ("clac" ::: "cc");
+}
+
+static inline uint64_t cpu_get_ticks(void) {
+    uint32_t eax, edx;
+    __asm__ volatile ("rdtsc" : "=(eax)"(eax), "=(edx)"(edx)::);
+    return (((uint64_t)edx) << 32) | eax;
 }
 
 static inline void cpu_cr4_set_bit(int bit) {

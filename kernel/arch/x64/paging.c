@@ -35,6 +35,9 @@ static void paging_page_invalidate(void *virt) {
 
 #define Phys_Addr_Mask 0x000ffffffffff000
 
+// Memory_Writable implies NX. We need this for higher levels of the page table.
+#define Memory_Just_Writable (1 << 1)
+
 typedef uint64_t pl4_entry;
 typedef uint64_t pl3_entry;
 typedef uint64_t pl2_entry;
@@ -157,16 +160,12 @@ void debug_paging(void) {
     logf(Log_Debug, "kernel end: %p\n", Kernel_Virtual_End);
 }
 
-bool debug_me = false;
-
-enum status checked map_update_page(void *virtual_address,
-                                    enum memory_attributes permissions) {
+enum status checked map_update_page(void *virtual_address, enum memory_attributes permissions) {
 
     if ((permissions & Memory_Writable) && !(permissions & Memory_No_Execute))
     {
         return Error_Permissions;
-    } else if (!memory_is_lower_half(virtual_address) &&
-        (permissions & Memory_User_Access)) {
+    } else if (!memory_is_lower_half(virtual_address) && (permissions & Memory_User_Access)) {
         return Error_Permissions;
     }
 
@@ -175,42 +174,8 @@ enum status checked map_update_page(void *virtual_address,
     pl2_entry *level_two = get_pl2(virtual_address);
     pl1_entry *level_one = get_pl1(virtual_address);
 
-    if (!is_pl3_present(pl4, virtual_address)) {
-        phys_addr phys_address = physical_alloc();
-        if (phys_address == invalid_phys_addr) {
-            return Error_No_Memory;
-        }
-        pl4[pl4_index(virtual_address)] =
-            (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
-             Memory_Present);
-        paging_page_invalidate(level_three);
-    }
-
-    if (!is_pl2_present(level_three, virtual_address)) {
-        phys_addr phys_address = physical_alloc();
-        if (phys_address == invalid_phys_addr) {
-            return Error_No_Memory;
-        }
-        level_three[pl3_index(virtual_address)] =
-            (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
-             Memory_Present);
-        paging_page_invalidate(level_two);
-    }
-
-    if (!is_pl1_present(level_two, virtual_address)) {
-        phys_addr phys_address = physical_alloc();
-        if (phys_address == invalid_phys_addr) {
-            return Error_No_Memory;
-        }
-        level_two[pl2_index(virtual_address)] =
-            (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
-             Memory_Present);
-        paging_page_invalidate(level_one);
-    }
-
-    if (!is_Memory_Present(level_one, virtual_address)) {
-        logf(Log_Debug, "The virtual address %p is not present\n",
-             virtual_address);
+    if (!is_pl3_present(pl4, virtual_address) || !is_pl2_present(level_three, virtual_address) || !is_pl1_present(level_two, virtual_address) || !is_Memory_Present(level_one, virtual_address)) {
+        logf(Log_Debug, "The virtual address %p is not present\n", virtual_address);
         return Error_Absent;
     }
 
@@ -233,6 +198,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
         return Error_Permissions;
     }
 
+    phys_address = phys_address & ~Memory_Permissions_Mask;
     pl4_entry *pl4 = get_pl4();
     pl3_entry *level_three = get_pl3(virtual_address);
     pl2_entry *level_two = get_pl2(virtual_address);
@@ -243,9 +209,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
         if (phys_address == invalid_phys_addr) {
             return Error_No_Memory;
         }
-        pl4[pl4_index(virtual_address)] =
-            (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
-             Memory_Present);
+        pl4[pl4_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
         paging_page_invalidate(level_three);
     }
 
@@ -254,9 +218,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
         if (phys_address == invalid_phys_addr) {
             return Error_No_Memory;
         }
-        level_three[pl3_index(virtual_address)] =
-            (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
-             Memory_Present);
+        level_three[pl3_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
         paging_page_invalidate(level_two);
     }
 
@@ -265,9 +227,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
         if (phys_address == invalid_phys_addr) {
             return Error_No_Memory;
         }
-        level_two[pl2_index(virtual_address)] =
-            (phys_address | (permissions & Memory_Execute_Mask) | Memory_User_Access |
-             Memory_Present);
+        level_two[pl2_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
         paging_page_invalidate(level_one);
     }
 
@@ -277,8 +237,7 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
         return Error_Present;
     }
 
-    level_one[pl1_index(virtual_address)] =
-        (phys_address | permissions | Memory_Present);
+    level_one[pl1_index(virtual_address)] = (phys_address | permissions | Memory_Present);
     paging_page_invalidate(virtual_address);
 
     return Ok;
@@ -293,7 +252,7 @@ void unmap_page(void *address, bool free_physical_memory) {
 
 
         if (free_physical_memory) {
-            physical_free(align_page(level_one[pl1_index(address)]));
+            physical_free(level_one[pl1_index(address)] & ~Memory_Permissions_Mask);
         }
         level_one[pl1_index(address)] = free_page_entry;
         paging_page_invalidate(address);
