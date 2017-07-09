@@ -10,6 +10,17 @@ SECTIONS {
 		*(.text)
 	}
 
+	.init_array : {
+		*(.init_array*)
+		*(.ctors*)
+	}
+
+	.fini_array : {
+		*(.init_array*)
+		*(.dtors*)
+	}
+
+
 	.data BLOCK(4K) : ALIGN(4K) {
 		__text_end = .;
 		__data_start = .;
