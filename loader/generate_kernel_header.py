@@ -1,16 +1,10 @@
 import sys
 
-prefix = '''
-#pragma once
-
+prefix = '''#pragma once
 #include <stdint.h>
+uint8_t Kernel_ELF[]={'''
 
-uint8_t Kernel_ELF[] = {
-'''
-
-suffix = '''
-};
-
+suffix = '''};
 '''
 
 if __name__ == '__main__':
@@ -22,5 +16,5 @@ if __name__ == '__main__':
         header.write(prefix)
         with open(sys.argv[2], 'r') as elf:
             for byte in elf.read():
-                header.write('{}, '.format(hex(ord(byte))))
+                header.write('{},'.format(ord(byte)))
         header.write(suffix)
