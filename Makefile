@@ -16,6 +16,9 @@ MACROS := -dD \
 BUILD_DIR := build
 
 KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
+KERNEL64 := $(BUILD_DIR)/truth.$(ARCH).elf64
+LOADER := $(BUILD_DIR)/truth_loader.$(ARCH).elf
+LOADER64 := $(BUILD_DIR)/truth_loader.$(ARCH).elf64
 
 OBJ :=
 LOADER_OBJS :=
@@ -31,31 +34,27 @@ include modules/Makefile
 
 
 PYTHON := python
+OD := od
 
 LOADER_FLAGS := -O2 -MP -MMD \
 	-ffreestanding \
 	-Wall -Wextra \
 	-I ./include -mno-sse
 
-LOADER_CFLAGS := $(LOADER_FLAGS) -D __C__ -std=c11
+RANOM_NUMBER := $(strip $(shell $(OD) -vAn -N8 -tu8 < /dev/urandom))
+LOADER_CFLAGS := $(LOADER_FLAGS) -D __C__ -std=c11 -D Boot_Compile_Random_Number=$(RANOM_NUMBER)ul
 LOADER_ASFLAGS := $(LOADER_FLAGS) -D __ASM__
 
 
-
+KERNEL_FLAGS := -O2 -MP -MMD -mno-sse -Wall -Wextra -ffreestanding -I ./include -fPIC
 CC := $(TRIPLE)-gcc
-CFLAGS := -std=c11 -O2 -MP -MMD -mcmodel=kernel \
-	-ffreestanding -fstack-protector-all \
-	-Wall -Wextra \
-	-I ./include $(MACROS) -D __C__ -mno-sse
+CFLAGS := -std=c11 $(KERNEL_FLAGS) $(MACROS) -D __C__
 
 AS := $(TRIPLE)-gcc
-ASFLAGS := -O2 -MP -MMD -mcmodel=kernel \
-	-ffreestanding \
-	-Wall -Wextra \
-	-I ./include $(MACROS) -D __ASM__
+ASFLAGS := $(KERNEL_FLAGS) $(MACROS) -D __ASM__
 
-LD := $(TRIPLE)-gcc
-LDFLAGS := -nostdlib -ffreestanding -O2 -mcmodel=kernel
+LD := $(TRIPLE)-ld
+LDFLAGS := -nostdlib -O2 -soname="Kernel of Truth" -m elf_x86_64 -z max-page-size=0x1000 -fPIE -fPIC
 
 MODULE_CC := $(CC)
 MODULE_LD := $(TRIPLE)-ld
@@ -76,15 +75,15 @@ MAKE := make
 
 .PHONY: all clean debug iso release start start-log tools
 
-all: $(KERNEL) tools
+all: $(LOADER) $(MODULES)
 
-include/loader/kernel.h: $(KERNEL)
+include/loader/kernel.h: $(KERNEL64)
 	$(PYTHON) loader/generate_kernel_header.py $@ $<
 
-$(BUILD_DIR)/truth_loader.$(ARCH).elf64: loader/$(ARCH)/link.ld $(KERNEL)64 $(LOADER_OBJS)
+$(LOADER64): loader/$(ARCH)/link.ld $(LOADER_OBJS)
 	$(CC) -T loader/$(ARCH)/link.ld $(LOADER_OBJS) $(LOADER_CFLAGS) -o $@ $< -nostdlib
 
-$(BUILD_DIR)/truth_loader.$(ARCH).elf: $(BUILD_DIR)/truth_loader.$(ARCH).elf64
+$(LOADER): $(BUILD_DIR)/truth_loader.$(ARCH).elf64
 	$(OBJCOPY) $< -O elf32-i386 $@
 
 
@@ -97,6 +96,8 @@ debug: CFLAGS += -g -fsanitize=undefined
 debug: ASFLAGS += -g
 debug: all
 
+release: LOADER_CFLAGS += -Werror
+release: LOADER_ASFLAGS += -Werror
 release: CFLAGS += -Werror
 release: AFLAGS += -Werror
 release: all
@@ -105,8 +106,9 @@ release: all
 $(KERNEL): $(KERNEL)64 $(MODULES)
 	$(OBJCOPY) $< -O elf32-i386 $@
 
-$(KERNEL)64: kernel/arch/$(ARCH)/link.ld $(BUILD_DIR)/symbols.o
-	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) $(BUILD_DIR)/symbols.o -o $@ $(LDFLAGS)
+$(KERNEL64): kernel/arch/$(ARCH)/link.ld $(OBJ)
+	#$(LD) -T kernel/arch/$(ARCH)/link.ld $(BUILD_DIR)/symbols.o -o $@ $(OBJ)
+	$(LD) -T kernel/arch/$(ARCH)/link.ld -o $@ $(OBJ) -shared -soname="truth" -ffreestanding -nostdlib
 
 $(BUILD_DIR)/%.c.o: kernel/%.c include/truth/key.h
 	mkdir -p $(shell dirname $@)
@@ -120,7 +122,7 @@ $(BUILD_DIR)/loader/%.S.o: loader/%.S
 	mkdir -p $(shell dirname $@)
 	$(AS) -c $< -o $@ $(LOADER_ASFLAGS)
 
-$(BUILD_DIR)/loader/%.c.o: loader/%.c
+$(BUILD_DIR)/loader/%.c.o: loader/%.c include/loader/kernel.h
 	mkdir -p $(shell dirname $@)
 	$(CC) -c $< -o $@ $(LOADER_CFLAGS)
 
@@ -131,10 +133,10 @@ $(BUILD_DIR)/key.pub: $(BUILD_DIR)/tools/truesign
 include/truth/key.h: $(BUILD_DIR)/key.pub
 	$(BUILD_DIR)/tools/truesign header $(BUILD_DIR)/key.pub $@
 
-$(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld
-	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $(KERNEL)64 $(LDFLAGS)
-	nm $(KERNEL)64 | $(PYTHON) build_symbol_table.py $(BUILD_DIR)/symbols.S
-	$(AS) -c $(BUILD_DIR)/symbols.S -o $@ $(ASFLAGS)
+#$(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld
+#	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $(KERNEL)64 $(LDFLAGS)
+#	nm $(KERNEL)64 | $(PYTHON) build_symbol_table.py $(BUILD_DIR)/symbols.S
+#	$(AS) -c $(BUILD_DIR)/symbols.S -o $@ $(ASFLAGS)
 
 $(BUILD_DIR)/modules/%.ko: modules/% modules/link.ld $(BUILD_DIR)/key.pub
 	mkdir -p $(shell dirname $@)

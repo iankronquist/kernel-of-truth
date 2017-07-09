@@ -2,9 +2,9 @@ ENTRY(_start)
 
 SECTIONS {
 
-	. = 0xffffffff80000000 + 1M;
+	/*. = 0xffffffff80000000 + 1M;*/
 
-	.text : AT(1M) {
+	.text BLOCK(4K) : ALIGN(4K)  {
 		__kernel_start = .;
 		__text_start = .;
 		*(.text)

@@ -28,7 +28,7 @@ static bool physical_region_contains(uintptr_t start_a, uintptr_t end_a,
 
 // When populating the physical allocator, certain addresses are unavailable or
 // reserved. The multiboot tables give a sorted list of regions which are
-// useable memory, but some of these contain the kernel, modules, or the
+// usable memory, but some of these contain the kernel, modules, or the
 // multiboot tables themselves.
 static void insert_regions(struct multiboot_info *multiboot_tables) {
     struct reserved_region {

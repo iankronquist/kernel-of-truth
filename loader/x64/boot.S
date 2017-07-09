@@ -34,9 +34,18 @@ init_pl3:
 init_pl2:
 	.skip Page_Small
 
-.global init_pl1
-init_pl1:
+.global init_pl1_a
+init_pl1_a:
 	.skip Page_Small
+
+.global init_pl1_b
+init_pl1_b:
+	.skip Page_Small
+
+.global init_pl1_c
+init_pl1_c:
+	.skip Page_Small
+
 
 .global _init_stack_top
 init_stack:
@@ -52,7 +61,11 @@ Function(_start)
 	movl $_init_stack_top, %esp
 
 	# Save Multiboot info table physical address.
+	# Push a 0 in front of it so when we do a 64 bit pop later we don't
+	# underflow the stack.
+	pushl $0
 	pushl %ebx
+	movl %esp, %ebp
 
 	# Is this a multiboot compatible bootloader?
 	cmpl $Multiboot_Register_Magic, %eax
@@ -141,29 +154,12 @@ long_mode:
 	movw %cx, %es
 	movw %cx, %ss
 
-	movl $Boot_Loader_String, %edi
-	call boot_vga_log64
+	pop %rdi
+	call boot_loader_main
 	jmp boot_halt
 .bad_boot:
 	call boot_vga_log
 	jmp boot_halt
-
-# void boot_vga_log64(char *edi);
-Function(boot_vga_log64)
-	movl (Boot_VGA_Pointer), %ebx
-.write_char64:
-	movl (%edi), %eax
-	testb %al, %al
-	jz .out64
-	movb $0x0f, %ah
-	movw %ax, (%ebx)
-	addl $2, %ebx
-	inc %edi
-	jmp .write_char64
-.out64:
-	movl %ebx, (Boot_VGA_Pointer)
-	ret
-
 
 .code32
 
@@ -175,12 +171,14 @@ Function(boot_map_page_table)
 
 	movl $(init_pl2 + (Page_User | Page_Write | Page_Present)), init_pl3
 
-	movl $(init_pl1 + (Page_Write | Page_Present)), init_pl2
+	movl $(init_pl1_a + (Page_Write | Page_Present)), init_pl2
+	movl $(init_pl1_b + (Page_Write | Page_Present)), init_pl2 + 8
+	movl $(init_pl1_c + (Page_Write | Page_Present)), init_pl2 + 16
 
 	# Fractal mapping.
 	movl $(init_pl4 + (Page_Write | Page_Present)), init_pl4 + Kernel_Fractal_Page_Table_Index * 8
 	# Map first 4 MB except for the NULL page.
-	movl $(init_pl1 + 8), %edi
+	movl $(init_pl1_a + 8), %edi
 	movl $(0x1000 | Page_Present | Page_Write), %esi
 	movl $0x1ff, %ecx
 1:
@@ -188,6 +186,27 @@ Function(boot_map_page_table)
 	addl $8, %edi
 	addl $Page_Small, %esi
 	loop 1b
+
+	addl $Page_Small, %esi
+	# Map next pl1
+	movl $(init_pl1_b + 8), %edi
+	movl $0x200, %ecx
+1:
+	movl %esi, (%edi)
+	addl $8, %edi
+	addl $Page_Small, %esi
+	loop 1b
+
+	# Map next pl1
+	movl $(init_pl1_c + 8), %edi
+	movl $0x200, %ecx
+1:
+	movl %esi, (%edi)
+	addl $8, %edi
+	addl $Page_Small, %esi
+	loop 1b
+
+
 	ret
 
 
@@ -202,8 +221,6 @@ Function(boot_vga_clear)
 
 # void boot_vga_log(char *edi);
 Function(boot_vga_log)
-	movl (Boot_VGA_Pointer), %ebx
-.write_char:
 	movl (%edi), %eax
 	testb %al, %al
 	jz .out
@@ -211,9 +228,8 @@ Function(boot_vga_log)
 	movw %ax, (%ebx)
 	addl $2, %ebx
 	inc %edi
-	jmp .write_char
+	jmp boot_vga_log
 .out:
-	movl %ebx, (Boot_VGA_Pointer)
 	ret
 
 Function(boot_halt)
@@ -242,12 +258,6 @@ Function(boot_cpuid_available)
 	ret
 
 .section .data
-Boot_VGA_Pointer:
-.long Boot_VGA_Window_Start
-
-
-Boot_Loader_String:
-.asciz "Kernel of Truth Loader"
 
 Boot_Bad_Multiboot_Magic_String:
 .asciz "Bad multiboot magic. Incompatible bootloader."

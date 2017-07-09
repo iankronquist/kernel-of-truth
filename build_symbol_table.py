@@ -36,4 +36,6 @@ if __name__ == '__main__':
         _, symbol_type, name = line.split()
         if is_global_function(symbol_type):
             symbols.append(name)
+
+    symbols = []
     write_assembly(symbols, sys.argv[1])
