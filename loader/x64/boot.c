@@ -5,6 +5,27 @@
 #include <external/multiboot.h>
 
 #define ELF_BAD_BASE_ADDRESS (~0ul)
+// Memory_Writable implies NX. We need this for higher levels of the page table.
+#define Memory_Just_Writable (1 << 1)
+#define invalid_phys_addr 0xfff
+
+
+#define pl1_Count 512
+#define pl2_Count 512
+#define pl3_Count 512
+#define pl4_Count 512
+
+#define pl1_offset 12
+#define pl1_mask   0777
+#define pl2_offset 21
+#define pl2_mask   0777
+#define pl3_offset 30
+#define pl3_mask   0777
+#define pl4_offset 39
+#define pl4_mask   0777
+
+void boot_halt(void);
+
 
 size_t strlen(const char *str) {
     const char *c;
@@ -189,6 +210,122 @@ uint64_t boot_memory_jitter_calculate(void) {
     return entropy;
 }
 
+static inline size_t pl4_index(void *address) {
+    return (uintptr_t)address >> pl4_offset & pl4_mask;
+}
+
+static inline size_t pl3_index(void *address) {
+    return ((uintptr_t)address >> pl3_offset) & pl3_mask;
+}
+
+static inline size_t pl2_index(void *address) {
+    return ((uintptr_t)address >> pl2_offset) & pl2_mask;
+}
+
+static inline size_t pl1_index(void *address) {
+    return ((uintptr_t)address >> pl1_offset) & pl1_mask;
+}
+
+
+static uint64_t *get_pl4(void) {
+    return (uint64_t *)01777774004004004000000;
+}
+
+static uint64_t *get_pl3_index(size_t pl4_index) {
+    return (uint64_t *)(01777774004004000000000 | (pl4_index << 12));
+}
+
+static uint64_t *get_pl2_index(size_t pl4_index, size_t pl3_index) {
+    return (uint64_t *)(01777774004000000000000 | (pl4_index << 21) | (pl3_index << 12));
+}
+
+static uint64_t *get_pl1_index(size_t pl4_index, size_t pl3_index, size_t pl2_index) {
+    return (uint64_t *)(01777774000000000000000 | (pl4_index << 30) | (pl3_index << 21) | (pl2_index << 12));
+}
+
+static void paging_page_invalidate(void *virt) {
+    __asm__ volatile ("invlpg %0" ::"m"(*(uint8_t *)virt));
+}
+
+static phys_addr *get_pl3(void *address) {
+    return get_pl3_index(pl4_index(address));
+}
+
+static phys_addr *get_pl2(void *address) {
+    return get_pl2_index(pl4_index(address), pl3_index(address));
+}
+
+static phys_addr *get_pl1(void *address) {
+    return get_pl1_index(pl4_index(address), pl3_index(address), pl2_index(address));
+}
+
+static inline bool is_pl3_present(phys_addr *pl4, void *address) {
+    return (pl4[pl4_index(address)] & Memory_Present) == 1;
+}
+
+static inline bool is_pl2_present(phys_addr *level_three, void *address) {
+    return level_three[pl3_index(address)] & Memory_Present;
+}
+
+static inline bool is_pl1_present(phys_addr *level_two, void *address) {
+    return level_two[pl2_index(address)] & Memory_Present;
+}
+
+static inline bool is_Memory_Present(phys_addr *level_one, void *address) {
+    return level_one[pl1_index(address)] & Memory_Present;
+}
+
+
+
+enum status boot_map_page(void *virtual_address, phys_addr phys_address, enum memory_attributes permissions) {
+
+    phys_address = phys_address & ~Memory_Permissions_Mask;
+    phys_addr *level_four = get_pl4();
+    phys_addr *level_three = get_pl3(virtual_address);
+    phys_addr *level_two = get_pl2(virtual_address);
+    phys_addr *level_one = get_pl1(virtual_address);
+
+    if (!is_pl3_present(level_four, virtual_address)) {
+        phys_addr phys_address = (phys_addr)boot_allocator(Page_Small/KB);
+        if (phys_address == invalid_phys_addr) {
+            boot_vga_log64("l3");
+            return Error_No_Memory;
+        }
+        level_four[pl4_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
+        paging_page_invalidate(level_three);
+    }
+
+    if (!is_pl2_present(level_three, virtual_address)) {
+        phys_addr phys_address = (phys_addr)boot_allocator(Page_Small/KB);
+        if (phys_address == invalid_phys_addr) {
+            boot_vga_log64("l2");
+            return Error_No_Memory;
+        }
+        level_three[pl3_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
+        paging_page_invalidate(level_two);
+    }
+
+    if (!is_pl1_present(level_two, virtual_address)) {
+        phys_addr phys_address = (phys_addr)boot_allocator(Page_Small/KB);
+        if (phys_address == invalid_phys_addr) {
+            boot_vga_log64("l1");
+            return Error_No_Memory;
+        }
+        level_two[pl2_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
+        paging_page_invalidate(level_one);
+    }
+
+    if (is_Memory_Present(level_one, virtual_address)) {
+        boot_vga_log64("The virtual address is already present");
+        boot_log_number((uintptr_t)virtual_address);
+        return Error_Present;
+    }
+
+    level_one[pl1_index(virtual_address)] = (phys_address | permissions | Memory_Present);
+    paging_page_invalidate(virtual_address);
+
+    return Ok;
+}
 /*
 uint32_t boot_crc32(void *start, size_t size) {
     uint32_t checksum = 0;
@@ -278,39 +415,22 @@ bool boot_elf_relocate(uint64_t random_address, void *kernel_start, size_t kerne
     size_t dynstr_size;
     void *base;
 
-    const struct elf_section_header *sections = (const void *)kernel_start +
-                                                    header->e_shoff;
-    /*
+    const struct elf_section_header *sections = (const void *)kernel_start + header->e_shoff;
     if ((uint8_t *)(sections + header->e_shnum) > (uint8_t *)kernel_start + kernel_size) {
         boot_vga_log64("Section header out of bounds");
         return false;
         //return NULL;
     }
-    */
 
-    const char *strtab = kernel_start +
-                            sections[header->e_shstrndx].sh_offset;
+    const char *strtab = kernel_start + sections[header->e_shstrndx].sh_offset;
     if (strtab >= (const char *)header + kernel_size) {
         boot_vga_log64("Strtab out of bounds");
         return false;
         //return NULL;
     }
 
-    /*
-    for (size_t i = 0; i < header->e_shnum; ++i) {
-
-    boot_vga_log64("a 5 a");
-        //boot_vga_log64(&strtab[sections[i].sh_name]);
-        //boot_log_number(sections[i].sh_offset);
-        boot_log_number(sections[i].sh_type);
-    }
-    boot_vga_log64("a 6 a");
-    */
  
-    const char *dynstr = boot_elf_get_section(kernel_start,
-                                         kernel_size,
-                                         ".dynstr",
-                                         &dynstr_size);
+    const char *dynstr = boot_elf_get_section(kernel_start, kernel_size, ".dynstr", &dynstr_size);
     if (dynstr == NULL) {
         boot_vga_log64("Couldn't find section .dynstr");
         return false;
@@ -410,11 +530,88 @@ bool boot_kernel_init(uint64_t random_address, void *kernel_start, size_t kernel
     return true;
 }
 
+
+static enum status boot_elf_allocate_bss(void *random_address, void *kernel_start, size_t kernel_size) {
+
+    size_t bss_size;
+    void *bss = boot_elf_get_section(kernel_start, kernel_size, ".bss", &bss_size);
+    if (bss == NULL) {
+        boot_vga_log64("Couldn't find section .bss");
+        return Error_Invalid;
+    }
+    void *base_bss = bss - kernel_start + random_address;
+
+    phys_addr phys;
+    void *page;
+    for (page = base_bss, phys = (phys_addr)bss; phys < round_next((uintptr_t)bss + bss_size, Page_Small); page += Page_Small, phys += Page_Small) {
+        if (boot_map_page(page, phys, Memory_Writable) != Ok) {
+            return Error_Invalid;
+        }
+    }
+
+    return Ok;
+}
+
+static enum status boot_elf_kernel_enter(void *kernel_start, size_t kernel_size, struct multiboot_info *mb_info) {
+    void *base;
+    size_t funcs_size = 0;
+    bool funcs_size_found = false;
+    void (**funcs)(uint64_t) = NULL;
+    size_t dynamic_size;
+    const struct elf_dyn *dynamic = boot_elf_get_section(kernel_start, kernel_size, ".dynamic", &dynamic_size);
+    if (dynamic == NULL) {
+        boot_vga_log64("Couldn't find section .dynamic");
+        return Error_Invalid;
+    }
+
+    base = boot_elf_get_base_address(kernel_start, kernel_size);
+    if (base == NULL) {
+        boot_vga_log64("Bad base");
+        return Error_Invalid;
+    }
+
+    for (size_t i = 0; i < dynamic_size / sizeof(struct elf_dyn); ++i) {
+        if (dynamic[i].d_tag == DT_INIT_ARRAY) {
+            funcs = base + dynamic[i].d_un.d_ptr;
+        } else if (dynamic[i].d_tag == DT_INIT_ARRAYSZ) {
+            funcs_size = dynamic[i].d_un.d_val;
+            funcs_size_found = true;
+        }
+
+        if (funcs != NULL && funcs_size_found) {
+            break;
+        }
+    }
+
+
+    if (funcs == NULL || !funcs_size_found) {
+        boot_vga_log64("Kernel has no entry point");
+        return Ok;
+    } else if ((void *)funcs + funcs_size > kernel_start + kernel_size) {
+        boot_vga_log64("Kernel entry point out of bounds");
+        return Error_Invalid;
+    } else if (funcs_size / sizeof(enum status (*)(void)) != 1) {
+        boot_vga_log64("Kernel should have one entry point");
+        return Error_Invalid;
+    }
+    boot_vga_log64("call");
+    boot_log_number(funcs[0]);
+    boot_log_number(mb_info);
+    while(1);
+    funcs[0]((uintptr_t)mb_info);
+
+    // NOT REACHED
+    boot_vga_log64("Kernel main should never return!");
+    boot_halt();
+    return Error_Invalid;
+}
+
+
 void boot_loader_main(struct multiboot_info *multiboot_info_physical) {
     uint64_t random;
     size_t kernel_size = sizeof(Kernel_ELF);
     boot_vga_log64("Kernel of Truth Secondary Loader");
-    boot_log_number(multiboot_info_physical);
+    boot_log_number((uintptr_t)multiboot_info_physical);
     boot_allocator_init(multiboot_info_physical->mem_lower);
     do {
         random = boot_memory_jitter_calculate() ^ Boot_Compile_Random_Number;
@@ -425,5 +622,28 @@ void boot_loader_main(struct multiboot_info *multiboot_info_physical) {
 
     if (!boot_kernel_init(random, &Kernel_ELF, kernel_size)) {
         boot_vga_log64("Failed to load kernel");
+        return;
+    }
+
+    // FIXME W^X/DEP
+    void *kernel_random_base = (void *)random;
+    phys_addr kernel_physical_base = (phys_addr)&Kernel_ELF;
+    for (size_t i = 0; i < kernel_size / Page_Small; ++i, kernel_random_base += Page_Small, kernel_physical_base += Page_Small) {
+        boot_map_page(kernel_random_base, kernel_physical_base, Memory_Writable);
+    }
+    boot_vga_log64("ready to roll");
+
+    enum status status = boot_elf_allocate_bss(kernel_random_base, &Kernel_ELF, kernel_size);
+    if (status != Ok) {
+        boot_vga_log64("Couldn't allocate bss");
+        return;
+    };
+
+    boot_log_number(&Kernel_ELF);
+    boot_log_number(kernel_size);
+    boot_log_number(multiboot_info_physical);
+    status = boot_elf_kernel_enter(&Kernel_ELF, kernel_size, multiboot_info_physical);
+    if (status != Ok) {
+        boot_vga_log64("Couldn't enter kernel");
     }
 }
