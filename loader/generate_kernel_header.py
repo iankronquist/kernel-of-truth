@@ -2,7 +2,7 @@ import sys
 
 prefix = '''#pragma once
 #include <stdint.h>
-uint8_t Kernel_ELF[]={'''
+uint8_t Kernel_ELF[]__attribute__((aligned(0x1000)))={'''
 
 suffix = '''};
 '''

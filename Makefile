@@ -160,10 +160,10 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 start: debug
-	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio
+	$(QEMU) -kernel $(LOADER) $(QEMU_FLAGS) -monitor stdio
 
 start-log: debug
-	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall \
+	$(QEMU) -kernel $(LOADER) -d in_asm,cpu_reset,exec,int,guest_errors,pcall \
 		-D $(BUILD_DIR)/qemu.log $(QEMU_FLAGS) -monitor stdio
 
 -include $(OBJ:.o=.d)
