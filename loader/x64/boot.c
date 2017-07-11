@@ -9,6 +9,8 @@
 #define Memory_Just_Writable (1 << 1)
 #define invalid_phys_addr 0xfff
 
+extern uint8_t _binary_build_truth_x64_elf64_start[];
+extern uint8_t _binary_build_truth_x64_elf64_end[];
 
 #define pl1_Count 512
 #define pl2_Count 512
@@ -483,7 +485,30 @@ enum status boot_elf_relocate(void *kernel_start, size_t kernel_size) {
 
 
 
-enum status boot_kernel_init(void *kernel_start, size_t kernel_size) {
+static enum status boot_elf_allocate_bss(void *kernel_start, size_t kernel_size) {
+
+    size_t bss_size;
+    const void *bss = boot_elf_get_section(kernel_start, kernel_size, ".bss", &bss_size);
+    if (bss == NULL) {
+        boot_vga_log64("Couldn't find section .bss");
+        return Error_Invalid;
+    }
+    void *base_bss = bss - kernel_start;
+
+    phys_addr phys;
+    void *page;
+    for (page = base_bss, phys = (phys_addr)bss; phys < bss_size / Page_Small + 5; page += Page_Small, phys += Page_Small) {
+        if (boot_map_page(page, phys, Memory_Just_Writable) != Ok) {
+            return Error_Invalid;
+        }
+    }
+
+    return Ok;
+}
+
+
+enum status boot_kernel_init(void *random) {
+    const size_t kernel_size = _binary_build_truth_x64_elf64_end - _binary_build_truth_x64_elf64_start;
     const char elf_magic[] = ELFMAG;
     if (kernel_size < sizeof(struct elf64_header)) {
         boot_vga_log64("Kernel is way too small");
@@ -503,40 +528,43 @@ enum status boot_kernel_init(void *kernel_start, size_t kernel_size) {
     */
 
 
-    struct elf64_header *header = kernel_start;
+    // FIXME W^X/DEP
+    void *addr;
+    phys_addr page;
+    for (addr = random, page = (phys_addr)_binary_build_truth_x64_elf64_start;
+            addr < random + kernel_size;
+            addr += Page_Small, page += Page_Small) {
+        boot_map_page(addr, page, Memory_Just_Writable);
+    }
+
+    boot_log_number((uintptr_t)_binary_build_truth_x64_elf64_start);
+    struct elf64_header *header = (struct elf64_header *)_binary_build_truth_x64_elf64_start;
+    boot_log_number((uintptr_t)header);
+    boot_log_number((uintptr_t)header->e_shnum);
+    boot_log_number((uintptr_t)header->e_shoff);
+    boot_vga_log64(&header->e_ident);
     for (size_t i = 0; i < 4; ++i) {
         if (header->e_ident[i] != elf_magic[i]) {
             boot_vga_log64("Kernel isn't a valid ELF file");
             return Error_Invalid;
         }
     }
-    enum status status = boot_elf_relocate(kernel_start, kernel_size);
+
+    boot_vga_log64("ready to roll");
+
+    boot_log_number((uintptr_t)random);
+    boot_log_number((uintptr_t)random + kernel_size);
+    enum status status = boot_elf_allocate_bss(header, kernel_size);
+    if (status != Ok) {
+        boot_vga_log64("Couldn't allocate bss");
+        return status;
+    };
+
+    status = boot_elf_relocate((void *)random, kernel_size);
     if (status != Ok) {
         boot_vga_log64("Couldn't relocate elf");
         return status;
     }
-    return Ok;
-}
-
-
-static enum status boot_elf_allocate_bss(void *random_address, void *kernel_start, size_t kernel_size) {
-
-    size_t bss_size;
-    const void *bss = boot_elf_get_section(kernel_start, kernel_size, ".bss", &bss_size);
-    if (bss == NULL) {
-        boot_vga_log64("Couldn't find section .bss");
-        return Error_Invalid;
-    }
-    void *base_bss = bss - kernel_start + random_address;
-
-    phys_addr phys;
-    void *page;
-    for (page = base_bss, phys = (phys_addr)bss; phys < round_next((uintptr_t)bss + bss_size, Page_Small); page += Page_Small, phys += Page_Small) {
-        if (boot_map_page(page, phys, Memory_Just_Writable) != Ok) {
-            return Error_Invalid;
-        }
-    }
-
     return Ok;
 }
 
@@ -646,7 +674,7 @@ enum status boot_elf_kernel_enter(void *kernel_start, size_t kernel_size, struct
 
 void boot_loader_main(struct multiboot_info *multiboot_info_physical) {
     uint64_t random;
-    size_t kernel_size = sizeof(Kernel_ELF);
+    size_t kernel_size = _binary_build_truth_x64_elf64_end - _binary_build_truth_x64_elf64_start;
     boot_vga_log64("Kernel of Truth Secondary Loader");
     boot_allocator_init(multiboot_info_physical->mem_lower);
     do {
@@ -655,24 +683,8 @@ void boot_loader_main(struct multiboot_info *multiboot_info_physical) {
         random = align_as(random, Page_Small);
     } while (~0ul - random < kernel_size);
 
-    // FIXME W^X/DEP
-    void *kernel_random_base = (void *)random;
-    phys_addr kernel_physical_base = (phys_addr)&Kernel_ELF;
-    for (size_t i = 0; i < round_next(kernel_size, Page_Small) / Page_Small; ++i, kernel_random_base += Page_Small, kernel_physical_base += Page_Small) {
-        boot_map_page(kernel_random_base, kernel_physical_base, Memory_Just_Writable);
-    }
-    boot_vga_log64("ready to roll");
 
-    boot_log_number(random);
-    boot_log_number((uintptr_t)random + kernel_size);
-    boot_log_number((uintptr_t)kernel_random_base);
-    enum status status = boot_elf_allocate_bss(kernel_random_base, &Kernel_ELF, kernel_size);
-    if (status != Ok) {
-        boot_vga_log64("Couldn't allocate bss");
-        return;
-    };
-
-    status = boot_kernel_init((void *)random, kernel_size);
+    enum status status = boot_kernel_init((void *)random);
     if (status != Ok) {
         boot_vga_log64("Failed to load kernel");
         return;

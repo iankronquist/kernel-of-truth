@@ -77,15 +77,12 @@ MAKE := make
 
 all: $(LOADER) $(MODULES)
 
-include/loader/kernel.h: $(KERNEL64)
-	$(PYTHON) loader/generate_kernel_header.py $@ $<
 
-$(LOADER64): loader/$(ARCH)/link.ld $(LOADER_OBJS)
+$(LOADER64): loader/$(ARCH)/link.ld $(LOADER_OBJS) $(KERNEL64)
 	$(CC) -T loader/$(ARCH)/link.ld $(LOADER_OBJS) $(LOADER_CFLAGS) -o $@ $< -nostdlib
 
-$(LOADER): $(BUILD_DIR)/truth_loader.$(ARCH).elf64
+$(LOADER): $(LOADER64)
 	$(OBJCOPY) $< -O elf32-i386 $@
-
 
 tools: $(BUILD_DIR)/tools/truesign
 
@@ -107,7 +104,6 @@ $(KERNEL): $(KERNEL)64 $(MODULES)
 	$(OBJCOPY) $< -O elf32-i386 $@
 
 $(KERNEL64): kernel/arch/$(ARCH)/link.ld $(OBJ)
-	#$(LD) -T kernel/arch/$(ARCH)/link.ld $(BUILD_DIR)/symbols.o -o $@ $(OBJ)
 	$(LD) -T kernel/arch/$(ARCH)/link.ld -o $@ $(OBJ) -shared -soname="truth" -ffreestanding -nostdlib
 
 $(BUILD_DIR)/%.c.o: kernel/%.c include/truth/key.h

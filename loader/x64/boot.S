@@ -276,3 +276,12 @@ Boot_No_NX_Bit_String:
 
 Boot_No_Syscall_String:
 .asciz "Syscall instruction not supported. Incompatible hardware."
+
+.section .data.kernel
+.align Page_Small
+.global _binary_build_truth_x64_elf64_start
+.global _binary_build_truth_x64_elf64_end
+_binary_build_truth_x64_elf64_start:
+.incbin "build/truth.x64.elf64"
+_binary_build_truth_x64_elf64_end:
+
