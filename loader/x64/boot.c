@@ -28,6 +28,15 @@ extern uint8_t _binary_build_truth_x64_elf64_end[];
 void boot_halt(void);
 
 
+// FIXME: This is inefficient.
+void *memset(void *b, int c, size_t len) {
+    uint8_t *buf = b;
+    for (size_t i = 0; i < len; ++i) {
+        buf[i] = c;
+    }
+    return b;
+}
+
 size_t strlen(const char *str) {
     const char *c;
     for (c = str; *c != '\0'; ++c) { }
@@ -493,11 +502,16 @@ static enum status boot_elf_allocate_bss(void *kernel_start, size_t kernel_size)
 
     phys_addr phys;
     void *page;
-    for (page = base_bss, phys = (phys_addr)bss; phys < bss_size / Page_Small + 5; page += Page_Small, phys += Page_Small) {
+    for (page = base_bss, phys = (phys_addr)bss; phys < ((bss_size / Page_Small) + 5); page += Page_Small, phys += Page_Small) {
         if (boot_map_page(page, phys, Memory_Just_Writable) != Ok) {
             return Error_Invalid;
         }
     }
+
+    boot_vga_log64("bss");
+    boot_log_number(base_bss);
+    boot_log_number(base_bss + bss_size + (5 * Page_Small));
+    memset(base_bss, 0, bss_size + (5 * Page_Small));
 
     return Ok;
 }
@@ -541,7 +555,7 @@ enum status boot_kernel_init(void *random) {
         }
     }
 
-    enum status status = boot_elf_allocate_bss(header, kernel_size);
+    enum status status = boot_elf_allocate_bss(random, kernel_size);
     if (status != Ok) {
         boot_vga_log64("Couldn't allocate bss");
         return status;
@@ -606,7 +620,7 @@ enum status boot_elf_kernel_enter(void *kernel_start, size_t kernel_size, struct
     void *base;
     size_t funcs_size = 0;
     bool funcs_size_found = false;
-    void (**entrypoint)(uint64_t) = NULL;
+    void (**entrypoint)(void *, size_t, struct multiboot_info *) = NULL;
     size_t dynamic_size;
     const struct elf_dyn *dynamic = boot_elf_get_section(kernel_start, kernel_size, ".dynamic", &dynamic_size);
     if (dynamic == NULL) {
@@ -645,7 +659,7 @@ enum status boot_elf_kernel_enter(void *kernel_start, size_t kernel_size, struct
         return Error_Invalid;
     }
 
-    entrypoint[0]((uintptr_t)mb_info);
+    entrypoint[0](kernel_start, kernel_size, mb_info);
 
     // NOT REACHED
     boot_vga_log64("Kernel main should never return!");
