@@ -1,7 +1,6 @@
 #include <truth/types.h>
 #include <truth/memory.h>
 #include <truth/elf.h>
-#include <loader/kernel.h>
 #include <external/multiboot.h>
 
 #define ELF_BAD_BASE_ADDRESS (~0ul)

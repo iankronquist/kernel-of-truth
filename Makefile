@@ -113,11 +113,11 @@ $(BUILD_DIR)/%.S.o: kernel/%.S
 	mkdir -p $(shell dirname $@)
 	$(AS) -c $< -o $@ $(ASFLAGS)
 
-$(BUILD_DIR)/loader/%.S.o: loader/%.S
+$(BUILD_DIR)/loader/%.S.o: loader/%.S $(KERNEL64)
 	mkdir -p $(shell dirname $@)
 	$(AS) -c $< -o $@ $(LOADER_ASFLAGS)
 
-$(BUILD_DIR)/loader/%.c.o: loader/%.c include/loader/kernel.h
+$(BUILD_DIR)/loader/%.c.o: loader/%.c
 	mkdir -p $(shell dirname $@)
 	$(CC) -c $< -o $@ $(LOADER_CFLAGS)
 
