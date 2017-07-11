@@ -10,6 +10,8 @@
 
 extern uint8_t _binary_build_truth_x64_elf64_start[];
 extern uint8_t _binary_build_truth_x64_elf64_end[];
+#define Boot_Kernel_Physical_Start ((phys_addr)_binary_build_truth_x64_elf64_start)
+#define Boot_Kernel_Physical_End ((phys_addr)_binary_build_truth_x64_elf64_end)
 
 #define pl1_Count 512
 #define pl2_Count 512
@@ -518,7 +520,7 @@ static enum status boot_elf_allocate_bss(void *kernel_start, size_t kernel_size)
 
 
 enum status boot_kernel_init(void *random) {
-    const size_t kernel_size = _binary_build_truth_x64_elf64_end - _binary_build_truth_x64_elf64_start;
+    const size_t kernel_size = Boot_Kernel_Physical_End - Boot_Kernel_Physical_Start;
     const char elf_magic[] = ELFMAG;
     if (kernel_size < sizeof(struct elf64_header)) {
         boot_vga_log64("Kernel is way too small");
@@ -541,13 +543,13 @@ enum status boot_kernel_init(void *random) {
     // FIXME W^X/DEP
     void *addr;
     phys_addr page;
-    for (addr = random, page = (phys_addr)_binary_build_truth_x64_elf64_start;
+    for (addr = random, page = Boot_Kernel_Physical_Start;
             addr < random + kernel_size;
             addr += Page_Small, page += Page_Small) {
         boot_map_page(addr, page, Memory_Just_Writable);
     }
 
-    struct elf64_header *header = (struct elf64_header *)_binary_build_truth_x64_elf64_start;
+    struct elf64_header *header = (struct elf64_header *)Boot_Kernel_Physical_Start;
     for (size_t i = 0; i < 4; ++i) {
         if (header->e_ident[i] != elf_magic[i]) {
             boot_vga_log64("Kernel isn't a valid ELF file");
@@ -555,7 +557,7 @@ enum status boot_kernel_init(void *random) {
         }
     }
 
-    enum status status = boot_elf_allocate_bss(random, kernel_size);
+    enum status status = boot_elf_allocate_bss(random, Boot_Kernel_Physical_Start, kernel_size);
     if (status != Ok) {
         boot_vga_log64("Couldn't allocate bss");
         return status;
@@ -571,12 +573,9 @@ enum status boot_kernel_init(void *random) {
 
 
 enum status boot_elf_kernel_enter(void *kernel_start, size_t kernel_size, struct multiboot_info *mb_info) {
-    void *base;
-    size_t funcs_size = 0;
-    bool funcs_size_found = false;
     void (*entrypoint)(void *, size_t, struct multiboot_info *) = NULL;
     struct elf64_header *header = kernel_start;
-    base = boot_elf_get_base_address(kernel_start, kernel_size);
+    void *base = boot_elf_get_base_address(kernel_start, kernel_size);
 
     entrypoint = kernel_start + (uintptr_t)base + header->e_entry;
 
@@ -591,7 +590,7 @@ enum status boot_elf_kernel_enter(void *kernel_start, size_t kernel_size, struct
 
 void boot_loader_main(struct multiboot_info *multiboot_info_physical) {
     uint64_t random;
-    size_t kernel_size = _binary_build_truth_x64_elf64_end - _binary_build_truth_x64_elf64_start;
+    size_t kernel_size = Boot_Kernel_Physical_End - Boot_Kernel_Physical_Start;
     boot_vga_log64("Kernel of Truth Secondary Loader");
     boot_allocator_init(multiboot_info_physical->mem_lower);
     do {
