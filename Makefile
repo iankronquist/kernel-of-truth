@@ -33,7 +33,6 @@ include kernel/device/Makefile
 include modules/Makefile
 
 
-PYTHON := python
 OD := od
 
 LOADER_FLAGS := -O2 -MP -MMD \
