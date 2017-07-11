@@ -47,8 +47,7 @@ _init_stack_top:
 .code64
 _start:
 	# Initialize stack pointer.
-	# lea _init_stack_top(%rip), %rsi
-	movq %rsi, %rsp
+	lea _init_stack_top@GOTPCREL(%rip), %rsp
 	call set_stack_guard
 	call *kernel_main@GOTPCREL(%rip)
 
