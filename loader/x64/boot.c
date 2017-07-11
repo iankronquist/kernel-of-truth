@@ -290,7 +290,6 @@ enum status boot_map_page(void *virtual_address, phys_addr phys_address, enum me
     if (!is_pl3_present(level_four, virtual_address)) {
         phys_addr phys_address = (phys_addr)boot_allocator(Page_Small/KB);
         if (phys_address == invalid_phys_addr) {
-            boot_vga_log64("l3");
             return Error_No_Memory;
         }
         level_four[pl4_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
@@ -300,7 +299,6 @@ enum status boot_map_page(void *virtual_address, phys_addr phys_address, enum me
     if (!is_pl2_present(level_three, virtual_address)) {
         phys_addr phys_address = (phys_addr)boot_allocator(Page_Small/KB);
         if (phys_address == invalid_phys_addr) {
-            boot_vga_log64("l2");
             return Error_No_Memory;
         }
         level_three[pl3_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
@@ -310,7 +308,6 @@ enum status boot_map_page(void *virtual_address, phys_addr phys_address, enum me
     if (!is_pl1_present(level_two, virtual_address)) {
         phys_addr phys_address = (phys_addr)boot_allocator(Page_Small/KB);
         if (phys_address == invalid_phys_addr) {
-            boot_vga_log64("l1");
             return Error_No_Memory;
         }
         level_two[pl2_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
@@ -544,8 +541,6 @@ enum status boot_kernel_init(void *random) {
             return Error_Invalid;
         }
     }
-
-    boot_vga_log64("ready to roll");
 
     enum status status = boot_elf_allocate_bss(header, kernel_size);
     if (status != Ok) {

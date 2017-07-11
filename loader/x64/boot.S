@@ -18,7 +18,6 @@
 .long MB_Magic
 .long MB_Flags
 .long MB_Checksum
-
 .section .bss, "aw", @nobits
 .align Page_Small
 
