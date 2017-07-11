@@ -220,19 +220,19 @@ uint64_t boot_memory_jitter_calculate(void) {
     return entropy;
 }
 
-static inline size_t pl4_index(void *address) {
+static inline size_t pl4_index(const void *address) {
     return (uintptr_t)address >> pl4_offset & pl4_mask;
 }
 
-static inline size_t pl3_index(void *address) {
+static inline size_t pl3_index(const void *address) {
     return ((uintptr_t)address >> pl3_offset) & pl3_mask;
 }
 
-static inline size_t pl2_index(void *address) {
+static inline size_t pl2_index(const void *address) {
     return ((uintptr_t)address >> pl2_offset) & pl2_mask;
 }
 
-static inline size_t pl1_index(void *address) {
+static inline size_t pl1_index(const void *address) {
     return ((uintptr_t)address >> pl1_offset) & pl1_mask;
 }
 
@@ -253,41 +253,41 @@ static uint64_t *get_pl1_index(size_t pl4_index, size_t pl3_index, size_t pl2_in
     return (uint64_t *)(01777774000000000000000 | (pl4_index << 30) | (pl3_index << 21) | (pl2_index << 12));
 }
 
-static void paging_page_invalidate(void *virt) {
+static void paging_page_invalidate(const void *virt) {
     __asm__ volatile ("invlpg %0" ::"m"(*(uint8_t *)virt));
 }
 
-static phys_addr *get_pl3(void *address) {
+static phys_addr *get_pl3(const void *address) {
     return get_pl3_index(pl4_index(address));
 }
 
-static phys_addr *get_pl2(void *address) {
+static phys_addr *get_pl2(const void *address) {
     return get_pl2_index(pl4_index(address), pl3_index(address));
 }
 
-static phys_addr *get_pl1(void *address) {
+static phys_addr *get_pl1(const void *address) {
     return get_pl1_index(pl4_index(address), pl3_index(address), pl2_index(address));
 }
 
-static inline bool is_pl3_present(phys_addr *pl4, void *address) {
+static inline bool is_pl3_present(phys_addr *pl4, const void *address) {
     return (pl4[pl4_index(address)] & Memory_Present) == 1;
 }
 
-static inline bool is_pl2_present(phys_addr *level_three, void *address) {
+static inline bool is_pl2_present(phys_addr *level_three, const void *address) {
     return level_three[pl3_index(address)] & Memory_Present;
 }
 
-static inline bool is_pl1_present(phys_addr *level_two, void *address) {
+static inline bool is_pl1_present(phys_addr *level_two, const void *address) {
     return level_two[pl2_index(address)] & Memory_Present;
 }
 
-static inline bool is_Memory_Present(phys_addr *level_one, void *address) {
+static inline bool is_Memory_Present(phys_addr *level_one, const void *address) {
     return level_one[pl1_index(address)] & Memory_Present;
 }
 
 
 
-enum status boot_map_page(void *virtual_address, phys_addr phys_address, enum memory_attributes permissions) {
+enum status boot_map_page(const void *virtual_address, phys_addr phys_address, enum memory_attributes permissions) {
 
     phys_address = phys_address & ~Memory_Permissions_Mask;
     phys_addr *level_four = get_pl4();
