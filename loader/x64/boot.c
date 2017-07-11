@@ -537,12 +537,7 @@ enum status boot_kernel_init(void *random) {
         boot_map_page(addr, page, Memory_Just_Writable);
     }
 
-    boot_log_number((uintptr_t)_binary_build_truth_x64_elf64_start);
     struct elf64_header *header = (struct elf64_header *)_binary_build_truth_x64_elf64_start;
-    boot_log_number((uintptr_t)header);
-    boot_log_number((uintptr_t)header->e_shnum);
-    boot_log_number((uintptr_t)header->e_shoff);
-    boot_vga_log64(&header->e_ident);
     for (size_t i = 0; i < 4; ++i) {
         if (header->e_ident[i] != elf_magic[i]) {
             boot_vga_log64("Kernel isn't a valid ELF file");
@@ -552,8 +547,6 @@ enum status boot_kernel_init(void *random) {
 
     boot_vga_log64("ready to roll");
 
-    boot_log_number((uintptr_t)random);
-    boot_log_number((uintptr_t)random + kernel_size);
     enum status status = boot_elf_allocate_bss(header, kernel_size);
     if (status != Ok) {
         boot_vga_log64("Couldn't allocate bss");
