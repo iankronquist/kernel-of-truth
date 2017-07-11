@@ -129,20 +129,14 @@ $(BUILD_DIR)/key.pub: $(BUILD_DIR)/tools/truesign
 include/truth/key.h: $(BUILD_DIR)/key.pub
 	$(BUILD_DIR)/tools/truesign header $(BUILD_DIR)/key.pub $@
 
-#$(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld
-#	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $(KERNEL)64 $(LDFLAGS)
-#	nm $(KERNEL)64 | $(PYTHON) build_symbol_table.py $(BUILD_DIR)/symbols.S
-#	$(AS) -c $(BUILD_DIR)/symbols.S -o $@ $(ASFLAGS)
-
 $(BUILD_DIR)/modules/%.ko: modules/% modules/link.ld $(BUILD_DIR)/key.pub
 	mkdir -p $(shell dirname $@)
 	$(MAKE) -C $< OUTFILE='../../$@' CFLAGS='$(MODULE_CFLAGS)' CC='$(MODULE_CC)' \
 		BUILD_DIR='../../$(BUILD_DIR)' LD='$(MODULE_LD)' \
 		AS='$(MODULE_AS)'
 
-tags: kernel/arch/$(ARCH)/*.c kernel/core/*.c kernel/device/*.c \
-		include/arch/$(ARCH)/*.h include/truth/*.h
-	ctags -R kernel include
+tags: kernel/arch/$(ARCH)/*.c kernel/core/*.c kernel/device/*.c include/arch/$(ARCH)/*.h include/truth/*.h loader/$(ARCH)/*.c
+	ctags -R kernel include loader
 
 iso: $(BUILD_DIR)/truth.iso
 
