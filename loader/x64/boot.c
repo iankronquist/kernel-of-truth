@@ -569,52 +569,6 @@ enum status boot_kernel_init(void *random) {
     return Ok;
 }
 
-/*
-void *boot_debugelf_kernel_enter(void *kernel_start, size_t kernel_size, struct multiboot_info *mb_info) {
-    void *base;
-    size_t funcs_size = 0;
-    bool funcs_size_found = false;
-    void (**funcs)(uint64_t) = NULL;
-    size_t dynamic_size;
-    const struct elf_dyn *dynamic = boot_elf_get_section(kernel_start, kernel_size, ".dynamic", &dynamic_size);
-    if (dynamic == NULL) {
-        boot_vga_log64("Couldn't find section .dynamic");
-        return NULL;
-    }
-
-    base = boot_elf_get_base_address(kernel_start, kernel_size);
-    if (base == NULL) {
-        boot_vga_log64("Bad base");
-        return NULL;
-    }
-
-    for (size_t i = 0; i < dynamic_size / sizeof(struct elf_dyn); ++i) {
-        if (dynamic[i].d_tag == DT_INIT_ARRAY) {
-            funcs = base + dynamic[i].d_un.d_ptr;
-        } else if (dynamic[i].d_tag == DT_INIT_ARRAYSZ) {
-            funcs_size = dynamic[i].d_un.d_val;
-            funcs_size_found = true;
-        }
-
-        if (funcs != NULL && funcs_size_found) {
-            break;
-        }
-    }
-
-
-    if (funcs == NULL || !funcs_size_found) {
-        boot_vga_log64("Kernel has no entry point");
-        return NULL;
-    } else if ((void *)funcs + funcs_size > kernel_start + kernel_size) {
-        boot_vga_log64("Kernel entry point out of bounds");
-        return NULL;
-    } else if (funcs_size / sizeof(enum status (*)(void)) != 1) {
-        boot_vga_log64("Kernel should have one entry point");
-        return NULL;
-    }
-    return funcs;
-}
-*/
 
 enum status boot_elf_kernel_enter(void *kernel_start, size_t kernel_size, struct multiboot_info *mb_info) {
     void *base;
