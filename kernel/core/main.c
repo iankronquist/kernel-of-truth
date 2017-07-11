@@ -16,7 +16,7 @@
 #include <truth/device/ps2_keyboard.h>
 
 
-constructor void kernel_main(uint64_t multiboot_tables) {
+void kernel_main(void *kernel_start, size_t kernel_size, struct multiboot_tables *multiboot_tables) {
     assert_ok(log_init(Log_Debug, "log"));
     log(Log_None, Logo);
     logf(Log_None, "\tCPU Time %ld\n", cpu_time());

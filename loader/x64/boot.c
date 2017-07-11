@@ -574,46 +574,13 @@ enum status boot_elf_kernel_enter(void *kernel_start, size_t kernel_size, struct
     void *base;
     size_t funcs_size = 0;
     bool funcs_size_found = false;
-    void (**entrypoint)(void *, size_t, struct multiboot_info *) = NULL;
-    size_t dynamic_size;
-    const struct elf_dyn *dynamic = boot_elf_get_section(kernel_start, kernel_size, ".dynamic", &dynamic_size);
-    if (dynamic == NULL) {
-        boot_vga_log64("Couldn't find section .dynamic");
-        return Error_Invalid;
-    }
-
+    void (*entrypoint)(void *, size_t, struct multiboot_info *) = NULL;
+    struct elf64_header *header = kernel_start;
     base = boot_elf_get_base_address(kernel_start, kernel_size);
-    if (base == NULL) {
-        boot_vga_log64("Bad base");
-        return Error_Invalid;
-    }
 
-    for (size_t i = 0; i < dynamic_size / sizeof(struct elf_dyn); ++i) {
-        if (dynamic[i].d_tag == DT_INIT_ARRAY) {
-            entrypoint = kernel_start + (uintptr_t)base + dynamic[i].d_un.d_ptr;
-        } else if (dynamic[i].d_tag == DT_INIT_ARRAYSZ) {
-            funcs_size = dynamic[i].d_un.d_val;
-            funcs_size_found = true;
-        }
+    entrypoint = kernel_start + (uintptr_t)base + header->e_entry;
 
-        if (entrypoint != NULL && funcs_size_found) {
-            break;
-        }
-    }
-
-
-    if (entrypoint == NULL || !funcs_size_found) {
-        boot_vga_log64("Kernel has no entry point");
-        return Ok;
-    } else if ((void *)entrypoint + funcs_size > kernel_start + kernel_size) {
-        boot_vga_log64("Kernel entry point out of bounds");
-        return Error_Invalid;
-    } else if (funcs_size / sizeof(enum status (*)(void)) != 1) {
-        boot_vga_log64("Kernel should have one entry point");
-        return Error_Invalid;
-    }
-
-    entrypoint[0](kernel_start, kernel_size, mb_info);
+    entrypoint(kernel_start, kernel_size, mb_info);
 
     // NOT REACHED
     boot_vga_log64("Kernel main should never return!");

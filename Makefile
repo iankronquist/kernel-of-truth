@@ -103,7 +103,7 @@ $(KERNEL): $(KERNEL)64 $(MODULES)
 	$(OBJCOPY) $< -O elf32-i386 $@
 
 $(KERNEL64): kernel/arch/$(ARCH)/link.ld $(OBJ)
-	$(LD) -T kernel/arch/$(ARCH)/link.ld -o $@ $(OBJ) -shared -soname="truth" -ffreestanding -nostdlib
+	$(LD) -T kernel/arch/$(ARCH)/link.ld -o $@ $(OBJ) -shared -soname="truth" -ffreestanding -nostdlib -z max-page-size=0x1000 -e kernel_main
 
 $(BUILD_DIR)/%.c.o: kernel/%.c include/truth/key.h
 	mkdir -p $(shell dirname $@)
