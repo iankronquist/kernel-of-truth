@@ -493,7 +493,7 @@ static enum status boot_elf_allocate_bss(void *kernel_start, size_t kernel_size)
         boot_vga_log64("Couldn't find section .bss");
         return Error_Invalid;
     }
-    void *base_bss = bss - kernel_start;
+    void *base_bss = (void *)(bss - kernel_start);
 
     phys_addr phys;
     void *page;
@@ -650,12 +650,7 @@ enum status boot_elf_kernel_enter(void *kernel_start, size_t kernel_size, struct
         boot_vga_log64("Kernel should have one entry point");
         return Error_Invalid;
     }
-    boot_vga_log64("call");
 
-    //boot_log_number((uintptr_t)&funcs[0]);
-    //boot_log_number((uintptr_t)funcs[0]);
-    boot_log_number((uintptr_t)entrypoint);
-    boot_log_number(*(uint64_t *)(entrypoint));
     entrypoint[0]((uintptr_t)mb_info);
 
     // NOT REACHED
