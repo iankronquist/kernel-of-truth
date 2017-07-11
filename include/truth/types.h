@@ -78,9 +78,9 @@ extern uint8_t __kernel_end;
 
 #define container_of(child, parent_type, parent_entry) \
     ((parent_type)(child - &((parent_type)NULL)->parent_entry))
-#define align_as(value, alignment) (value & ~(alignment - 1))
+#define align_as(value, alignment) ((value) & ~((alignment) - 1))
 #define is_power_of_two(value) ((((value) - 1) & value) == 0)
-#define is_aligned(value, alignment) !(value & (alignment - 1))
+#define is_aligned(value, alignment) !((value) & ((alignment) - 1))
 #define round_next(x, y) (((x) + (y - 1)) & ~(y - 1))
 #define static_array_count(x) (sizeof(x) / sizeof(x)[0])
 
