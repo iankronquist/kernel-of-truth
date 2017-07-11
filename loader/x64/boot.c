@@ -490,9 +490,7 @@ enum status boot_elf_relocate(void *kernel_start, size_t kernel_size) {
 }
 
 
-
-
-static enum status boot_elf_allocate_bss(void *kernel_start, size_t kernel_size) {
+static enum status boot_elf_allocate_bss(void *kernel_start, phys_addr kernel_phys, size_t kernel_size) {
 
     size_t bss_size;
     const void *bss = boot_elf_get_section(kernel_start, kernel_size, ".bss", &bss_size);
@@ -500,20 +498,19 @@ static enum status boot_elf_allocate_bss(void *kernel_start, size_t kernel_size)
         boot_vga_log64("Couldn't find section .bss");
         return Error_Invalid;
     }
-    void *base_bss = (void *)(bss - kernel_start);
+    size_t bss_offset = bss - kernel_start;
+    const void *bss_end = (void *)round_next((uintptr_t)bss + bss_size, Page_Small);
 
-    phys_addr phys;
-    void *page;
-    for (page = base_bss, phys = (phys_addr)bss; phys < ((bss_size / Page_Small) + 5); page += Page_Small, phys += Page_Small) {
-        if (boot_map_page(page, phys, Memory_Just_Writable) != Ok) {
+    phys_addr page = align_as(kernel_phys + bss_offset, Page_Small);
+    const void *addr = bss;
+    for (; addr < bss_end; addr += Page_Small, page += Page_Small) {
+        if (boot_map_page(addr, page, Memory_Just_Writable) != Ok) {
             return Error_Invalid;
         }
     }
 
     boot_vga_log64("bss");
-    boot_log_number(base_bss);
-    boot_log_number(base_bss + bss_size + (5 * Page_Small));
-    memset(base_bss, 0, bss_size + (5 * Page_Small));
+    memset((void *)bss, 0, bss_size);
 
     return Ok;
 }
