@@ -181,8 +181,6 @@ Function(boot_map_page_table)
 	movl $(init_pl1_b + (Page_Write | Page_Present)), init_pl2 + 8
 	movl $(init_pl1_c + (Page_Write | Page_Present)), init_pl2 + 16
 
-	# Fractal mapping.
-	movl $(init_pl4 + (Page_Write | Page_Present)), init_pl4 + Kernel_Fractal_Page_Table_Index * 8
 	# Map first 4 MB except for the NULL page.
 	movl $(init_pl1_a + 8), %edi
 	movl $(0x1000 | Page_Present | Page_Write), %esi

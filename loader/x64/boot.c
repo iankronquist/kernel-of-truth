@@ -9,8 +9,12 @@
 #define Memory_Just_Writable (1 << 1)
 #define invalid_phys_addr 0xfff
 
+extern uint8_t __loader_start[];
+extern uint8_t __loader_end[];
 extern uint8_t _binary_build_truth_x64_elf64_start[];
 extern uint8_t _binary_build_truth_x64_elf64_end[];
+#define Boot_Loader_Physical_Start ((phys_addr)__loader_start)
+#define Boot_Loader_Physical_End ((phys_addr)__loader_end)
 #define Boot_Kernel_Physical_Start ((phys_addr)_binary_build_truth_x64_elf64_start)
 #define Boot_Kernel_Physical_End ((phys_addr)_binary_build_truth_x64_elf64_end)
 
@@ -27,6 +31,12 @@ extern uint8_t _binary_build_truth_x64_elf64_end[];
 #define pl3_mask   0777
 #define pl4_offset 39
 #define pl4_mask   0777
+
+static inline uint64_t boot_get_cr3(void) {
+    uint64_t cr3;
+    __asm__("mov %%cr3, %0" : "=r"(cr3));
+    return cr3;
+}
 
 void boot_halt(void);
 struct boot_info *Boot_Info_Pointer = NULL;
@@ -240,23 +250,6 @@ static inline size_t pl1_index(const void *address) {
     return ((uintptr_t)address >> pl1_offset) & pl1_mask;
 }
 
-
-static uint64_t *get_pl4(void) {
-    return (uint64_t *)01777774004004004000000;
-}
-
-static uint64_t *get_pl3_index(size_t pl4_index) {
-    return (uint64_t *)(01777774004004000000000 | (pl4_index << 12));
-}
-
-static uint64_t *get_pl2_index(size_t pl4_index, size_t pl3_index) {
-    return (uint64_t *)(01777774004000000000000 | (pl4_index << 21) | (pl3_index << 12));
-}
-
-static uint64_t *get_pl1_index(size_t pl4_index, size_t pl3_index, size_t pl2_index) {
-    return (uint64_t *)(01777774000000000000000 | (pl4_index << 30) | (pl3_index << 21) | (pl2_index << 12));
-}
-
 static void paging_page_invalidate(const void *virt) {
     __asm__ volatile ("invlpg %0" ::"m"(*(uint8_t *)virt));
 }
@@ -289,15 +282,17 @@ static inline bool is_Memory_Present(phys_addr *level_one, const void *address) 
     return level_one[pl1_index(address)] & Memory_Present;
 }
 
-
+phys_addr *boot_page_table_entry(phys_addr p) {
+    return (phys_addr *)(p & ~Memory_Permissions_Mask);
+}
 
 enum status boot_map_page(const void *virtual_address, phys_addr phys_address, enum memory_attributes permissions, bool force) {
 
-    phys_address = phys_address & ~Memory_Permissions_Mask;
-    phys_addr *level_four = get_pl4();
-    phys_addr *level_three = get_pl3(virtual_address);
-    phys_addr *level_two = get_pl2(virtual_address);
-    phys_addr *level_one = get_pl1(virtual_address);
+    phys_address = (phys_addr)boot_page_table_entry(phys_address);
+    phys_addr *level_four = (phys_addr *)boot_get_cr3();
+    phys_addr *level_three;
+    phys_addr *level_two;
+    phys_addr *level_one;
 
     if (!is_pl3_present(level_four, virtual_address)) {
         phys_addr phys_address = (phys_addr)boot_allocator(Page_Small/KB);
@@ -305,8 +300,8 @@ enum status boot_map_page(const void *virtual_address, phys_addr phys_address, e
             return Error_No_Memory;
         }
         level_four[pl4_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
-        paging_page_invalidate(level_three);
     }
+    level_three = boot_page_table_entry(level_four[pl4_index(virtual_address)]);
 
     if (!is_pl2_present(level_three, virtual_address)) {
         phys_addr phys_address = (phys_addr)boot_allocator(Page_Small/KB);
@@ -314,8 +309,8 @@ enum status boot_map_page(const void *virtual_address, phys_addr phys_address, e
             return Error_No_Memory;
         }
         level_three[pl3_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
-        paging_page_invalidate(level_two);
     }
+    level_two = boot_page_table_entry(level_three[pl3_index(virtual_address)]);
 
     if (!is_pl1_present(level_two, virtual_address)) {
         phys_addr phys_address = (phys_addr)boot_allocator(Page_Small/KB);
@@ -323,8 +318,9 @@ enum status boot_map_page(const void *virtual_address, phys_addr phys_address, e
             return Error_No_Memory;
         }
         level_two[pl2_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
-        paging_page_invalidate(level_one);
     }
+    level_one = boot_page_table_entry(level_two[pl2_index(virtual_address)]);
+
 
     if (!force && is_Memory_Present(level_one, virtual_address)) {
         boot_vga_log64("The virtual address is already present");
@@ -524,10 +520,8 @@ static enum status boot_elf_allocate_bss(void *kernel_start, phys_addr kernel_ph
         }
     }
 
-    boot_vga_log64("bss");
     memset((void *)bss, 0, bss_size);
 
-    boot_log_number(bss_size);
     return Ok;
 }
 
