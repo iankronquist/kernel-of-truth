@@ -30,7 +30,7 @@ static inline void cpu_flags_clear_ac(void) {
 
 static inline uint64_t cpu_get_ticks(void) {
     uint32_t eax, edx;
-    __asm__ volatile ("rdtsc" : "=(eax)"(eax), "=(edx)"(edx)::);
+    __asm__ volatile ("rdtsc" : "=a"(eax), "=d"(edx)::);
     return (((uint64_t)edx) << 32) | eax;
 }
 
