@@ -638,40 +638,6 @@ enum status boot_kernel_init(void *random, struct multiboot_info *multiboot_info
     return Ok;
 }
 
-/*
-struct boot_info *boot_get_kernel_boot_info(void *kernel_start, size_t kernel_size) {
-    struct elf64_header *header = kernel_start;
-    size_t strtab_size;
-    const char *strtab = boot_elf_get_section(kernel_start, kernel_size, &strtab_size, ".strtab");
-    if (strtab == NULL) {
-        boot_vga_log64("Couldn't find strtab");
-        return NULL;
-    }
-
-    size_t symtab_size;
-    struct elf_symbol *symtab = boot_elf_get_section(kernel_start, kernel_size, &symtab_size, ".symtab");
-    if (symtab == NULL) {
-        boot_vga_log64("Couldn't find symtab");
-        return NULL;
-    }
-
-    for (size_t i = 0; i < symtab_size/ sizeof(struct elf_symbol); ++i) {
-        const char *symbol_name = &strtab[symtab[i].st_name];
-        if ((void *)symbol_name > kernel_start + kernel_size) {
-            boot_vga_log64("Symbol name out of bounds");
-            return NULL;
-        }
-        if (strncmp(symbol_name, Boot_Info_Name, sizeof(Boot_Info_Name)) == 0) {
-            struct boot_info
-
-            return boot_info;
-        }
-    }
-
-    return NULL;
-}
-*/
-
 
 enum status boot_elf_kernel_enter(void *kernel_start, size_t kernel_size) {
     void (*entrypoint)(void);
