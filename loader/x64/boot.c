@@ -1,3 +1,7 @@
+#include <loader/allocator.h>
+#include <loader/jitter.h>
+#include <loader/log.h>
+#include <loader/paging.h>
 #include <loader/string.h>
 #include <truth/boot.h>
 #include <truth/types.h>
@@ -6,34 +10,11 @@
 #include <external/multiboot.h>
 
 #define ELF_BAD_BASE_ADDRESS (~0ul)
-// Memory_Writable implies NX. We need this for higher levels of the page table.
-#define Memory_Just_Writable (1 << 1)
-#define invalid_phys_addr 0xfff
 
 extern uint8_t _binary_build_truth_x64_elf64_start[];
 extern uint8_t _binary_build_truth_x64_elf64_end[];
 #define Boot_Kernel_Physical_Start ((phys_addr)_binary_build_truth_x64_elf64_start)
 #define Boot_Kernel_Physical_End ((phys_addr)_binary_build_truth_x64_elf64_end)
-
-#define pl1_Count 512
-#define pl2_Count 512
-#define pl3_Count 512
-#define pl4_Count 512
-
-#define pl1_offset 12
-#define pl1_mask   0777
-#define pl2_offset 21
-#define pl2_mask   0777
-#define pl3_offset 30
-#define pl3_mask   0777
-#define pl4_offset 39
-#define pl4_mask   0777
-
-static inline uint64_t boot_get_cr3(void) {
-    uint64_t cr3;
-    __asm__("mov %%cr3, %0" : "=r"(cr3));
-    return cr3;
-}
 
 void boot_halt(void);
 struct boot_info *Boot_Info_Pointer = NULL;
@@ -136,165 +117,7 @@ struct gdt_register Boot_GDT_Register = {
     .base = (uint64_t)&Boot_GDT,
 };
 
-static void *Boot_Allocator_Next_Page = (void *)0x1000;
-static void *Boot_Allocator_Last_Page = NULL;
 
-void *boot_allocator(size_t pages) {
-    void *page = Boot_Allocator_Next_Page;
-    if (Boot_Allocator_Next_Page == Boot_Allocator_Last_Page) {
-        return NULL;
-    }
-
-    Boot_Allocator_Next_Page += pages * Page_Small;
-    return page;
-}
-
-void boot_allocator_init(uint64_t kilobytes) {
-    Boot_Allocator_Last_Page = (void *)(kilobytes * KB);
-}
-
-static uint16_t *const Boot_VGA_Window = (uint16_t *)0xb8000;
-static size_t Boot_VGA_Window_Index = 0;
-
-void boot_vga_log64(const char *string) {
-    for (const char *c = string; *c != '\0'; ++c) {
-        Boot_VGA_Window[Boot_VGA_Window_Index] = 0x0f00 | *c;
-        Boot_VGA_Window_Index++;
-    }
-}
-
-void boot_log_number(uint64_t n) {
-    const size_t nibbles = sizeof(uint64_t) * 2;
-    char number[nibbles + 1];
-    for (size_t i = 0; i < nibbles; ++i) {
-        int nibble = n % 16;
-        n /= 16;
-        if (nibble < 10) {
-            number[nibbles - i - 1] = nibble + '0';
-        } else {
-            number[nibbles - i - 1] = nibble + 'a' - 10;
-        }
-    }
-
-    number[nibbles] = '\0';
-    boot_vga_log64(" ");
-    boot_vga_log64((const char *)&number);
-    boot_vga_log64(" ");
-}
-
-#define Boot_Jitter_SHA1_Starting_Values 0xefcdab8967452301
-
-#define Boot_Jitter_Max_Fold_Bits 4
-#define Boot_Jitter_Buffer_Size (2 * Page_Small)
-#define Boot_Jitter_Fold_Mask (0xff)
-
-static inline uint64_t boot_cpu_get_ticks(void) {
-    uint32_t eax, edx;
-    __asm__ volatile ("rdtsc" : "=(eax)"(eax), "=(edx)"(edx)::);
-    return (((uint64_t)edx) << 32) | eax;
-}
-
-uint64_t boot_memory_jitter_calculate(void) {
-    uint8_t *memory = boot_allocator(Boot_Jitter_Buffer_Size/Page_Small);
-    uint64_t entropy = Boot_Jitter_SHA1_Starting_Values;
-    for (size_t i = 0; i < Boot_Jitter_Buffer_Size; ++i) {
-        uint64_t before = boot_cpu_get_ticks();
-        memory[i] += 1;
-        uint64_t after = boot_cpu_get_ticks();
-        uint64_t delta = after - before;
-        entropy ^= delta & Boot_Jitter_Fold_Mask;
-        entropy = (entropy << 8) | (entropy & 0xff00000000000000) >> 56;
-    }
-    return entropy;
-}
-
-static inline size_t pl4_index(const void *address) {
-    return (uintptr_t)address >> pl4_offset & pl4_mask;
-}
-
-static inline size_t pl3_index(const void *address) {
-    return ((uintptr_t)address >> pl3_offset) & pl3_mask;
-}
-
-static inline size_t pl2_index(const void *address) {
-    return ((uintptr_t)address >> pl2_offset) & pl2_mask;
-}
-
-static inline size_t pl1_index(const void *address) {
-    return ((uintptr_t)address >> pl1_offset) & pl1_mask;
-}
-
-static void paging_page_invalidate(const void *virt) {
-    __asm__ volatile ("invlpg %0" ::"m"(*(uint8_t *)virt));
-}
-
-static inline bool is_pl3_present(phys_addr *pl4, const void *address) {
-    return (pl4[pl4_index(address)] & Memory_Present) == 1;
-}
-
-static inline bool is_pl2_present(phys_addr *level_three, const void *address) {
-    return level_three[pl3_index(address)] & Memory_Present;
-}
-
-static inline bool is_pl1_present(phys_addr *level_two, const void *address) {
-    return level_two[pl2_index(address)] & Memory_Present;
-}
-
-static inline bool is_Memory_Present(phys_addr *level_one, const void *address) {
-    return level_one[pl1_index(address)] & Memory_Present;
-}
-
-phys_addr *boot_page_table_entry(phys_addr p) {
-    return (phys_addr *)(p & ~Memory_Permissions_Mask);
-}
-
-enum status boot_map_page(const void *virtual_address, phys_addr phys_address, enum memory_attributes permissions, bool force) {
-
-    phys_address = (phys_addr)boot_page_table_entry(phys_address);
-    phys_addr *level_four = (phys_addr *)boot_get_cr3();
-    phys_addr *level_three;
-    phys_addr *level_two;
-    phys_addr *level_one;
-
-    if (!is_pl3_present(level_four, virtual_address)) {
-        phys_addr phys_address = (phys_addr)boot_allocator(Page_Small/KB);
-        if (phys_address == invalid_phys_addr) {
-            return Error_No_Memory;
-        }
-        level_four[pl4_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
-    }
-    level_three = boot_page_table_entry(level_four[pl4_index(virtual_address)]);
-
-    if (!is_pl2_present(level_three, virtual_address)) {
-        phys_addr phys_address = (phys_addr)boot_allocator(Page_Small/KB);
-        if (phys_address == invalid_phys_addr) {
-            return Error_No_Memory;
-        }
-        level_three[pl3_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
-    }
-    level_two = boot_page_table_entry(level_three[pl3_index(virtual_address)]);
-
-    if (!is_pl1_present(level_two, virtual_address)) {
-        phys_addr phys_address = (phys_addr)boot_allocator(Page_Small/KB);
-        if (phys_address == invalid_phys_addr) {
-            return Error_No_Memory;
-        }
-        level_two[pl2_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
-    }
-    level_one = boot_page_table_entry(level_two[pl2_index(virtual_address)]);
-
-
-    if (!force && is_Memory_Present(level_one, virtual_address)) {
-        boot_vga_log64("The virtual address is already present");
-        boot_log_number((uintptr_t)virtual_address);
-        return Error_Present;
-    }
-
-    level_one[pl1_index(virtual_address)] = (phys_address | permissions | Memory_Present);
-    paging_page_invalidate(virtual_address);
-
-    return Ok;
-}
 /*
 uint32_t boot_crc32(void *start, size_t size) {
     uint32_t checksum = 0;
