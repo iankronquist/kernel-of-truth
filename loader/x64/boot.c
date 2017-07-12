@@ -250,18 +250,6 @@ static void paging_page_invalidate(const void *virt) {
     __asm__ volatile ("invlpg %0" ::"m"(*(uint8_t *)virt));
 }
 
-static phys_addr *get_pl3(const void *address) {
-    return get_pl3_index(pl4_index(address));
-}
-
-static phys_addr *get_pl2(const void *address) {
-    return get_pl2_index(pl4_index(address), pl3_index(address));
-}
-
-static phys_addr *get_pl1(const void *address) {
-    return get_pl1_index(pl4_index(address), pl3_index(address), pl2_index(address));
-}
-
 static inline bool is_pl3_present(phys_addr *pl4, const void *address) {
     return (pl4[pl4_index(address)] & Memory_Present) == 1;
 }
