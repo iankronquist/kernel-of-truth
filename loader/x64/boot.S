@@ -3,7 +3,7 @@
 
 #define Boot_VGA_Window_Start 0xb8000
 #define CPU_Flags_ID 0x00200000
-#define CPUId_Leaf_Manufacturer   0x0
+#define CPUId_Leaf_Feature_Info   0x1
 #define CPUId_Leaf_Processor_Info 0x80000001
 #define CPUId_EDX_Long_Mode (1 << 29)
 #define CPUId_EDX_Time_Step_Counter (1 << 4)
@@ -66,58 +66,65 @@ Function(_start)
 	pushl %ebx
 	movl %esp, %ebp
 
+
+
+.compat_check_multiboot:
 	# Is this a multiboot compatible bootloader?
 	cmpl $Multiboot_Register_Magic, %eax
-	je .compat_multiboot_magic_ok
-	# If not, clear the screen, print an error message, and hang.
+	je .compat_check_cpuid
 	call boot_vga_clear
+	# If not, print an error message, and hang.
 	movl $Boot_Bad_Multiboot_Magic_String, %edi
 	jmp .bad_boot
 
 
-.compat_multiboot_magic_ok:
+.compat_check_cpuid:
 
 	call boot_vga_clear
 
 	# Is cpuid supported? It is if the eax register is not 0.
 	call boot_cpuid_available
 	testl %eax, %eax
-	jnz .compat_cpuid_available
+	jnz .compat_check_long_mode
 	movl $Boot_No_CPUId, %edi
 	jmp .bad_boot
 
-.compat_cpuid_available:
+.compat_check_long_mode:
 	movl $CPUId_Leaf_Processor_Info, %eax
 	cpuid
 
 	movl %edx, %edi
 	andl $CPUId_EDX_Long_Mode, %edi
-	jnz .compat_long_mode_supported
+	jnz .compat_check_nx
 	movl $Boot_No_Long_Mode_String, %edi
 	jmp .bad_boot
 
-.compat_long_mode_supported:
-	movl %edx, %edi
-	andl $CPUId_EDX_Time_Step_Counter, %edi
-	jnz .compat_time_step_counter_available
-	movl $Boot_No_RDTSC_String, %edi
-	jmp .bad_boot
-
-.compat_time_step_counter_available:
+.compat_check_nx:
 	movl %edx, %edi
 	andl $CPUId_EDX_Not_Executable_Pages, %edi
-	jnz .compat_nx_bit_available
+	jnz .compat_check_syscall
 	movl $Boot_No_NX_Bit_String, %edi
 	jmp .bad_boot
 
-.compat_nx_bit_available:
+.compat_check_syscall:
 	movl %edx, %edi
 	andl $CPUId_EDX_Syscall, %edi
-	jnz .compat_syscall_available
+	jnz .compat_check_tsc
 	movl $Boot_No_Syscall_String, %edi
 	jmp .bad_boot
 
-.compat_syscall_available:
+.compat_check_tsc:
+	movl $CPUId_Leaf_Feature_Info, %eax
+	cpuid
+
+	movl %edx, %edi
+	andl $CPUId_EDX_Time_Step_Counter, %edi
+	jnz .enable_paging
+	movl $Boot_No_RDTSC_String, %edi
+	jmp .bad_boot
+
+
+.enable_paging:
 	call boot_map_page_table
 
 	# Enable PAE.
@@ -220,6 +227,8 @@ Function(boot_vga_clear)
 
 # void boot_vga_log(char *edi);
 Function(boot_vga_log)
+	movl $Boot_VGA_Window_Start, %ebx
+.boot_vga_log_loop:
 	movl (%edi), %eax
 	testb %al, %al
 	jz .out
@@ -227,7 +236,7 @@ Function(boot_vga_log)
 	movw %ax, (%ebx)
 	addl $2, %ebx
 	inc %edi
-	jmp boot_vga_log
+	jmp .boot_vga_log_loop
 .out:
 	ret
 
