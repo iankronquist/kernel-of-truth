@@ -289,7 +289,7 @@ static inline bool is_Memory_Present(phys_addr *level_one, const void *address) 
 
 
 
-enum status boot_map_page(const void *virtual_address, phys_addr phys_address, enum memory_attributes permissions) {
+enum status boot_map_page(const void *virtual_address, phys_addr phys_address, enum memory_attributes permissions, bool force) {
 
     phys_address = phys_address & ~Memory_Permissions_Mask;
     phys_addr *level_four = get_pl4();
@@ -324,7 +324,7 @@ enum status boot_map_page(const void *virtual_address, phys_addr phys_address, e
         paging_page_invalidate(level_one);
     }
 
-    if (is_Memory_Present(level_one, virtual_address)) {
+    if (!force && is_Memory_Present(level_one, virtual_address)) {
         boot_vga_log64("The virtual address is already present");
         boot_log_number((uintptr_t)virtual_address);
         return Error_Present;
@@ -499,12 +499,12 @@ static enum status boot_elf_allocate_bss(void *kernel_start, phys_addr kernel_ph
         return Error_Invalid;
     }
     size_t bss_offset = bss - kernel_start;
-    const void *bss_end = (void *)round_next((uintptr_t)bss + bss_size, Page_Small);
+    const void *bss_end = (const void *)round_next((uintptr_t)bss + bss_size, Page_Small);
 
-    phys_addr page = align_as(kernel_phys + bss_offset, Page_Small);
-    const void *addr = bss;
+    phys_addr page = round_next(kernel_phys + bss_offset + Page_Small, Page_Small);
+    const void *addr = (const void *)round_next((uintptr_t)bss + Page_Small, Page_Small);
     for (; addr < bss_end; addr += Page_Small, page += Page_Small) {
-        if (boot_map_page(addr, page, Memory_Just_Writable) != Ok) {
+        if (boot_map_page(addr, page, Memory_Just_Writable, true) != Ok) {
             return Error_Invalid;
         }
     }
@@ -543,7 +543,7 @@ enum status boot_kernel_init(void *random) {
     for (addr = random, page = Boot_Kernel_Physical_Start;
             addr < random + kernel_size;
             addr += Page_Small, page += Page_Small) {
-        boot_map_page(addr, page, Memory_Just_Writable);
+        boot_map_page(addr, page, Memory_Just_Writable, false);
     }
 
     struct elf64_header *header = (struct elf64_header *)Boot_Kernel_Physical_Start;
