@@ -6,6 +6,11 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#ifndef ATOMIC_INT_LOCK_FREE
+#define ATOMIC_INT_LOCK_FREE (0)
+#endif
+
+
 typedef uint64_t phys_addr;
 
 enum partial {
