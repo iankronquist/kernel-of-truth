@@ -97,7 +97,7 @@ release: LOADER_ASFLAGS += -Werror
 release: CFLAGS += -Werror
 release: AFLAGS += -Werror
 release: all
-	$(STRIP) -s $(KERNEL)
+	$(STRIP) $(KERNEL64)
 
 $(KERNEL): $(KERNEL)64 $(MODULES)
 	$(OBJCOPY) $< -O elf32-i386 $@
