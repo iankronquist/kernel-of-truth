@@ -61,9 +61,9 @@ MODULE_LD := $(TRIPLE)-ld
 MODULE_AS := $(AS)
 
 
-OBJCOPY := objcopy
+OBJCOPY := $(TRIPLE)-objcopy
 GRUB_MKRESCUE := grub-mkrescue
-STRIP := strip
+STRIP := $(TRIPLE)-strip
 
 TOOLS_CC := gcc
 
@@ -98,7 +98,7 @@ release: LOADER_ASFLAGS += -Werror
 release: CFLAGS += -Werror
 release: AFLAGS += -Werror
 release: all
-	$(STRIP) $(KERNEL64)
+	$(STRIP) -s $(KERNEL64)
 
 $(KERNEL): $(KERNEL)64 $(MODULES)
 	$(OBJCOPY) $< -O elf32-i386 $@
