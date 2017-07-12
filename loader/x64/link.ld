@@ -3,7 +3,6 @@ ENTRY(_start)
 SECTIONS {
 
 	. = 1M;
-    __loader_start = .;
 	.text : AT(1M) {
 		*(.text)
 	}
@@ -21,5 +20,4 @@ SECTIONS {
 	}
 
 	. = ALIGN(4K);
-    __loader_end = .;
 }

@@ -9,12 +9,8 @@
 #define Memory_Just_Writable (1 << 1)
 #define invalid_phys_addr 0xfff
 
-extern uint8_t __loader_start[];
-extern uint8_t __loader_end[];
 extern uint8_t _binary_build_truth_x64_elf64_start[];
 extern uint8_t _binary_build_truth_x64_elf64_end[];
-#define Boot_Loader_Physical_Start ((phys_addr)__loader_start)
-#define Boot_Loader_Physical_End ((phys_addr)__loader_end)
 #define Boot_Kernel_Physical_Start ((phys_addr)_binary_build_truth_x64_elf64_start)
 #define Boot_Kernel_Physical_End ((phys_addr)_binary_build_truth_x64_elf64_end)
 
