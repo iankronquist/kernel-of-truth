@@ -1,3 +1,5 @@
+#pragma once
+
 #include <truth/types.h>
 
 #define EI_CLASS 4
