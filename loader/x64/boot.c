@@ -490,7 +490,7 @@ enum status boot_elf_relocate(void *kernel_start, size_t kernel_size) {
 }
 
 
-static enum status boot_elf_allocate_bss(void *kernel_start, phys_addr kernel_phys, size_t kernel_size) {
+static enum status boot_elf_allocate_bss(void *kernel_start, phys_addr kernel_phys, size_t kernel_size, const void **bss_end) {
 
     size_t bss_size;
     const void *bss = boot_elf_get_section(kernel_start, kernel_size, ".bss", &bss_size);
@@ -499,11 +499,11 @@ static enum status boot_elf_allocate_bss(void *kernel_start, phys_addr kernel_ph
         return Error_Invalid;
     }
     size_t bss_offset = bss - kernel_start;
-    const void *bss_end = (const void *)round_next((uintptr_t)bss + bss_size, Page_Small);
+    *bss_end = (const void *)round_next((uintptr_t)bss + bss_size, Page_Small);
 
     phys_addr page = round_next(kernel_phys + bss_offset + Page_Small, Page_Small);
     const void *addr = (const void *)round_next((uintptr_t)bss + Page_Small, Page_Small);
-    for (; addr < bss_end; addr += Page_Small, page += Page_Small) {
+    for (; addr < *bss_end; addr += Page_Small, page += Page_Small) {
         if (boot_map_page(addr, page, Memory_Just_Writable, true) != Ok) {
             return Error_Invalid;
         }
@@ -511,6 +511,30 @@ static enum status boot_elf_allocate_bss(void *kernel_start, phys_addr kernel_ph
 
     boot_vga_log64("bss");
     memset((void *)bss, 0, bss_size);
+
+    boot_log_number(bss_size);
+    return Ok;
+}
+
+static enum status boot_remap_section(void *kernel_start, phys_addr kernel_phys, size_t kernel_size, const void *virtual_base, size_t *section_size, const char *section_name) {
+    enum status status;
+    const void *section = boot_elf_get_section(kernel_start, kernel_size, section_name, section_size);
+    if (section == NULL) {
+        boot_vga_log64("Section absent.");
+        return Error_Absent;
+    }
+    size_t section_offset = section - kernel_start;
+    phys_addr section_phys = kernel_phys + section_offset;
+    phys_addr section_phys_end = round_next(section_phys + *section_size, Page_Small);
+    phys_addr page = section_phys;
+    const void *addr = virtual_base;
+    for (; page < section_phys_end; page += Page_Small, addr += Page_Small) {
+        status = boot_map_page(addr, page, Memory_Just_Writable, false);
+        if (status != Ok) {
+            boot_vga_log64("Mapping already present.");
+            return status;
+        }
+    }
 
     return Ok;
 }
@@ -554,7 +578,9 @@ enum status boot_kernel_init(void *random) {
         }
     }
 
-    enum status status = boot_elf_allocate_bss(random, Boot_Kernel_Physical_Start, kernel_size);
+    const void *bss_end;
+    const void *kernel_end = (void *)round_next((uintptr_t)random + kernel_size, Page_Small);
+    enum status status = boot_elf_allocate_bss(random, Boot_Kernel_Physical_Start, kernel_size, &bss_end);
     if (status != Ok) {
         boot_vga_log64("Couldn't allocate bss");
         return status;
@@ -565,6 +591,23 @@ enum status boot_kernel_init(void *random) {
         boot_vga_log64("Couldn't relocate elf");
         return status;
     }
+    boot_log_number(bss_end);
+
+    size_t symtab_size;
+    status = boot_remap_section(random, Boot_Kernel_Physical_Start, kernel_size, kernel_end, &symtab_size, ".symtab");
+    if (status != Ok) {
+        boot_vga_log64("Couldn't remap symtab");
+        return status;
+    }
+    const void *symtab_end = (const void *)round_next((uintptr_t)kernel_end + symtab_size, Page_Small);
+
+    size_t strtab_size;
+    status = boot_remap_section(random, Boot_Kernel_Physical_Start, kernel_size, symtab_end, &strtab_size, ".strtab");
+    if (status != Ok) {
+        boot_vga_log64("Couldn't remap strtab");
+        return status;
+    }
+
     return Ok;
 }
 
