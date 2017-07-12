@@ -10,6 +10,8 @@
 
 #ifdef __C__
 
+#include <truth/types.h>
+
 void tss_set_stack(void *stack);
 
 struct tss_entry {
