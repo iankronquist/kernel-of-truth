@@ -16,11 +16,16 @@ MACROS := -dD \
 BUILD_DIR := build
 
 KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
+KERNEL64 := $(BUILD_DIR)/truth.$(ARCH).elf64
+LOADER := $(BUILD_DIR)/truth_loader.$(ARCH).elf
+LOADER64 := $(BUILD_DIR)/truth_loader.$(ARCH).elf64
 
 OBJ :=
+LOADER_OBJS :=
 MODULES :=
 MODULE_CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra \
 	-fpic -nostdlib -I ../../include -D __C__ -mno-sse
+include loader/$(ARCH)/Makefile
 include kernel/arch/$(ARCH)/Makefile
 include kernel/core/Makefile
 include kernel/crypto/Makefile
@@ -28,33 +33,37 @@ include kernel/device/Makefile
 include modules/Makefile
 
 
-PYTHON := python
+CLANG_TIDY := clang-tidy
+OD := od
 
-
-
-CC := $(TRIPLE)-gcc
-CFLAGS := -std=c11 -O2 -MP -MMD -mcmodel=kernel \
-	-ffreestanding -fstack-protector-all \
-	-Wall -Wextra \
-	-I ./include $(MACROS) -D __C__ -mno-sse
-
-AS := $(TRIPLE)-gcc
-ASFLAGS := -O2 -MP -MMD -mcmodel=kernel \
+LOADER_FLAGS := -O2 -MP -MMD \
 	-ffreestanding \
 	-Wall -Wextra \
-	-I ./include $(MACROS) -D __ASM__
+	-I ./include -mno-sse
 
-LD := $(TRIPLE)-gcc
-LDFLAGS := -nostdlib -ffreestanding -O2 -mcmodel=kernel
+RANOM_NUMBER := $(strip $(shell $(OD) -vAn -N8 -tu8 < /dev/urandom))
+LOADER_CFLAGS := $(LOADER_FLAGS) -D __C__ -std=c11 -D Boot_Compile_Random_Number=$(RANOM_NUMBER)ul
+LOADER_ASFLAGS := $(LOADER_FLAGS) -D __ASM__
+
+
+KERNEL_FLAGS := -O2 -MP -MMD -mno-sse -Wall -Wextra -ffreestanding -I ./include -fPIC
+CC := $(TRIPLE)-gcc
+CFLAGS := -std=c11 $(KERNEL_FLAGS) $(MACROS) -D __C__
+
+AS := $(TRIPLE)-gcc
+ASFLAGS := $(KERNEL_FLAGS) $(MACROS) -D __ASM__
+
+LD := $(TRIPLE)-ld
+LDFLAGS := -nostdlib -O2 -soname="Kernel of Truth" -m elf_x86_64 -z max-page-size=0x1000 -fPIE -fPIC
 
 MODULE_CC := $(CC)
 MODULE_LD := $(TRIPLE)-ld
 MODULE_AS := $(AS)
 
 
-OBJCOPY := objcopy
+OBJCOPY := $(TRIPLE)-objcopy
 GRUB_MKRESCUE := grub-mkrescue
-STRIP := strip
+STRIP := $(TRIPLE)-strip
 
 TOOLS_CC := gcc
 
@@ -64,9 +73,16 @@ QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/serial.txt \
 
 MAKE := make
 
-.PHONY: all clean debug iso release start start-log tools
+.PHONY: all clean debug iso release start start-log tools tidy
 
-all: $(KERNEL) tools
+all: $(LOADER) $(MODULES)
+
+
+$(LOADER64): loader/$(ARCH)/link.ld $(LOADER_OBJS) $(KERNEL64)
+	$(CC) -T loader/$(ARCH)/link.ld $(LOADER_OBJS) $(LOADER_CFLAGS) -o $@ $< -nostdlib
+
+$(LOADER): $(LOADER64)
+	$(OBJCOPY) $< -O elf32-i386 $@
 
 tools: $(BUILD_DIR)/tools/truesign
 
@@ -77,16 +93,18 @@ debug: CFLAGS += -g -fsanitize=undefined
 debug: ASFLAGS += -g
 debug: all
 
+release: LOADER_CFLAGS += -Werror
+release: LOADER_ASFLAGS += -Werror
 release: CFLAGS += -Werror
 release: AFLAGS += -Werror
 release: all
-	$(STRIP) -s $(KERNEL)
+	$(STRIP) -s $(KERNEL64)
 
 $(KERNEL): $(KERNEL)64 $(MODULES)
 	$(OBJCOPY) $< -O elf32-i386 $@
 
-$(KERNEL)64: kernel/arch/$(ARCH)/link.ld $(BUILD_DIR)/symbols.o
-	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) $(BUILD_DIR)/symbols.o -o $@ $(LDFLAGS)
+$(KERNEL64): kernel/arch/$(ARCH)/link.ld $(OBJ)
+	$(LD) -T kernel/arch/$(ARCH)/link.ld -o $@ $(OBJ) -shared -soname="truth" -ffreestanding -nostdlib -z max-page-size=0x1000 -e kernel_main
 
 $(BUILD_DIR)/%.c.o: kernel/%.c include/truth/key.h
 	mkdir -p $(shell dirname $@)
@@ -96,16 +114,20 @@ $(BUILD_DIR)/%.S.o: kernel/%.S
 	mkdir -p $(shell dirname $@)
 	$(AS) -c $< -o $@ $(ASFLAGS)
 
+$(BUILD_DIR)/loader/%.S.o: loader/%.S $(KERNEL64)
+	mkdir -p $(shell dirname $@)
+	$(AS) -c $< -o $@ $(LOADER_ASFLAGS)
+
+$(BUILD_DIR)/loader/%.c.o: loader/%.c
+	mkdir -p $(shell dirname $@)
+	$(CC) -c $< -o $@ $(LOADER_CFLAGS)
+
+
 $(BUILD_DIR)/key.pub: $(BUILD_DIR)/tools/truesign
 	$(BUILD_DIR)/tools/truesign generate $(BUILD_DIR)/key.priv $@
 
 include/truth/key.h: $(BUILD_DIR)/key.pub
 	$(BUILD_DIR)/tools/truesign header $(BUILD_DIR)/key.pub $@
-
-$(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld
-	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $(KERNEL)64 $(LDFLAGS)
-	nm $(KERNEL)64 | $(PYTHON) build_symbol_table.py $(BUILD_DIR)/symbols.S
-	$(AS) -c $(BUILD_DIR)/symbols.S -o $@ $(ASFLAGS)
 
 $(BUILD_DIR)/modules/%.ko: modules/% modules/link.ld $(BUILD_DIR)/key.pub
 	mkdir -p $(shell dirname $@)
@@ -113,11 +135,13 @@ $(BUILD_DIR)/modules/%.ko: modules/% modules/link.ld $(BUILD_DIR)/key.pub
 		BUILD_DIR='../../$(BUILD_DIR)' LD='$(MODULE_LD)' \
 		AS='$(MODULE_AS)'
 
-tags: kernel/arch/$(ARCH)/*.c kernel/core/*.c kernel/device/*.c \
-		include/arch/$(ARCH)/*.h include/truth/*.h
-	ctags -R kernel include
+tags: kernel/arch/$(ARCH)/*.c kernel/core/*.c kernel/device/*.c include/arch/$(ARCH)/*.h include/truth/*.h loader/$(ARCH)/*.c
+	ctags -R kernel include loader
 
 iso: $(BUILD_DIR)/truth.iso
+
+tidy: kernel/arch/$(ARCH)/*.c kernel/core/*.c kernel/device/*.c include/arch/$(ARCH)/*.h include/truth/*.h loader/$(ARCH)/*.c
+	$(CLANG_TIDY) $^ --checks="*,-clang-diagnostic-incompatible-library-redeclaration" -- -I ./include $(MACROS) -D __C__ -D Boot_Compile_Random_Number=0
 
 $(BUILD_DIR)/truth.iso: $(KERNEL) grub.cfg
 	mkdir -p $(BUILD_DIR)/isodir/boot/grub
@@ -129,10 +153,10 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 start: debug
-	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio
+	$(QEMU) -kernel $(LOADER) $(QEMU_FLAGS) -monitor stdio
 
 start-log: debug
-	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall \
+	$(QEMU) -kernel $(LOADER) -d in_asm,cpu_reset,exec,int,guest_errors,pcall \
 		-D $(BUILD_DIR)/qemu.log $(QEMU_FLAGS) -monitor stdio
 
 -include $(OBJ:.o=.d)

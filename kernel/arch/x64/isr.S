@@ -43,12 +43,12 @@ _service_interrupt:
 	rdtsc
 	mov %di, %ax
 	.extern entropy_pool_seed
-	call entropy_pool_seed
+	call *entropy_pool_seed@GOTPCREL(%rip)
 
 	# Call interrupt dispatcher.
 .dispatch:
 	.extern interrupts_dispatcher
-	call interrupts_dispatcher
+	call *interrupts_dispatcher@GOTPCREL(%rip)
 
 	# Restore data segment.
 	pop %rax

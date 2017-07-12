@@ -6,6 +6,11 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#ifndef ATOMIC_INT_LOCK_FREE
+#define ATOMIC_INT_LOCK_FREE (0)
+#endif
+
+
 typedef uint64_t phys_addr;
 
 enum partial {
@@ -78,11 +83,12 @@ extern uint8_t __kernel_end;
 
 #define container_of(child, parent_type, parent_entry) \
     ((parent_type)(child - &((parent_type)NULL)->parent_entry))
-#define align_as(value, alignment) (value & ~(alignment - 1))
+#define align_as(value, alignment) ((value) & ~((alignment) - 1))
 #define is_power_of_two(value) ((((value) - 1) & value) == 0)
-#define is_aligned(value, alignment) !(value & (alignment - 1))
+#define is_aligned(value, alignment) !((value) & ((alignment) - 1))
 #define round_next(x, y) (((x) + (y - 1)) & ~(y - 1))
 #define static_array_count(x) (sizeof(x) / sizeof(x)[0])
+#define min(x, y) ((x) < (y) ? (x) : (y))
 
 #define check_format(x, y) __attribute__((format(printf, x, y)))
 #define checked __attribute__((warn_unused_result))

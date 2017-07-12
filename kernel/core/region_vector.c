@@ -66,6 +66,7 @@ enum status checked region_alloc_random(struct region_vector *vect, size_t size,
     // Randomness has some element of luck. We could pick an address we can't fit in multiple times in a row, so try this multiple times.
     for (size_t addresses_tried = 0; addresses_tried < Region_Vector_Max_Random_Addresses; ++addresses_tried) {
         void *addr = random_address(true, Page_Small);
+        bool finish_vector_iteration = false;
         struct region_vector *v = vect;
         // For section in region vector.
         do {
@@ -77,9 +78,7 @@ enum status checked region_alloc_random(struct region_vector *vect, size_t size,
                 if (v->regions[i].address <= addr && v->regions[i].address + v->regions[i].size >= addr && v->regions[i].address) {
                     // If there isn't enough room to fit this region, pick a new address.
                     if (after_random_addr_size < size) {
-                        // Break out of while loop.
-                        v = NULL;
-                        // Break out of for loop.
+                        finish_vector_iteration = true;
                         break;
                     }
                     size_t suffix_size = after_random_addr_size - size;
@@ -102,7 +101,7 @@ enum status checked region_alloc_random(struct region_vector *vect, size_t size,
                 }
             }
             v = v->next;
-        } while (v != NULL);
+        } while (!finish_vector_iteration && v != NULL);
     }
     // Either there isn't enough memory, it's too fragmented, or we're just plain unlucky.
     return Error_No_Memory;

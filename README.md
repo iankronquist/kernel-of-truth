@@ -32,6 +32,7 @@ Kernel Features
 - [x] Elf loader.
 - [x] Loadable kernel modules.
 - [x] 🔐 Kernel module Address Space Layout Randomization (ASLR) & signature verification.
+- [x] 🔐 Kernel Address Space Layout Randomization (KASLR).
 - [ ] Basic syscalls.
 - [ ] POSIX syscall layer.
 - [ ] EXT2 filesystem.

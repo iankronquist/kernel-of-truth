@@ -3,6 +3,7 @@
 #include <truth/memory.h>
 #include <arch/x64/segments.h>
 
+#define Multiboot_Register_Magic     0x2badb002
 #define MB_Magic     0x1badb002
 #define MB_Alignment (1 << 1)
 #define MB_Info      (1 << 1)

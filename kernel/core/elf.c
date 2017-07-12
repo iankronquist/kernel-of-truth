@@ -238,10 +238,7 @@ enum status elf_relocate(void *module_start, size_t module_size) {
     const struct elf_symbol *dynsym;
     size_t dynstr_size;
     void *base;
-    const char *dynstr = elf_get_section(module_start,
-                                         module_size,
-                                         ".dynstr",
-                                         &dynstr_size);
+    const char *dynstr = elf_get_section(module_start, module_size, ".dynstr", &dynstr_size);
     if (dynstr == NULL) {
         log(Log_Error, "Couldn't find section .dynstr");
         return Error_Invalid;
@@ -290,7 +287,7 @@ enum status elf_relocate(void *module_start, size_t module_size) {
                 }
                 pointer = base + rela[i].r_offset;
                 if (symbol->st_index == SHN_UNDEF) {
-                    if ((void *)&dynsym[symbol->st_name] > module_start + module_size) {
+                    if ((void *)&dynstr[symbol->st_name] > module_start + module_size) {
                         log(Log_Error, "String out of bounds");
                         return Error_Invalid;
                     }

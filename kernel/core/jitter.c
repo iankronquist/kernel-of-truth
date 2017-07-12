@@ -20,7 +20,13 @@ uint64_t memory_jitter_calculate(void) {
     uint64_t entropy = Jitter_SHA1_Starting_Values;
     for (size_t i = 0; i < Jitter_Buffer_Size; ++i) {
         uint64_t before = cpu_get_ticks();
+        // Analyzer complains about a garbage value -- and it's right, but we
+        // really don't care about it here, we just want to read and write
+        // memory.
+#ifndef __clang_analyzer__
+        // NOLINT
         memory[i] += 1;
+#endif
         uint64_t after = cpu_get_ticks();
         uint64_t delta = after - before;
         entropy ^= delta & Jitter_Fold_Mask;
