@@ -10,7 +10,7 @@
 
 static inline uint64_t boot_cpu_get_ticks(void) {
     uint32_t eax, edx;
-    __asm__ volatile ("rdtsc" : "=(eax)"(eax), "=(edx)"(edx)::);
+    __asm__ volatile ("rdtsc" : "=eax"(eax), "=edx"(edx)::);
     return (((uint64_t)edx) << 32) | eax;
 }
 
