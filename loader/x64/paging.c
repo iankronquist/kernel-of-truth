@@ -1,3 +1,5 @@
+#include <loader/allocator.h>
+#include <loader/log.h>
 #include <loader/paging.h>
 #include <truth/types.h>
 

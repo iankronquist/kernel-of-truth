@@ -1,3 +1,4 @@
+#include <loader/allocator.h>
 #include <loader/jitter.h>
 #include <truth/memory.h>
 
