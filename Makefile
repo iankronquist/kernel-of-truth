@@ -33,6 +33,7 @@ include kernel/device/Makefile
 include modules/Makefile
 
 
+CLANG_TIDY := clang-tidy
 OD := od
 
 LOADER_FLAGS := -O2 -MP -MMD \
@@ -72,7 +73,7 @@ QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/serial.txt \
 
 MAKE := make
 
-.PHONY: all clean debug iso release start start-log tools
+.PHONY: all clean debug iso release start start-log tools tidy
 
 all: $(LOADER) $(MODULES)
 
@@ -138,6 +139,9 @@ tags: kernel/arch/$(ARCH)/*.c kernel/core/*.c kernel/device/*.c include/arch/$(A
 	ctags -R kernel include loader
 
 iso: $(BUILD_DIR)/truth.iso
+
+tidy: kernel/arch/$(ARCH)/*.c kernel/core/*.c kernel/device/*.c include/arch/$(ARCH)/*.h include/truth/*.h loader/$(ARCH)/*.c
+	$(CLANG_TIDY) $^ --checks="*,-clang-diagnostic-incompatible-library-redeclaration" -- -I ./include $(MACROS) -D __C__ -D Boot_Compile_Random_Number=0
 
 $(BUILD_DIR)/truth.iso: $(KERNEL) grub.cfg
 	mkdir -p $(BUILD_DIR)/isodir/boot/grub
