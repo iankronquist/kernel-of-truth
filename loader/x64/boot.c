@@ -1,3 +1,4 @@
+#include <truth/boot.h>
 #include <truth/types.h>
 #include <truth/memory.h>
 #include <truth/elf.h>
@@ -28,6 +29,7 @@ extern uint8_t _binary_build_truth_x64_elf64_end[];
 #define pl4_mask   0777
 
 void boot_halt(void);
+struct boot_info *Boot_Info_Pointer = NULL;
 
 
 // FIXME: This is inefficient.
@@ -454,6 +456,12 @@ enum status boot_elf_relocate(void *kernel_start, size_t kernel_size) {
     }
 
     for (size_t i = 0; i < rela_size / sizeof(struct elf_rela); ++i) {
+        symbol = &dynsym[ELF64_R_SYM(rela[i].r_info)];
+        if ((void *)(symbol + 1) > kernel_start + kernel_size) {
+            boot_vga_log64("Symbol out of bounds");
+            return Error_Invalid;
+        }
+
         int r_type = ELF64_R_TYPE(rela[i].r_info);
         switch (r_type) {
             case R_X86_64_RELATIVE:
@@ -464,11 +472,6 @@ enum status boot_elf_relocate(void *kernel_start, size_t kernel_size) {
             case R_X86_64_JUMP_SLOT:
             case R_X86_64_GLOB_DAT:
             case R_X86_64_64:
-                symbol = &dynsym[ELF64_R_SYM(rela[i].r_info)];
-                if ((void *)(symbol + 1) > kernel_start + kernel_size) {
-                    boot_vga_log64("Symbol out of bounds");
-                    return Error_Invalid;
-                }
                 pointer = kernel_start + (uintptr_t)base + rela[i].r_offset;
                 if (symbol->st_index == SHN_UNDEF) {
                     boot_vga_log64("Undefined symbol");
@@ -484,8 +487,20 @@ enum status boot_elf_relocate(void *kernel_start, size_t kernel_size) {
                 boot_log_number(rela[i].r_info);
                 return Error_Invalid;
         }
+        const char *symbol_name = &dynstr[symbol->st_name];
+        if ((void *)symbol_name > kernel_start + kernel_size) {
+            boot_vga_log64("String out of bounds");
+            return Error_Invalid;
+        }
+        if (strncmp(symbol_name, Boot_Info_Name, sizeof(Boot_Info_Name)) == 0) {
+            Boot_Info_Pointer = (struct boot_info *)value;
+        }
     }
 
+    if (Boot_Info_Pointer == NULL) {
+        boot_vga_log64("Couldn't find Boot Info structure");
+        return Error_Absent;
+    }
     return Ok;
 }
 
@@ -516,7 +531,7 @@ static enum status boot_elf_allocate_bss(void *kernel_start, phys_addr kernel_ph
     return Ok;
 }
 
-static enum status boot_remap_section(void *kernel_start, phys_addr kernel_phys, size_t kernel_size, const void *virtual_base, size_t *section_size, const char *section_name) {
+static enum status boot_remap_section(void *kernel_start, phys_addr kernel_phys, size_t kernel_size, const void *virtual_base, phys_addr *section_phys, size_t *section_size, const char *section_name) {
     enum status status;
     const void *section = boot_elf_get_section(kernel_start, kernel_size, section_name, section_size);
     if (section == NULL) {
@@ -524,9 +539,9 @@ static enum status boot_remap_section(void *kernel_start, phys_addr kernel_phys,
         return Error_Absent;
     }
     size_t section_offset = section - kernel_start;
-    phys_addr section_phys = kernel_phys + section_offset;
-    phys_addr section_phys_end = round_next(section_phys + *section_size, Page_Small);
-    phys_addr page = section_phys;
+    *section_phys = kernel_phys + section_offset;
+    phys_addr section_phys_end = round_next(*section_phys + *section_size, Page_Small);
+    phys_addr page = *section_phys;
     const void *addr = virtual_base;
     for (; page < section_phys_end; page += Page_Small, addr += Page_Small) {
         status = boot_map_page(addr, page, Memory_Just_Writable, false);
@@ -540,7 +555,7 @@ static enum status boot_remap_section(void *kernel_start, phys_addr kernel_phys,
 }
 
 
-enum status boot_kernel_init(void *random) {
+enum status boot_kernel_init(void *random, struct multiboot_info *multiboot_info) {
     const size_t kernel_size = Boot_Kernel_Physical_End - Boot_Kernel_Physical_Start;
     const char elf_magic[] = ELFMAG;
     if (kernel_size < sizeof(struct elf64_header)) {
@@ -591,10 +606,10 @@ enum status boot_kernel_init(void *random) {
         boot_vga_log64("Couldn't relocate elf");
         return status;
     }
-    boot_log_number(bss_end);
 
     size_t symtab_size;
-    status = boot_remap_section(random, Boot_Kernel_Physical_Start, kernel_size, kernel_end, &symtab_size, ".symtab");
+    phys_addr symtab_phys;
+    status = boot_remap_section(random, Boot_Kernel_Physical_Start, kernel_size, kernel_end, &symtab_phys, &symtab_size, ".symtab");
     if (status != Ok) {
         boot_vga_log64("Couldn't remap symtab");
         return status;
@@ -602,24 +617,76 @@ enum status boot_kernel_init(void *random) {
     const void *symtab_end = (const void *)round_next((uintptr_t)kernel_end + symtab_size, Page_Small);
 
     size_t strtab_size;
-    status = boot_remap_section(random, Boot_Kernel_Physical_Start, kernel_size, symtab_end, &strtab_size, ".strtab");
+    phys_addr strtab_phys;
+    status = boot_remap_section(random, Boot_Kernel_Physical_Start, kernel_size, symtab_end, &strtab_phys, &strtab_size, ".strtab");
     if (status != Ok) {
         boot_vga_log64("Couldn't remap strtab");
         return status;
     }
+    const void *strtab_end = (const void *)round_next((uintptr_t)symtab_end + strtab_size, Page_Small);
+
+    if (Boot_Info_Pointer == NULL) {
+        boot_vga_log64("Boot Info pointer is NULL");
+        return Error_Absent;
+    }
+
+    Boot_Info_Pointer->kernel = random;
+    Boot_Info_Pointer->kernel_size = kernel_size;
+    Boot_Info_Pointer->kernel_physical = Boot_Kernel_Physical_Start;
+    Boot_Info_Pointer->strtab_size = strtab_size;
+    Boot_Info_Pointer->strtab = kernel_end;
+    Boot_Info_Pointer->strtab_physical = strtab_phys;
+    Boot_Info_Pointer->symtab_size = symtab_size;
+    Boot_Info_Pointer->symtab = strtab_end;
+    Boot_Info_Pointer->symtab_physical = symtab_phys;
+    Boot_Info_Pointer->multiboot_info = multiboot_info;
 
     return Ok;
 }
 
+/*
+struct boot_info *boot_get_kernel_boot_info(void *kernel_start, size_t kernel_size) {
+    struct elf64_header *header = kernel_start;
+    size_t strtab_size;
+    const char *strtab = boot_elf_get_section(kernel_start, kernel_size, &strtab_size, ".strtab");
+    if (strtab == NULL) {
+        boot_vga_log64("Couldn't find strtab");
+        return NULL;
+    }
 
-enum status boot_elf_kernel_enter(void *kernel_start, size_t kernel_size, struct multiboot_info *mb_info) {
-    void (*entrypoint)(void *, size_t, struct multiboot_info *) = NULL;
+    size_t symtab_size;
+    struct elf_symbol *symtab = boot_elf_get_section(kernel_start, kernel_size, &symtab_size, ".symtab");
+    if (symtab == NULL) {
+        boot_vga_log64("Couldn't find symtab");
+        return NULL;
+    }
+
+    for (size_t i = 0; i < symtab_size/ sizeof(struct elf_symbol); ++i) {
+        const char *symbol_name = &strtab[symtab[i].st_name];
+        if ((void *)symbol_name > kernel_start + kernel_size) {
+            boot_vga_log64("Symbol name out of bounds");
+            return NULL;
+        }
+        if (strncmp(symbol_name, Boot_Info_Name, sizeof(Boot_Info_Name)) == 0) {
+            struct boot_info
+
+            return boot_info;
+        }
+    }
+
+    return NULL;
+}
+*/
+
+
+enum status boot_elf_kernel_enter(void *kernel_start, size_t kernel_size) {
+    void (*entrypoint)(void);
     struct elf64_header *header = kernel_start;
     void *base = boot_elf_get_base_address(kernel_start, kernel_size);
 
     entrypoint = kernel_start + (uintptr_t)base + header->e_entry;
 
-    entrypoint(kernel_start, kernel_size, mb_info);
+    entrypoint();
 
     // NOT REACHED
     boot_vga_log64("Kernel main should never return!");
@@ -640,13 +707,13 @@ void boot_loader_main(struct multiboot_info *multiboot_info_physical) {
     } while (~0ul - random < kernel_size);
 
 
-    enum status status = boot_kernel_init((void *)random);
+    enum status status = boot_kernel_init((void *)random, multiboot_info_physical);
     if (status != Ok) {
         boot_vga_log64("Failed to load kernel");
         return;
     }
 
-    status = boot_elf_kernel_enter((void *)random, kernel_size, multiboot_info_physical);
+    status = boot_elf_kernel_enter((void *)random, kernel_size);
     if (status != Ok) {
         boot_vga_log64("Couldn't enter kernel");
     }
