@@ -19,6 +19,7 @@ addons:
             - clang-3.5
             - gcc-6
             - curl
+            - qemu
 cache:
     directories:
         - compiler/x86_64-none-elf
@@ -39,4 +40,5 @@ script:
     - make release MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="gcc-6"
     - make iso MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="gcc-6"
     - make clean
+    - make start-test
     - #scan-build --status-bugs make MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="gcc-6"
