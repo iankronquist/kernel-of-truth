@@ -4,6 +4,7 @@
 #include <truth/interrupts.h>
 #include <truth/log.h>
 #include <truth/types.h>
+#include <truth/test.h>
 
 #define Not_Reached false
 
@@ -28,5 +29,8 @@
 
 static inline void panic() {
     interrupts_disable();
+#ifdef DEBUG
+    test_shutdown_status(Error_Invalid);
+#endif // DEBUG
     halt();
 }

@@ -22,4 +22,5 @@ OBJ += $(BUILD_DIR)/core/stack_protector.c.o
 OBJ += $(BUILD_DIR)/core/string.c.o
 OBJ += $(BUILD_DIR)/core/scheduler.c.o
 OBJ += $(BUILD_DIR)/core/symbols.c.o
+OBJ += $(BUILD_DIR)/core/test.c.o
 OBJ += $(BUILD_DIR)/core/ubsan.c.o

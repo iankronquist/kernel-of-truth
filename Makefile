@@ -75,8 +75,8 @@ tools: $(BUILD_DIR)/tools/truesign
 $(BUILD_DIR)/tools/truesign:
 	$(MAKE) -C tools/ CC=$(TOOLS_CC) ../$@
 
-debug: CFLAGS += -g -fsanitize=undefined
-debug: ASFLAGS += -g
+debug: CFLAGS += -g -fsanitize=undefined -D DEBUG
+debug: ASFLAGS += -g -D DEBUG
 debug: all
 
 release: CFLAGS += -Werror
@@ -132,6 +132,10 @@ clean:
 
 start: debug
 	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio
+
+start-test: debug
+	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio -device isa-debug-exit,iobase=0xf4,iosize=0x04 || [ $$? -eq 1 ]
+
 
 start-log: debug
 	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall \
