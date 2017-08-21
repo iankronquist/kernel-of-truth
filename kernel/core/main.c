@@ -36,7 +36,6 @@ void kernel_main(uint32_t multiboot_tables) {
     keyboard_init();
     vga_init();
 #ifdef DEBUG
-    log(Log_Debug, "hello");
     test_shutdown_status(Ok);
 #endif // DEBUG
     halt();
