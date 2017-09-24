@@ -12,6 +12,7 @@
 #include <truth/random.h>
 #include <truth/timer.h>
 #include <arch/x64/paging.h>
+#include <arch/x64/port.h>
 #include <truth/device/vga.h>
 #include <truth/device/ps2_keyboard.h>
 
@@ -34,5 +35,8 @@ void kernel_main(uint32_t multiboot_tables) {
     timer_init();
     keyboard_init();
     vga_init();
+#ifdef DEBUG
+    test_shutdown_status(Ok);
+#endif // DEBUG
     halt();
 }

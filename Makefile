@@ -47,6 +47,8 @@ ASFLAGS := -O2 -MP -MMD -mcmodel=kernel \
 LD := $(TRIPLE)-gcc
 LDFLAGS := -nostdlib -ffreestanding -O2 -mcmodel=kernel
 
+NM := $(TRIPLE)-nm
+
 MODULE_CC := $(CC)
 MODULE_LD := $(TRIPLE)-ld
 MODULE_AS := $(AS)
@@ -73,8 +75,8 @@ tools: $(BUILD_DIR)/tools/truesign
 $(BUILD_DIR)/tools/truesign:
 	$(MAKE) -C tools/ CC=$(TOOLS_CC) ../$@
 
-debug: CFLAGS += -g -fsanitize=undefined
-debug: ASFLAGS += -g
+debug: CFLAGS += -g -fsanitize=undefined -D DEBUG
+debug: ASFLAGS += -g -D DEBUG
 debug: all
 
 release: CFLAGS += -Werror
@@ -104,7 +106,7 @@ include/truth/key.h: $(BUILD_DIR)/key.pub
 
 $(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld
 	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $(KERNEL)64 $(LDFLAGS)
-	nm $(KERNEL)64 | $(PYTHON) build_symbol_table.py $(BUILD_DIR)/symbols.S
+	$(NM) $(KERNEL)64 | $(PYTHON) build_symbol_table.py $(BUILD_DIR)/symbols.S
 	$(AS) -c $(BUILD_DIR)/symbols.S -o $@ $(ASFLAGS)
 
 $(BUILD_DIR)/modules/%.ko: modules/% modules/link.ld $(BUILD_DIR)/key.pub
@@ -130,6 +132,10 @@ clean:
 
 start: debug
 	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio
+
+start-test: debug
+	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio -device isa-debug-exit,iobase=0xf4,iosize=0x04 || [ $$? -eq 1 ]
+
 
 start-log: debug
 	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall \

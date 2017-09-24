@@ -19,6 +19,7 @@ addons:
             - clang-3.5
             - gcc-6
             - curl
+            - qemu
 cache:
     directories:
         - compiler/x86_64-none-elf
@@ -32,11 +33,11 @@ script:
     - if [[ ! -e compiler/x86_64-none-elf/bin/x86_64-elf-gcc ]]; then
         bash ./scripts/build_cross_compiler.sh;
       fi
-    - curl https://raw.githubusercontent.com/gcc-mirror/gcc/master/gcc/ginclude/stdatomic.h > include/stdatomic.h
     - export PATH=$PATH:`pwd`/compiler/x86_64-elf/bin/
     - make debug MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="gcc-6"
     - make clean
     - make release MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="gcc-6"
     - make iso MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="gcc-6"
     - make clean
+    - make start-test MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="gcc-6"
     - #scan-build --status-bugs make MODULE_CC="x86_64-elf-gcc" MODULE_LD="x86_64-elf-ld" TOOLS_CC="gcc-6"
