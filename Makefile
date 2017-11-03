@@ -47,6 +47,8 @@ ASFLAGS := -O2 -MP -MMD -mcmodel=kernel \
 LD := $(TRIPLE)-gcc
 LDFLAGS := -nostdlib -ffreestanding -O2 -mcmodel=kernel
 
+NM := $(TRIPLE)-nm
+
 MODULE_CC := $(CC)
 MODULE_LD := $(TRIPLE)-ld
 MODULE_AS := $(AS)
@@ -104,7 +106,7 @@ include/truth/key.h: $(BUILD_DIR)/key.pub
 
 $(BUILD_DIR)/symbols.o: $(OBJ) kernel/arch/$(ARCH)/link.ld $(OBJ)
 	$(LD) -T kernel/arch/$(ARCH)/link.ld $(OBJ) -o $(KERNEL)64 $(LDFLAGS)
-	nm $(KERNEL)64 | $(PYTHON) build_symbol_table.py $(BUILD_DIR)/symbols.S
+	$(NM) $(KERNEL)64 | $(PYTHON) build_symbol_table.py $(BUILD_DIR)/symbols.S
 	$(AS) -c $(BUILD_DIR)/symbols.S -o $@ $(ASFLAGS)
 
 $(BUILD_DIR)/modules/%.ko: modules/% modules/link.ld $(BUILD_DIR)/key.pub
