@@ -1,5 +1,6 @@
 #include <arch/x64/port.h>
 #include <truth/file.h>
+#include <truth/device/vga.h>
 
 // The 4 available serial ports.
 enum com_port {
@@ -14,20 +15,20 @@ static enum status checked serial_write(enum com_port port, const uint8_t *buf,
 
 static enum status init_port(enum com_port port) {
     // Disable interrupts
-    write_port(port + 1, 0x00);
+    write_port(0x00, port + 1);
     // Enable divisor mode to set clock rate
-    write_port(port + 3, 0x80);
+    write_port(0x80, port + 3);
     // Set low bytes of divisor to 115200 baud
-    write_port(port + 0, 0x01);
+    write_port(0x01, port + 0);
     // Set high bytes of divisor
-    write_port(port + 1, 0x00);
+    write_port(0x00, port + 1);
     // Disable divisor mode and set parity
-    write_port(port + 3, 0x03);
+    write_port(0x03, port + 3);
     // Enable FIFO mode and clear buffer
-    write_port(port + 2, 0xc7);
+    write_port(0xc7, port + 2);
     // Enable interrupts
-    write_port(port + 4, 0x0b);
-    write_port(port + 1, 0x01);
+    write_port(0x0b, port + 4);
+    write_port(0x01, port + 1);
 
     return Ok;
 }
