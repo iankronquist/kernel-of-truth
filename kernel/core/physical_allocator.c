@@ -12,6 +12,7 @@ static struct lock physical_allocator_lock = Lock_Clear;
 
 struct physical_page_stack {
     phys_addr next;
+    size_t length;
 };
 
 static struct physical_page_stack *const Physical_Page_Stack =
@@ -45,7 +46,6 @@ static void insert_regions(struct multiboot_info *multiboot_tables) {
         (struct multiboot_mod_list *)(uintptr_t)multiboot_tables->mods_addr;
     struct multiboot_mmap_entry *mmap =
         (struct multiboot_mmap_entry *)(uintptr_t)multiboot_tables->mmap_addr;
-
 
     uintptr_t mods_list_start = align_as(multiboot_tables->mods_addr,
                                          Page_Small);
@@ -158,38 +158,53 @@ phys_addr physical_alloc(void) {
     phys_addr phys;
     phys_addr next;
     lock_acquire_writer(&physical_allocator_lock);
-
-    phys = Physical_Page;
-    next = Physical_Page_Stack->next;
-    unmap_page(Physical_Page_Stack, false);
-    if (next != invalid_phys_addr) {
-        if (map_page(Physical_Page_Stack, next, Memory_Writable) != Ok) {
-            phys = invalid_phys_addr;
-            goto out;
+    assert(is_aligned(Physical_Page_Stack->length, Page_Small));
+    Physical_Page_Stack->length -= Page_Small;
+    if (Physical_Page_Stack->length == Page_Small) {
+        phys = Physical_Page;
+        next = Physical_Page_Stack->next;
+        unmap_page(Physical_Page_Stack, false);
+        if (next != invalid_phys_addr) {
+            if (map_page(Physical_Page_Stack, next, Memory_Writable) != Ok) {
+                phys = invalid_phys_addr;
+                goto out;
+            }
         }
+        Physical_Page = next;
+        assert(phys != next);
+    } else {
+        phys = Physical_Page + Physical_Page_Stack->length;
     }
-    Physical_Page = next;
-    assert(phys != next);
 out:
     lock_release_writer(&physical_allocator_lock);
     return phys;
 }
 
 
-void physical_free(phys_addr address) {
+static void physical_free_range(phys_addr address, size_t length) {
+    enum status status;
     assert(is_aligned(address, Page_Small));
+    assert(is_aligned(length, Page_Small));
     phys_addr prev;
     lock_acquire_writer(&physical_allocator_lock);
 
     prev = Physical_Page;
     unmap_page(Physical_Page_Stack, false);
-    assert_ok(map_page(Physical_Page_Stack, address, Memory_Writable));
+    status = map_page(Physical_Page_Stack, address, Memory_Writable);
+    assert_ok(status);
+
     Physical_Page_Stack->next = prev;
+    Physical_Page_Stack->length = length;
     Physical_Page = address;
 
     lock_release_writer(&physical_allocator_lock);
 }
 #pragma GCC pop_options
+
+void physical_free(phys_addr address) {
+    physical_free_range(address, Page_Small);
+}
+
 
 void physical_stack_debug(void) {
     phys_addr original = Physical_Page;
@@ -217,7 +232,8 @@ enum status physical_page_remove(phys_addr address) {
     lock_acquire_writer(&physical_allocator_lock);
     while (current != invalid_phys_addr) {
         unmap_page(Physical_Page_Stack, false);
-        assert_ok(map_page(Physical_Page_Stack, current, Memory_Writable));
+        status = map_page(Physical_Page_Stack, current, Memory_Writable);
+        assert_ok(status);
         current = Physical_Page_Stack->next;
 
         if (Physical_Page_Stack->next == address) {
@@ -238,11 +254,4 @@ enum status physical_page_remove(phys_addr address) {
     return status;
 }
 
-static void physical_free_range(phys_addr address, size_t length) {
-    assert(length > 0);
-    assert(is_aligned(address, Page_Small));
-    for (size_t i = 0; i < length / Page_Small; ++i) {
-        physical_free(address);
-        address += Page_Small;
-    }
-}
+
