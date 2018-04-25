@@ -73,18 +73,19 @@ static enum status checked print_string(struct file *file, char *buf,
  * - %u: A decimal integer, this time unsigned.
  * - %x: A hexadecimal unsigned integer in lower case.
  * - %X: Same as above. Capital letters are ugly.
- * - %zu: A size_t, unsigned or course. Printed in hexadecimal because that's
- *        useful to me.
  * - %c: A single character.
  * - %s: A C style string.
  * - %p: A void* pointer.
- * - %b: A unsigned binary integer.
+ * - %b: An unsigned binary integer.
  *
  * Additionally we support the following modifiers:
- * - l: A 32 bit integer.
- * - ll: A 64 bit integer.
- * - h: A 16 bit integer
- * - hh: An 8 bit integer
+ * - z
+ * - l
+ * - ll
+ * - h
+ * - hh
+ *
+ * Note that the z modifier must be followed by either u or x.
  *
  * We do not support wide characters. We do not support %n. We do not support
  * any floating point specifiers.
@@ -125,19 +126,15 @@ enum status vfprintf(struct file *file, const char *restrict format,
                     break;
                 case 'z':
                     i++;
-                    if (format[i+1] != 'u') {
+                    if (format[i+1] != 'u' && format[i+1] != 'x' &&
+                            format[i+1] != 'X') {
                         bubble(print_string(file, buf, &top, "%z"),
-                               "Clearing buffer after print_string");
-                    } else {
-                        i++;
-                        is_signed = false;
-                        size = sizeof(size_t);
-                        number = va_arg(args, size_t);
-                        base = 10;
-                        bubble(print_number(file, buf, &top, is_signed, base,
-                                            size, number),
-                               "Clearing buffer after print_number");
+                                "Clearing buffer after print_string");
+                        goto next_iteration;
                     }
+                    is_signed = false;
+                    size = sizeof(size_t);
+                    number = va_arg(args, size_t);
                     goto next_iteration;
             }
             switch (format[i+1]) {

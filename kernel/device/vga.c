@@ -139,6 +139,17 @@ void vga_putc(const char c) {
     lock_release_writer(&VGA.obj.lock);
 }
 
+static bool VGA_Log_Enabled = false;
+void vga_log_enable() {
+    VGA_Log_Enabled = true;
+}
+
+
+void vga_log_putc(const char c) {
+    if (VGA_Log_Enabled) {
+        vga_putc(c);
+    }
+}
 
 static void vga_puts(const char *str) {
     lock_acquire_writer(&VGA.obj.lock);
@@ -179,5 +190,6 @@ enum status vga_init(void) {
     object_set_free(&VGA.obj, vga_free);
     vga_framebuffer_clear();
     vga_puts(Logo);
+    vga_log_enable();
     return Ok;
 }

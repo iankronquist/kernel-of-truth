@@ -211,6 +211,10 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
         }
         pl4[pl4_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
         paging_page_invalidate(level_three);
+
+        // FIXME: There is a really shitty race condition here which could be a
+        // security issue.
+        memset(level_three, 0, Page_Small);
     }
 
     if (!is_pl2_present(level_three, virtual_address)) {
@@ -220,6 +224,9 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
         }
         level_three[pl3_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
         paging_page_invalidate(level_two);
+        // FIXME: There is a really shitty race condition here which could be a
+        // security issue.
+        memset(level_two, 0, Page_Small);
     }
 
     if (!is_pl1_present(level_two, virtual_address)) {
@@ -229,11 +236,15 @@ enum status checked map_page(void *virtual_address, phys_addr phys_address,
         }
         level_two[pl2_index(virtual_address)] = phys_address | Memory_Just_Writable | Memory_User_Access | Memory_Present;
         paging_page_invalidate(level_one);
+
+        // FIXME: There is a really shitty race condition here which could be a
+        // security issue.
+        memset(level_one, 0, Page_Small);
     }
 
     if (is_Memory_Present(level_one, virtual_address)) {
-        logf(Log_Debug, "The virtual address %p is already present\n",
-             virtual_address);
+        logf(Log_Debug, "The virtual address %p is already present. PTE: %lx\n",
+             virtual_address, level_one[pl1_index(virtual_address)]);
         return Error_Present;
     }
 
@@ -252,7 +263,7 @@ void unmap_page(void *address, bool free_physical_memory) {
 
 
         if (free_physical_memory) {
-            physical_free(level_one[pl1_index(address)] & ~Memory_Permissions_Mask);
+            physical_free(page_entry_to_phys(level_one[pl1_index(address)]));
         }
         level_one[pl1_index(address)] = free_page_entry;
         paging_page_invalidate(address);
@@ -358,6 +369,7 @@ void page_table_fini(struct page_table *pt) {
                             pl1_entry *level_one = get_pl1_index(i4, i3, i2);
                             for (size_t i1 = 0; i1 < pl1_Count; ++i1) {
                                 if (level_one[i1] & Memory_Present) {
+                                    logf(Log_Debug, "PT teardown pfree %lx\n", level_one[i1]);
                                     physical_free(page_entry_to_phys(
                                                     level_one[i1]));
                                 }
@@ -372,7 +384,7 @@ void page_table_fini(struct page_table *pt) {
         }
     }
     page_table_switch(original_pt);
-    physical_free(pt->physical_address);
+    physical_free(page_entry_to_phys(pt->physical_address));
     kfree(pt);
 }
 
