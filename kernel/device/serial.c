@@ -9,6 +9,9 @@ enum com_port {
     COM4 = 0x2e8,
 };
 
+static enum status checked serial_write(enum com_port port, const uint8_t *buf,
+        size_t size);
+
 static enum status init_port(enum com_port port) {
     // Disable interrupts
     write_port(port + 1, 0x00);
@@ -61,6 +64,7 @@ static enum status checked serial_write(enum com_port port, const uint8_t *buf,
     size_t i;
     for (i = 0; i < size; ++i) {
         write_serial_byte(port, buf[i]);
+        vga_log_putc(buf[i]);
     }
     return Ok;
 }
