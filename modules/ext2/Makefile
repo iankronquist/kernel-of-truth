@@ -1,5 +1,5 @@
-MODULE_NAME := test
-MODULE_OBJS := test.o
+MODULE_NAME := ext2
+MODULE_OBJS := ext2.o
 LD := x86_64-elf-ld
 TRUESIGN := $(BUILD_DIR)/tools/truesign
 TRUESIGN_PRIV_KEY := $(BUILD_DIR)/key.priv
@@ -20,5 +20,3 @@ all: $(OUTFILE)
 
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS) -I ../../include
-
-.PHONY: all
