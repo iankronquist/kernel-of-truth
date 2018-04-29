@@ -126,16 +126,8 @@ enum status vfprintf(struct file *file, const char *restrict format,
                     break;
                 case 'z':
                     i++;
-                    if (format[i+1] != 'u' && format[i+1] != 'x' &&
-                            format[i+1] != 'X') {
-                        bubble(print_string(file, buf, &top, "%z"),
-                                "Clearing buffer after print_string");
-                        goto next_iteration;
-                    }
-                    is_signed = false;
                     size = sizeof(size_t);
-                    number = va_arg(args, size_t);
-                    goto next_iteration;
+                    break;
             }
             switch (format[i+1]) {
                 case 'i':
@@ -218,6 +210,7 @@ enum status vfprintf(struct file *file, const char *restrict format,
                 case sizeof(int):
                     number = va_arg(args, int);
                     break;
+                //case sizeof(size_t):
                 case sizeof(long):
                     number = va_arg(args, long);
                     break;
