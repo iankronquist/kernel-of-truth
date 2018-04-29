@@ -35,8 +35,11 @@
 #elif __C__
 #include <truth/types.h>
 
-#define virt_to_phys(x) ((uint64_t)(x) - Kernel_Space_Start)
-#define phys_to_virt(x) ((void *)((x) + Kernel_Space_Start))
+// Use only for things in the code or data sections of the kernel, not
+// dynamically allocated memory.
+// Use the function virt_to_phys for that.
+#define __virt_to_phys(x) ((uint64_t)(x) - Kernel_Space_Start)
+#define __phys_to_virt(x) ((void *)((x) + Kernel_Space_Start))
 
 #define Kernel_Memory_Start ((void *)01777774010000000000000)
 
