@@ -9,3 +9,5 @@ tags
 *.gcda
 *.gcno
 *.gcov
+
+include/truth/key.h
