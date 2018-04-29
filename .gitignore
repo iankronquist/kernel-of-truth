@@ -11,3 +11,4 @@ tags
 *.gcov
 
 include/truth/key.h
+.gdb_history
