@@ -20,7 +20,7 @@ KERNEL := $(BUILD_DIR)/truth.$(ARCH).elf
 OBJ :=
 MODULES :=
 MODULE_CFLAGS := -std=c11 -MP -MMD -ffreestanding -O2 -Wall -Wextra \
-	-fpic -nostdlib -I ../../include -D __C__ -fstack-protector-strong
+	-fpic -nostdlib -I ../../include -D __C__ -mno-sse -fstack-protector-strong
 include kernel/arch/$(ARCH)/Makefile
 include kernel/core/Makefile
 include kernel/crypto/Makefile
@@ -36,7 +36,7 @@ CC := $(TRIPLE)-gcc
 CFLAGS := -std=c11 -O2 -MP -MMD -mcmodel=kernel \
 	-ffreestanding -fstack-protector-strong \
 	-Wall -Wextra \
-	-I ./include $(MACROS) -D __C__
+	-I ./include $(MACROS) -D __C__ -mno-sse
 
 AS := $(TRIPLE)-gcc
 ASFLAGS := -O2 -MP -MMD -mcmodel=kernel \
@@ -75,8 +75,8 @@ tools: $(BUILD_DIR)/tools/truesign
 $(BUILD_DIR)/tools/truesign:
 	$(MAKE) -C tools/ CC=$(TOOLS_CC) ../$@
 
-debug: CFLAGS += -g -fsanitize=undefined
-debug: ASFLAGS += -g
+debug: CFLAGS += -g -fsanitize=undefined -D DEBUG
+debug: ASFLAGS += -g -D DEBUG
 debug: all
 
 release: CFLAGS += -Werror
@@ -132,6 +132,10 @@ clean:
 
 start: debug
 	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio
+
+start-test: debug
+	$(QEMU) -kernel $(KERNEL) $(QEMU_FLAGS) -monitor stdio -device isa-debug-exit,iobase=0xf4,iosize=0x04 || [ $$? -eq 1 ]
+
 
 start-log: debug
 	$(QEMU) -kernel $(KERNEL) -d in_asm,cpu_reset,exec,int,guest_errors,pcall \
