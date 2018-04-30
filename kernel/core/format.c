@@ -85,8 +85,6 @@ static enum status checked print_string(struct file *file, char *buf,
  * - h
  * - hh
  *
- * Note that the z modifier must be followed by either u or x.
- *
  * We do not support wide characters. We do not support %n. We do not support
  * any floating point specifiers.
  * We always fill leading zeros.

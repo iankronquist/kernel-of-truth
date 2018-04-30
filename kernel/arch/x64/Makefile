@@ -12,3 +12,5 @@ OBJ += $(BUILD_DIR)/arch/$(ARCH)/pic.c.o
 OBJ += $(BUILD_DIR)/arch/$(ARCH)/arch_process.c.o
 OBJ += $(BUILD_DIR)/arch/$(ARCH)/process.S.o
 OBJ += $(BUILD_DIR)/arch/$(ARCH)/memory.c.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/vmx.c.o
+OBJ += $(BUILD_DIR)/arch/$(ARCH)/vmx.S.o

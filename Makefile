@@ -34,7 +34,7 @@ PYTHON := python
 
 CC := $(TRIPLE)-gcc
 CFLAGS := -std=c11 -O2 -MP -MMD -mcmodel=kernel \
-	-ffreestanding -fstack-protector-all \
+	-ffreestanding -fstack-protector-strong \
 	-Wall -Wextra \
 	-I ./include $(MACROS) -D __C__ -mno-sse
 
@@ -62,7 +62,7 @@ TOOLS_CC := gcc
 
 QEMU := qemu-system-x86_64
 QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/serial.txt \
-	-cpu Broadwell -initrd "$(strip $(MODULES))"
+	-cpu host -initrd "$(strip $(MODULES))" -enable-kvm
 
 MAKE := make
 
