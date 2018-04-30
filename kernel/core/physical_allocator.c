@@ -160,7 +160,7 @@ phys_addr physical_alloc(void) {
     lock_acquire_writer(&physical_allocator_lock);
     assert(is_aligned(Physical_Page_Stack->length, Page_Small));
     Physical_Page_Stack->length -= Page_Small;
-    if (Physical_Page_Stack->length == Page_Small) {
+    if (Physical_Page_Stack->length == 0) {
         phys = Physical_Page;
         next = Physical_Page_Stack->next;
         unmap_page(Physical_Page_Stack, false);
@@ -176,9 +176,10 @@ phys_addr physical_alloc(void) {
         phys = Physical_Page + Physical_Page_Stack->length;
     }
 out:
+    lock_release_writer(&physical_allocator_lock);
     assert((phys & 0xfff) == 0);
     assert((phys & 0xffff000000000000) == 0);
-    lock_release_writer(&physical_allocator_lock);
+    assert(phys != Physical_Page);
     return phys;
 }
 
@@ -189,9 +190,11 @@ static void physical_free_range(phys_addr address, size_t length) {
     assert(is_aligned(length, Page_Small));
     assert((address & 0xfff) == 0);
     assert((length & 0xfff) == 0);
+    assert(length > 0);
     assert((address & 0xffff000000000000) == 0);
     assert(((address + length) & 0xffff000000000000) == 0);
     phys_addr prev;
+
     lock_acquire_writer(&physical_allocator_lock);
 
     prev = Physical_Page;
