@@ -147,7 +147,7 @@ void vga_log_enable() {
 
 void vga_log_putc(const char c) {
     if (VGA_Log_Enabled) {
-        vga_putc(c);
+        vga_putc_unlocked(c);
     }
 }
 

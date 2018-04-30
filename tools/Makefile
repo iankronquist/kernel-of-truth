@@ -18,6 +18,10 @@ $(BUILD_DIR)/tools/truesign: truesign.c $(LIBSODIUM_OBJS)
 	mkdir -p $(shell dirname $@)
 	$(CC) $(LIBSODIUM_OBJS) $< -o $@ $(CFLAGS) -I ../include/
 
+$(BUILD_DIR)/tools/cpuid: cpuid.c
+	mkdir -p $(shell dirname $@)
+	$(CC) $< -o $@ $(CFLAGS)
+
 test: $(BUILD_DIR)/tools/truesign
 	$(VALGRIND) $(BUILD_DIR)/tools/truesign generate \
 		$(BUILD_DIR)/test_key.priv $(BUILD_DIR)/test_key.pub

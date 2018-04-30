@@ -176,6 +176,8 @@ phys_addr physical_alloc(void) {
         phys = Physical_Page + Physical_Page_Stack->length;
     }
 out:
+    assert((phys & 0xfff) == 0);
+    assert((phys & 0xffff000000000000) == 0);
     lock_release_writer(&physical_allocator_lock);
     return phys;
 }
@@ -185,6 +187,10 @@ static void physical_free_range(phys_addr address, size_t length) {
     enum status status;
     assert(is_aligned(address, Page_Small));
     assert(is_aligned(length, Page_Small));
+    assert((address & 0xfff) == 0);
+    assert((length & 0xfff) == 0);
+    assert((address & 0xffff000000000000) == 0);
+    assert(((address + length) & 0xffff000000000000) == 0);
     phys_addr prev;
     lock_acquire_writer(&physical_allocator_lock);
 
@@ -209,11 +215,12 @@ void physical_free(phys_addr address) {
 void physical_stack_debug(void) {
     phys_addr original = Physical_Page;
     phys_addr current = Physical_Page;
+    logf(Log_Debug, "physical_stack_debug\n");
     lock_acquire_writer(&physical_allocator_lock);
     while (current != invalid_phys_addr) {
         unmap_page(Physical_Page_Stack, false);
         assert_ok(map_page(Physical_Page_Stack, current, Memory_Writable));
-        logf(Log_Debug, "%lx\n", current);
+        logf(Log_Debug, "%lx %zu\n", current, Physical_Page_Stack->length);
         current = Physical_Page_Stack->next;
     }
     logf(Log_Debug, "%lx\n", current);

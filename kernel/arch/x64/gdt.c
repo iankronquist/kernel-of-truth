@@ -102,7 +102,7 @@ struct gdt_register {
 
 struct gdt_register Physical_GDT_Register = {
     .limit = sizeof(GDT) - 1,
-    .base = virt_to_phys((uint64_t)&GDT),
+    .base = __virt_to_phys((uint64_t)&GDT),
 };
 
 struct gdt_register GDT_Register = {

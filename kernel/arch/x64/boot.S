@@ -248,14 +248,17 @@ set_stack_guard:
 	mov $0, %ecx
 	cpuid
 	bt $30, %ecx
-	jnc .use_rdtsc
-
+	// Hangs sometimes because we're not ready.
+	//jnc .use_rdtsc
+	jmp .use_rdtsc
+/*
 .use_rdrand:
 	# While random data is unavailable, try to load random data to rbx.
 	pause
 	rdrand %rbx
 	jc .use_rdrand
 	jmp .load_guard
+ */
 
 .use_rdtsc:
 	# rdtsc 8 times, each time taking the bottom byte and loading it into rbx.
