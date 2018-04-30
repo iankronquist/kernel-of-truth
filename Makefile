@@ -34,7 +34,7 @@ PYTHON := python
 
 CC := $(TRIPLE)-gcc
 CFLAGS := -std=c11 -O2 -MP -MMD -mcmodel=kernel \
-	-ffreestanding -fstack-protector-all \
+	-ffreestanding -fstack-protector-strong \
 	-Wall -Wextra \
 	-I ./include $(MACROS) -D __C__ -mno-sse
 
