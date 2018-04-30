@@ -19,6 +19,11 @@ char *Log_Prefix[Log_Count] = {
     "",
 };
 
+const char *VMX_Level[2] = {
+    "Guest: ",
+    "Host:  ",
+};
+
 
 enum status log_init(enum log_level level, const char *name) {
     Log_Global_Level = level;
@@ -28,7 +33,7 @@ enum status log_init(enum log_level level, const char *name) {
 
 void log(enum log_level level, const char *message) {
     if (level >= Log_Global_Level) {
-        fprintf(Log_File, "%s%s\n", Log_Prefix[level], message);
+        fprintf(Log_File, "%s %s%s\n", Log_Prefix[level], VMX_Level[vmx_in_host()], message);
     }
 }
 
@@ -37,7 +42,7 @@ void logf(enum log_level level, const char *message, ...) {
     if (level >= Log_Global_Level) {
         va_list args;
         va_start(args, message);
-        fprintf(Log_File, "%s", Log_Prefix[level]);
+        fprintf(Log_File, "%s %s", Log_Prefix[level], VMX_Level[vmx_in_host()]);
         vfprintf(Log_File, message, args);
         va_end(args);
     }
