@@ -62,7 +62,7 @@ TOOLS_CC := gcc
 
 QEMU := qemu-system-x86_64
 QEMU_FLAGS := -no-reboot -m 256M -serial file:$(BUILD_DIR)/serial.txt \
-	-cpu Broadwell -initrd "$(strip $(MODULES))"
+	-cpu host -initrd "$(strip $(MODULES))" -enable-kvm
 
 MAKE := make
 
