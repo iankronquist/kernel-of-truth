@@ -29,8 +29,8 @@
 
 static inline void panic() {
     interrupts_disable();
-#ifdef DEBUG
+#ifdef TEST
     test_shutdown_status(Error_Invalid);
-#endif // DEBUG
+#endif // TEST
     halt();
 }
