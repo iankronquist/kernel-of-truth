@@ -48,3 +48,25 @@ void log_set_level(enum log_level level) {
     assert(level < Log_Count);
     Log_Global_Level = level;
 }
+
+
+void log_hexdump(void *memory, size_t bytes) {
+    // Print every byte.
+    size_t i;
+    unsigned char *m = memory;
+    for (i = 0; i < bytes; ++i) {
+        // Every 16 bytes, print the current index.
+        if ((i % 16) == 0) {
+            fprintf(Log_File, "%zx: ", i);
+        }
+        fprintf(Log_File, "%hhx", m[i]);
+        // Every half word, print a space.
+        if ((i % 2) == 1) {
+            fprintf(Log_File, " ");
+        }
+        // After 16 bytes, print a newline.
+        if ((i % 16) == 15) {
+            fprintf(Log_File, "\n");
+        }
+    }
+}

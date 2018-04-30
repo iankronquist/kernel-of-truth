@@ -22,7 +22,7 @@ void kernel_main(uint32_t multiboot_tables) {
     log(Log_None, Logo);
     logf(Log_None, "\tCPU Time %ld\n", cpu_time());
     interrupts_init();
-    physical_allocator_init(phys_to_virt(multiboot_tables));
+    physical_allocator_init(__phys_to_virt(multiboot_tables));
     slab_init();
     logf(Log_Debug, "slab usage %lx\n", slab_get_usage());
     assert_ok(heap_init());
@@ -31,7 +31,7 @@ void kernel_main(uint32_t multiboot_tables) {
     assert_ok(processes_init());
     assert_ok(random_init());
     logf(Log_Debug, "slab usage %lx\n", slab_get_usage());
-    assert_ok(modules_init(phys_to_virt(multiboot_tables)));
+    assert_ok(modules_init(__phys_to_virt(multiboot_tables)));
     timer_init();
     keyboard_init();
     vga_init();

@@ -38,3 +38,5 @@ struct page_table *page_table_clone(struct page_table *pt);
 void page_table_fini(struct page_table *pt);
 
 void debug_paging(void);
+
+phys_addr virt_to_phys(void *virtual_address);

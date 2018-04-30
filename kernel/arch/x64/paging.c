@@ -186,7 +186,26 @@ enum status checked map_update_page(void *virtual_address, enum memory_attribute
     return Ok;
 }
 
+phys_addr virt_to_phys(void *virtual_address) {
 
+    pl4_entry *pl4 = get_pl4();
+    pl3_entry *level_three = get_pl3(virtual_address);
+    pl2_entry *level_two = get_pl2(virtual_address);
+    pl1_entry *level_one = get_pl1(virtual_address);
+
+    if (!is_pl3_present(pl4, virtual_address) ||
+        !is_pl2_present(level_three, virtual_address) ||
+        !is_pl1_present(level_two, virtual_address) ||
+        !is_Memory_Present(level_one, virtual_address)) {
+        assert(0);
+    }
+
+    phys_addr pa = level_one[pl1_index(virtual_address)] & ~Memory_Permissions_Mask;
+    assert(pa != invalid_phys_addr);
+
+    logf(Log_Debug, "Virt %p maps to %lx\n", virtual_address, pa);
+    return pa;
+}
 enum status checked map_page(void *virtual_address, phys_addr phys_address,
                              enum memory_attributes permissions) {
 
