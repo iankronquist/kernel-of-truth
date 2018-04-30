@@ -186,7 +186,7 @@ enum status checked map_update_page(void *virtual_address, enum memory_attribute
     return Ok;
 }
 
-void *virt_to_phys(void *virtual_address) {
+phys_addr virt_to_phys(void *virtual_address) {
 
     pl4_entry *pl4 = get_pl4();
     pl3_entry *level_three = get_pl3(virtual_address);
