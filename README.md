@@ -14,7 +14,7 @@ Kernel Features
 - [x] Support for x86_64.
 - [x] Boots from multiboot v1 compliant bootloader.
 - [x] 🔐 Supervisor Memory Access & Execution Protection (SMEP & SMAP).
-- [x] 🔐 Write XOR Execute page permissions AKA Data Execution Prevention.
+- [x] 🔐 Write XOR Execute memory permissions and Data Execution Prevention.
 - [x] 🔐 Heap red zone protection.
 - [x] 🔐 Stack guard protection.
 - [x] Undefined behavior sanitation (debug builds only).

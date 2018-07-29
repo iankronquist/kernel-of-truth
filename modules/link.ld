@@ -25,6 +25,8 @@ SECTIONS {
 
 	.data : {
 		*(.data*)
+		/* FIXME allocate dedicated BSS for modules in elf.c */
+		*(.bss*)
 	}
 
 	. = ALIGN(4K);
@@ -39,10 +41,6 @@ SECTIONS {
 	. = ALIGN(4K);
     __module_ro_end = .;
     __module_bss_start = .;
-
-	.bss : {
-		*(.bss*)
-	}
 
 	. = ALIGN(4K);
     __module_bss_end = .;

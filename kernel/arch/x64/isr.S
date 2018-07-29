@@ -138,3 +138,16 @@ no_error_code_interrupt 31
 no_error_code_interrupt 32
 no_error_code_interrupt 33
 no_error_code_interrupt 34
+no_error_code_interrupt 35
+no_error_code_interrupt 36
+no_error_code_interrupt 37
+no_error_code_interrupt 38
+no_error_code_interrupt 39
+no_error_code_interrupt 40
+no_error_code_interrupt 41
+no_error_code_interrupt 42
+no_error_code_interrupt 43
+no_error_code_interrupt 44
+no_error_code_interrupt 45
+no_error_code_interrupt 46
+no_error_code_interrupt 47
